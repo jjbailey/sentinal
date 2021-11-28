@@ -128,7 +128,7 @@ void   *workthread(void *arg)
 		if((ti->ti_pid = fork()) == 0) {
 			/*
 			 * child: command reads from sentinal, writes to stdout
-			 * application -> FIFO -> sentinal -> IPC pipe -> command -> log file
+			 * application -> FIFO -> sentinal -> IPC pipe -> command -> logfile
 			 */
 
 			if(geteuid() == (uid_t) 0) {
@@ -172,7 +172,7 @@ void   *workthread(void *arg)
 		} else {
 			/*
 			 * parent: sentinal reads from FIFO, writes to stdout
-			 * application -> FIFO -> sentinal -> IPC pipe -> command -> log file
+			 * application -> FIFO -> sentinal -> IPC pipe -> command -> logfile
 			 */
 
 			close(pipefd[0]);					/* close unused read end */

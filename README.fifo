@@ -24,7 +24,7 @@ NOTES
 
 Example of Logging Dataflow:
 
-    application -> FIFO -> sentinal -> IPC pipe -> zstd -> log file
+    application -> FIFO -> sentinal -> IPC pipe -> zstd -> logfile
     (writer)               (reader)
 
 

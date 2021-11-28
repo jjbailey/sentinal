@@ -13,7 +13,7 @@ Log Section Keys:
 command:  command line to run
           absolute path, optional, working directory is dirname
 
-dirname:  thread and postcmd working directory, log file location
+dirname:  thread and postcmd working directory, logfile location
           absolute path, required
 
 subdirs:  option to search subdirectories, 1/true, 0/false
@@ -42,7 +42,7 @@ diskfree: percent blocks free for unprivileged users; 0 = no monitor (off)
 inofree:  percent inodes free for unprivileged users; 0 = no monitor (off)
           default off
 
-expire:   log file retention, units = m, H, D, W, M, Y; 0 = no expiration (off)
+expire:   logfile retention, units = m, H, D, W, M, Y; 0 = no expiration (off)
           default off
 
 retmin:   minimum number of logs to retain, regardless of expiration; 0 = none (off)
@@ -83,7 +83,7 @@ Thread names assigned as <sectionname>_<taskname>.  Task names and purposes:
 
           wrk:  worker thread
           dfs:  filesystem free space monitor
-          exp:  log file expire monitor
+          exp:  logfile expire monitor
 
 Example: file expire thread name for the section called Console: Console_exp
 

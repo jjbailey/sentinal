@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
 			pthread_create(&workers[i], NULL, &workthread, (void *)&tinfo[i]);
 		}
 
-		/* monitor log file expiration, retention */
+		/* monitor logfile expiration, retention */
 
 		if(tinfo[i].ti_expire || tinfo[i].ti_retmin || tinfo[i].ti_retmax) {
 			usleep((useconds_t) 2000);
