@@ -29,13 +29,15 @@ off_t logsize(char *str)
 
 	switch (toupper(*p)) {
 
+	case 'B':
+		return (n);
+
 	case 'K':
 		return (n * (off_t) ONE_KiB);
 
 	case 'M':
 		return (n * (off_t) ONE_MiB);
 
-	case 'B':
 	case 'G':
 		return (n * (off_t) ONE_GiB);
 	}
