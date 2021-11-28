@@ -13,7 +13,7 @@ LOGDIR=/opt/sentinal/tests
 
 # this script creates files much faster than sentinal removes them
 
-for in in {1..5} ; do
+for i in {1..5} ; do
     for j in {1..10000} ; do
         INDEX=$(date +%H/%M/%S)
         LOGFILE="inode-$(printf '%05d' $RANDOM)"
