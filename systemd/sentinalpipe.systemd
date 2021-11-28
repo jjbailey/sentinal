@@ -1,0 +1,19 @@
+# /etc/systemd/system/sentinalpipe.service
+# systemd example unit file to keep example.ini's pipe open
+
+[Unit]
+Description=sentinal pipe service for example.ini
+StartLimitBurst=10
+StartLimitIntervalSec=0
+After=network.target network-online.target systemd-networkd.service
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+ExecStart=/opt/sentinal/bin/sentinalpipe -f INI_FILE/example.ini
+ExecReload=/bin/kill -s HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target
