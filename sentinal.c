@@ -1,6 +1,6 @@
 /*
  * sentinal.c
- * sentinal: Read input from FIFOs and write output to log files.
+ * sentinal: Manage directory contents according to an INI file
  *
  * Copyright (c) 2021 jjb
  * All rights reserved.

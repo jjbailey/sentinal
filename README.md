@@ -1,6 +1,6 @@
 # sentinal: Software for Logfile and Inode Management
 
-System and application processes can create many files, large files, or many inodes, possibly causing disk partitions to run out of space.  Sentinal is a systemd service for monitoring filesystems containing applications' directories and manages the directories to comply with the specifications in an INI configuration file.
+System and application processes can create many files, large files, or many inodes, possibly causing disk partitions to run out of space.  Sentinal is a systemd service for monitoring filesystems containing applications' directories and managing the directories to comply with the specifications in an INI configuration file.
 
 Monitoring and management capabilities:
 
