@@ -32,7 +32,7 @@ RPMFILE=sentinal-$MAJOR-$MINOR.x86_64.rpm
 
 rm -fr rpmbuild $BUILDIR
 mkdir -p rpmbuild $BUILDIR || exit 1
-( cd rpmbuild && rpmdev-setuptree )
+(cd rpmbuild && rpmdev-setuptree)
 cp -pr --parents /opt/sentinal $BUILDIR
 find $BUILDIR -name '*~' -delete
 find $BUILDIR -type p -delete
@@ -40,7 +40,7 @@ tar czvf rpmbuild/SOURCES/sentinal-$MAJOR.$MINOR.tar.gz $BUILDIR
 
 (
 
-cat << EOF
+    cat << EOF
 Name:           sentinal
 Version:        $MAJOR
 Release:        $MINOR
@@ -65,22 +65,22 @@ Copyright (c) 2021 jjb
 %install
 EOF
 
-cd $BUILDIR || exit 1
+    cd $BUILDIR || exit 1
 
-for d in $(find opt/* -type d | sort) ; do
-    echo "install -m 755 -d \$RPM_BUILD_ROOT/$d"
-done
+    for d in $(find opt/* -type d | sort); do
+        echo "install -m 755 -d \$RPM_BUILD_ROOT/$d"
+    done
 
-for f in $(find opt/* -type f | sort) ; do
-    [[ $f == */bin/* ]] && mode=755 || mode=644
-    echo "install -m $mode $f \$RPM_BUILD_ROOT/$f"
-done
+    for f in $(find opt/* -type f | sort); do
+        [[ $f == */bin/* ]] && mode=755 || mode=644
+        echo "install -m $mode $f \$RPM_BUILD_ROOT/$f"
+    done
 
-echo "chown -R root:root \$RPM_BUILD_ROOT/opt/sentinal"
+    echo 'chown -R root:root $RPM_BUILD_ROOT/opt/sentinal'
 
-echo
-echo "%files"
-find /opt/sentinal/* -type d | sort
+    echo
+    echo "%files"
+    find /opt/sentinal/* -type d | sort
 
 ) > rpmbuild/SPECS/sentinal.spec
 
