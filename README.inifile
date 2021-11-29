@@ -26,6 +26,7 @@ template: output file name, date(1) sequences %Y %m %d %H %M %S %s
           relative to dirname, required when command is set
 
 pcrestr:  perl-compatible regex naming files to manage
+          valid perl-compatible regex, required
 
 uid:      worker thread username or uid, username root ok, uid 0 not ok
           default nobody
