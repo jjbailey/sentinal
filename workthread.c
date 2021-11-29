@@ -224,9 +224,6 @@ void   *workthread(void *arg)
 			/* if file is empty, write failed, e.g. */
 			/* No space left on device (cannot write compressed block) */
 
-/*
-			if(STAT(filename, stbuf) > 0 && !IS_NULL(ti->ti_postcmd)) {
- */
 			if(STAT(filename, stbuf) > 0) {
 				/* success */
 				postcmd(ti, filename);
