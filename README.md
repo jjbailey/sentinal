@@ -43,21 +43,23 @@ sentinal uses INI files for its runtime configuration.  Each section in the INI 
     # ls -l example.log
     prw-r--r-- 1 sentinal sentinal 0 Dec  2 10:12 example.log
 
-If `command` is set, `template` must be set
+Note the following conditions.  If:
 
-If `loglimit` is greater than zero, sentinal rotates the log after it reaches the given size.
+`command` is set, `template` must be set.
 
-If `diskfree` is greater than zero, sentinal creates a thread to discard logs to free filesystem disk space.
+`loglimit` is greater than zero, sentinal rotates the log after it reaches the given size.
 
-If `inofree` is greater than zero, sentinal creates a thread to discard logs to free filesystem inodes.
+`diskfree` is greater than zero, sentinal creates a thread to discard logs to free disk space.
 
-If `expire` is greater than zero, sentinal removes logs older than the given time.
+`inofree` is greater than zero, sentinal creates a thread to discard logs (files) to free inodes.
 
-If `retmin` is greater than zero, sentinal retains `n` number of logs, regardless of expiration.
+`expire` is greater than zero, sentinal removes logs older than the given time.
 
-If `retmax` is greater than zero, sentinal retains a maximum number of `n` logs, regardless of expiration.
+`retmin` is greater than zero, sentinal retains `n` number of logs, regardless of expiration.
 
-If `postcmd` is specified, the value is passed as a command to `bash -c` after the log closes or rotates.  Optional.
+`retmax` is greater than zero, sentinal retains a maximum number of `n` logs, regardless of expiration.
+
+`postcmd` is specified, the value is passed as a command to `bash -c` after the log closes or rotates.  Optional.
 
 ### Disk Space Example
 
@@ -97,7 +99,9 @@ The lesser of `expire` and `retmax` takes precedence over the other.
 
 ### Logfile Ingestion and Processing
 
-sentinal can ingest and process logs, rotate logs when they reach a given size, and optionally post-process logs after rotation.  For logfile processing, replace the application's logfile with a FIFO, and set sentinal to read from it.  For example, this configuration connects the dd program to example.log for log ingestion, and rotates and compresses the logs once they reach 5G in size:
+sentinal can ingest and process logs, rotate logs on demand or when they reach a given size, and optionally post-process logs after rotation.  For logfile processing, replace the application's logfile with a FIFO, and set sentinal to read from it.
+
+For example, this configuration connects the dd program to example.log for log ingestion, and rotates and compresses the log when it reaches 5G in size:
 
     [example]
     command  = /bin/dd bs=64K status=none
@@ -110,7 +114,7 @@ sentinal can ingest and process logs, rotate logs when they reach a given size, 
     loglimit = 5G
     postcmd  = /usr/bin/zstd --rm -T0 %n 2>/dev/null
 
-This example does basically the same as above, but with on-the-fly compression, i.e., no intermediate files to compress:
+This example does basically the same as above, but with on-the-fly compression (no intermediate files), and rotates the compressed log when it reaches 1G in size:
 
     [example]
     command  = /usr/bin/zstd -T0
