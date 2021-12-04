@@ -44,7 +44,6 @@ void   *workthread(void *arg)
 	int     pflag;
 	int     pipefd[2];
 	int     status;
-	off_t   bytes;
 	struct stat stbuf;
 	struct thread_info *ti = arg;
 	extern int errno;
@@ -200,9 +199,7 @@ void   *workthread(void *arg)
 					break;
 				}
 
-				bytes = STAT(filename, stbuf);
-
-				if(ROTATE(ti->ti_loglimit, bytes, ti->ti_sig)) {
+				if(ROTATE(ti->ti_loglimit, STAT(filename, stbuf), ti->ti_sig)) {
 					/* loglimit or signaled to logrotate */
 
 					fprintf(stderr, "%s: rotate %s\n", ti->ti_section, ti->ti_filename);
