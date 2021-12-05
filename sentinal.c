@@ -166,12 +166,12 @@ int main(int argc, char *argv[])
 			/* get real path of argv[0] */
 
 			if(IS_NULL(tinfo[i].ti_path) || *tinfo[i].ti_path != '/') {
-				fprintf(stderr, "%s: path is null or not absolute\n", sections[i]);
+				fprintf(stderr, "%s: command path is null or not absolute\n", sections[i]);
 				exit(EXIT_FAILURE);
 			}
 
 			if(realpath(tinfo[i].ti_path, rbuf) == NULL) {
-				fprintf(stderr, "%s: missing/bad path\n", sections[i]);
+				fprintf(stderr, "%s: missing or bad command path\n", sections[i]);
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
 		tinfo[i].ti_dirname = strdup(rbuf);
 
 		if(IS_NULL(tinfo[i].ti_dirname) || strcmp(tinfo[i].ti_dirname, "/") == 0) {
-			fprintf(stderr, "%s: missing/bad dirname\n", sections[i]);
+			fprintf(stderr, "%s: missing or bad dirname\n", sections[i]);
 			exit(EXIT_FAILURE);
 		}
 
@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
 			fullpath(tinfo[i].ti_dirname, tinfo[i].ti_pipename, tbuf);
 
 			if(realpath(dirname(tbuf), rbuf) == NULL) {
-				fprintf(stderr, "%s: missing/bad pipedir\n", sections[i]);
+				fprintf(stderr, "%s: missing or bad pipedir\n", sections[i]);
 				exit(EXIT_FAILURE);
 			}
 
@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
 		tinfo[i].ti_pcrecmp = pcrecheck(tinfo[i].ti_pcrestr, tinfo[i].ti_pcrecmp);
 
 		if(IS_NULL(tinfo[i].ti_pcrestr) || tinfo[i].ti_pcrecmp == NULL) {
-			fprintf(stderr, "%s: missing/bad pcre\n", sections[i]);
+			fprintf(stderr, "%s: missing or bad pcre\n", sections[i]);
 			exit(EXIT_FAILURE);
 		}
 
