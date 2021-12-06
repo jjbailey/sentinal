@@ -24,7 +24,7 @@
 #include "sentinal.h"
 #include "basename.h"
 
-#define	PIPEBUFSIZ	(size_t)(64 * ONE_KiB)		/* better size for ipc i/o */
+#define	PIPEBUFSIZ	(64 * ONE_KiB)				/* better size for ipc i/o */
 
 #define	ROTATE(lim,n,sig)	((lim && n > lim) || sig == SIGHUP)
 #define	STAT(file,buf)	(stat(file, &buf) == -1 ? -1 : buf.st_size)
@@ -40,10 +40,10 @@ void   *workthread(void *arg)
 	int     holdfd;								/* fd to hold FIFO open */
 	int     i;
 	int     logfd;
+	int     n;
 	int     pflag;
 	int     pipefd[2];
 	int     status;
-	size_t  n;
 	struct stat stbuf;
 	struct thread_info *ti = arg;
 	extern int errno;
@@ -201,6 +201,7 @@ void   *workthread(void *arg)
 
 				if(ROTATE(ti->ti_loglimit, STAT(filename, stbuf), ti->ti_sig)) {
 					/* loglimit or signaled to logrotate */
+
 					fprintf(stderr, "%s: rotate %s\n", ti->ti_section, ti->ti_filename);
 					break;
 				}
