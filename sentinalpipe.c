@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
 
 		if(realpath(dirname(tbuf), rbuf) == NULL) {
 			/* ignore broken path */
-			fprintf(stderr, "missing/bad pipedir: %s\n", rbuf);
+			fprintf(stderr, "%s: missing or bad pipedir\n", rbuf);
 			continue;
 		}
 
