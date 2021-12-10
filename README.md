@@ -1,6 +1,6 @@
 # sentinal: Software for Logfile and Inode Management
 
-System and application processes can create many files, large files, or many inodes, possibly causing disk partitions to run out of space.  Sentinal is a systemd service for monitoring filesystems containing applications' directories and managing the directories to comply with the specifications in an INI configuration file.
+System and application processes can create many files, large files, or many inodes, possibly causing disk partitions to run out of space.  sentinal is a systemd service for monitoring filesystems containing applications' directories and managing the directories to comply with the specifications in an INI configuration file.
 
 Monitoring and management capabilities:
 
@@ -206,17 +206,17 @@ Useful commands for monitoring sentinal:
 
 - Linux processes writing to pipes block when processes are not reading from them.  systemd manages sentinal to ensure sentinal is always running.  See README.fifo for more detail.
 
-- The default pipe size in Linux is either 64KB or 1MB.  sentinal increases its pipe sizes on 3.x.x kernels to 4MiB.  Consider this a tuning parameter that can affect performance.
+- The default pipe size in Linux is either 64KB or 1MB. sentinal increases its pipe sizes on 3.x.x and newer kernels to 4MiB.  Consider this a tuning parameter that can affect performance.
 
 - In the on-the-fly compression example, zstd can be changed to a different program, e.g., gzip or (p)bzip2, though they are slower and may impact the performance of the writer application.
 
 - For inode management, sentinal counts the number of files and directories in `dirname`, not the number of inodes in the filesystem.
 
-- sentinal reports free space for unprivileged users which may be less than the privileged users values reported by disk utility programs.
+- sentinal reports free space for unprivileged users, which may be less than the privileged users' values reported by disk utility programs.
 
-- It is possible to configure sentinal without direct log handling.  If `command` is unset, sentinal does not start the worker thread, leaving the other threads to watch the logs and disk space as they would normally.
+- sentinal configuration without direct log handling (`command` and `pipename` are unset) does not start the worker thread, leaving the other threads to watch the logs and disk space as they would normally.
 
-- The `loglimit` key represents bytes written to disk.  When the `command` key specifies a compression program, log rotation occurs after sentinal writes `loglimit` bytes post-compression.
+- The `loglimit` key represents bytes written to disk.  When `command` specifies a compression program, log rotation occurs after sentinal writes `loglimit` bytes post-compression.
 
-- sentinal removes empty subdirectories within `dirname`.  To negate this behavior, simply create a file in the subdirectory, where the file name does not match `pcrestr`, for example, `.persist`.
+- sentinal removes empty subdirectories within `dirname`.  To negate this behavior, create a file in the subdirectory, where the file name does not match `pcrestr`, for example, `.persist`.
 
