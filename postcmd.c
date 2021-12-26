@@ -33,8 +33,8 @@ int postcmd(struct thread_info *ti, char *filename)
 	pid_t   pid;
 	struct passwd *p;
 
-	if(IS_NULL(ti->ti_postcmd))
-		return (-1);
+	if(IS_NULL(ti->ti_postcmd))					/* should not be here */
+		return (0);
 
 	switch (pid = fork()) {
 
@@ -56,6 +56,7 @@ int postcmd(struct thread_info *ti, char *filename)
 		substrstr(cmdbuf, _DIR_TOK, ti->ti_dirname);
 		substrstr(cmdbuf, _FILE_TOK, filename);
 		fprintf(stderr, "%s: %s\n", ti->ti_section, cmdbuf);
+
 #if 0
 		fprintf(stderr, "%s: postcmd pid: %d\n", ti->ti_section, getpid());
 #endif
