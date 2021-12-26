@@ -223,9 +223,8 @@ void   *workthread(void *arg)
 
 			if(STAT(filename, stbuf) > 0) {
 				/* success */
-
 				if((status = postcmd(ti, filename)) != 0) {
-					fprintf(stderr, "exit status: %d\n", status);
+					fprintf(stderr, "%s: postcmd exit: %d\n", ti->ti_section, status);
 					sleep(5);					/* be nice */
 				}
 			} else {

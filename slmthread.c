@@ -53,9 +53,8 @@ void   *slmthread(void *arg)
 
 		if(ROTATE(ti->ti_loglimit, STAT(filename, stbuf), ti->ti_sig)) {
 			/* loglimit or signaled to post-process */
-
 			if((status = postcmd(ti, filename)) != 0) {
-				fprintf(stderr, "exit status: %d\n", status);
+				fprintf(stderr, "%s: postcmd exit: %d\n", ti->ti_section, status);
 				sleep(5);						/* be nice */
 			}
 
