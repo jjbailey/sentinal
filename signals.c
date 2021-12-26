@@ -64,7 +64,8 @@ void sigparent(int sig)
 		exit(EXIT_SUCCESS);
 
 	if(sig == SIGCHLD) {
-		while((pid = waitpid(-1, &status, WNOHANG | WUNTRACED | WCONTINUED)) > 0);
+		while((pid = waitpid(-1, &status, WNOHANG | WUNTRACED | WCONTINUED)) > 0)
+			;
 
 		return;
 	}
