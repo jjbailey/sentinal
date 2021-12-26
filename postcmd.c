@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include "sentinal.h"
 
+#define	ENV		"/usr/bin/env"
 #define	BASH	"/bin/bash"
 #define	PATH	"/usr/bin:/usr/sbin"
 
@@ -73,9 +74,7 @@ int postcmd(struct thread_info *ti, char *filename)
 		setenv("PATH", PATH, TRUE);
 		setenv("SHELL", BASH, TRUE);
 
-		execl("/usr/bin/env", "-iS", BASH, "--noprofile", "-l", "-c",
-			  cmdbuf, (char *)NULL);
-
+		execl(ENV, "-iS", BASH, "--noprofile", "-l", "-c", cmdbuf, (char *)NULL);
 		exit(EXIT_FAILURE);
 
 	default:

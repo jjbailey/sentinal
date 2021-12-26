@@ -45,7 +45,7 @@ void   *slmthread(void *arg)
 	fprintf(stderr, "%s: monitor log size: %ldMiB\n", ti->ti_section,
 			MiB(ti->ti_loglimit));
 
-	ti->ti_wfd = 0;								/* reset */
+	ti->ti_wfd = 0;								/* only workers use this */
 	ti->ti_sig = 0;								/* reset */
 
 	for(;;) {
@@ -53,6 +53,7 @@ void   *slmthread(void *arg)
 
 		if(ROTATE(ti->ti_loglimit, STAT(filename, stbuf), ti->ti_sig)) {
 			/* loglimit or signaled to post-process */
+
 			if((status = postcmd(ti, filename)) != 0) {
 				fprintf(stderr, "%s: postcmd exit: %d\n", ti->ti_section, status);
 				sleep(5);						/* be nice */
