@@ -43,7 +43,7 @@
 #define	KiB(n)		((size_t) (n) >> 10)		/* convert bytes to KiB */
 #define	MiB(n)		((size_t) (n) >> 20)		/* convert bytes to MiB */
 
-#define	PIPESIZ		(4L * ONE_MiB)				/* tunable, just a guess */
+#define	PIPESIZ		(64L * ONE_MiB)				/* tunable, just a guess */
 
 #define	IS_NULL(s)	((s) == NULL || *(s) == '\0')
 
