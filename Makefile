@@ -25,6 +25,7 @@ SENOBJS=	sentinal.o		\
 			postcmd.o		\
 			runcmd.o		\
 			signals.o		\
+			slmthread.o		\
 			strlcat.o		\
 			strlcpy.o		\
 			substrstr.o		\

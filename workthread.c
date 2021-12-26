@@ -223,7 +223,11 @@ void   *workthread(void *arg)
 
 			if(STAT(filename, stbuf) > 0) {
 				/* success */
-				postcmd(ti, filename);
+
+				if((status = postcmd(ti, filename)) != 0) {
+					fprintf(stderr, "exit status: %d\n", status);
+					sleep(5);					/* be nice */
+				}
 			} else {
 				/* fail */
 				remove(filename);

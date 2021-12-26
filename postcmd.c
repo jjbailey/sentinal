@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
+#include <sys/wait.h>
 #include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,22 +24,23 @@
 
 extern struct utsname utsbuf;
 
-void postcmd(struct thread_info *ti, char *filename)
+int postcmd(struct thread_info *ti, char *filename)
 {
-	char   *home;
 	char    cmdbuf[BUFSIZ];
+	char   *home;
 	int     i;
+	int     status;
 	pid_t   pid;
 	struct passwd *p;
 
 	if(IS_NULL(ti->ti_postcmd))
-		return;
+		return (-1);
 
 	switch (pid = fork()) {
 
 	case -1:
 		fprintf(stderr, "%s: can't fork postcmd\n", ti->ti_section);
-		return;
+		return (-1);
 
 	case 0:
 		if(geteuid() == (uid_t) 0) {
@@ -76,7 +78,8 @@ void postcmd(struct thread_info *ti, char *filename)
 		exit(EXIT_FAILURE);
 
 	default:
-		return;
+		waitpid(pid, &status, WUNTRACED | WCONTINUED);
+		return (status);
 	}
 }
 
