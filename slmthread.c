@@ -39,12 +39,12 @@ void   *slmthread(void *arg)
 	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, "slm", task));
 
-	fprintf(stderr, "%s: monitor log: %s\n", ti->ti_section, ti->ti_template);
+	fullpath(ti->ti_dirname, ti->ti_template, filename);
+	fprintf(stderr, "%s: monitor log: %s\n", ti->ti_section, filename);
 
 	fprintf(stderr, "%s: monitor log size: %ldMiB\n", ti->ti_section,
 			MiB(ti->ti_loglimit));
 
-	fullpath(ti->ti_dirname, ti->ti_template, filename);
 	ti->ti_wfd = 0;								/* reset */
 	ti->ti_sig = 0;								/* reset */
 
