@@ -45,6 +45,11 @@
 
 #define	PIPESIZ		(64L * ONE_MiB)				/* tunable, just a guess */
 
+/*
+ some say this is better:
+ #define IS_NULL(s) !((s) && *(s))
+ */
+
 #define	IS_NULL(s)	((s) == NULL || *(s) == '\0')
 
 #define	_HOST_TOK	"%h"						/* hostname token */
