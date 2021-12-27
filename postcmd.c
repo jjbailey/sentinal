@@ -78,8 +78,7 @@ int postcmd(struct thread_info *ti, char *filename)
 		exit(EXIT_FAILURE);
 
 	default:
-		waitpid(pid, &status, WUNTRACED | WCONTINUED);
-		return (status);
+		return (waitpid(pid, &status, 0) == -1 ? status : 0);
 	}
 }
 

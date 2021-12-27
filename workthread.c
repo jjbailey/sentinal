@@ -216,7 +216,7 @@ void   *workthread(void *arg)
 			}
 
 			close(ti->ti_wfd);
-			waitpid(ti->ti_pid, &status, WUNTRACED | WCONTINUED);
+			waitpid(ti->ti_pid, &status, 0);
 			ti->ti_wfd = EOF;					/* done with this file */
 
 			/* if file is empty, write failed, e.g. */
