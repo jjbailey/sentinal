@@ -93,7 +93,7 @@ To monitor inode usage for 15% free and a maximum of 5M files where they are les
 
 ### Simple Log Monitor
 
-sentinal can monitor logs and process them when they reach a given size.  In this example, sentinal runs logrotate on chattyapp.log when sentinal notices the log exceeded 5MiB in size:
+sentinal can monitor logs and process them when they reach a given size.  In this example, sentinal runs logrotate on chattyapp.log once the log exceeds 5MiB in size:
 
     [global]
     pidfile  = /run/chattyapp.pid
