@@ -11,5 +11,15 @@ LOGFILE="test6.log"
 # /opt/sentinal/bin/sentinal -f /opt/sentinal/tests/test6.ini
 # /opt/sentinal/tests/test6.sh
 
-dd if=/dev/urandom of=$LOGDIR/$LOGFILE bs=1M count=500
+# this test intentionally runs slowly.
+
+for i in {1..60} ; do
+    for dir in /etc /usr /var ; do
+        find $dir >> $LOGDIR/$LOGFILE 2> /dev/null
+        sleep $((RANDOM % 9 + 1))
+    done
+
+    sleep $((RANDOM % 10 + 60))
+done
+
 exit 0
