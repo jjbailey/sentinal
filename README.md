@@ -166,7 +166,7 @@ sentinal runs as a systemd service.  The following is an example of a unit file:
 
 Note: if an application never needs root privileges to run and process logs, consider using the application's user and group IDs in the unit file.  User=root is useful (and likely necessary) when a single sentinal instance monitors several different applications.
 
-## sentinal status
+## sentinal Status
 
 The INI file tests/test4.ini is used here as an example.
 
@@ -202,7 +202,7 @@ Create a systemd unit file and add it to the local systemd directory, or run
 
     # make systemd
 
-to install an exmaple as a starting point.
+to install an example as a starting point.
 
     Edit /etc/systemd/system/sentinal.service as necessary.
 
@@ -217,10 +217,6 @@ sentinal provides two options for testing INI files.  `-d` prints INI file secti
     # systemctl enable sentinal
     # systemctl start sentinal
 
-To rotate the logs:
-
-    # systemctl reload sentinal
-
 Useful commands for monitoring sentinal:
 
     $ journalctl -f -n 20 -t sentinal
@@ -228,6 +224,12 @@ Useful commands for monitoring sentinal:
     $ ps -lT -p $(pidof sentinal)
     $ top -H -S -p $(pidof sentinal)
     # lslocks -p $(pidof sentinal)
+
+Examples of on-demand log rotation:
+
+    # systemctl reload sentinal
+    # pkill -HUP sentinal
+    # kill -HUP $(cat /path/to/pidfile)
 
 ## Notes
 
