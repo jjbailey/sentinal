@@ -1,5 +1,6 @@
 /*
  * slmthread.c
+ * simple log monitor thread
  *
  * Copyright (c) 2021 jjb
  * All rights reserved.
