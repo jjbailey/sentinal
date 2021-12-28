@@ -198,9 +198,19 @@ sentinal requires the pcre-devel package for building the software.
     # make
     # make install
 
-    Example INI file
-    Edit /etc/systemd/system/sentinal.service to refer to the new INI file
+Create a systemd unit file and add it to the local systemd directory, or run
+
+    # make systemd
+
+to install an exmaple as a starting point.
+
+    Edit /etc/systemd/system/sentinal.service as necessary.
+
     # systemctl daemon-reload
+
+## Test INI Files
+
+sentinal provides two options for testing INI files.  `-d` prints INI file sections as parsed, where the output is similar to the input.  `-v` prints INI file sections with the keys evaluated as they would be at run time, including symlink resolution and relative to full pathname conversion.
 
 ## Run
 
