@@ -69,10 +69,15 @@ int main(int argc, char *argv[])
 	int     i;
 	int     nsect;
 	int     opt;
-	int     verbose = FALSE;
 	pthread_t *dfsmons;
 	pthread_t *expmons;
+	pthread_t *slmmons;
 	pthread_t *workers;
+	short   verbose = FALSE;
+	short   dfs_started = FALSE;
+	short   exp_started = FALSE;
+	short   slm_started = FALSE;
+	short   wrk_started = FALSE;
 
 	umask(022);
 	*inifile = '\0';
@@ -166,7 +171,8 @@ int main(int argc, char *argv[])
 			/* get real path of argv[0] */
 
 			if(IS_NULL(tinfo[i].ti_path) || *tinfo[i].ti_path != '/') {
-				fprintf(stderr, "%s: command path is null or not absolute\n", sections[i]);
+				fprintf(stderr, "%s: command path is null or not absolute\n",
+						sections[i]);
 				exit(EXIT_FAILURE);
 			}
 
@@ -258,7 +264,7 @@ int main(int argc, char *argv[])
 		tinfo[i].ti_pid = (pid_t) 0;
 		tinfo[i].ti_uid = verifyuid(my_ini(inidata, sections[i], "uid"));
 		tinfo[i].ti_gid = verifygid(my_ini(inidata, sections[i], "gid"));
-		tinfo[i].ti_wfd = EOF;
+		tinfo[i].ti_wfd = EOF;					/* only workers use this */
 		tinfo[i].ti_loglimit = logsize(my_ini(inidata, sections[i], "loglimit"));
 		tinfo[i].ti_diskfree = fabs(atof(my_ini(inidata, sections[i], "diskfree")));
 		tinfo[i].ti_inofree = fabs(atof(my_ini(inidata, sections[i], "inofree")));
@@ -291,8 +297,9 @@ int main(int argc, char *argv[])
 	/* setup threads and run */
 
 	workers = (pthread_t *) malloc(nsect * sizeof(*workers));
-	expmons = (pthread_t *) malloc(nsect * sizeof(*expmons));
 	dfsmons = (pthread_t *) malloc(nsect * sizeof(*dfsmons));
+	expmons = (pthread_t *) malloc(nsect * sizeof(*expmons));
+	slmmons = (pthread_t *) malloc(nsect * sizeof(*slmmons));
 
 	/* usleep for systemd journal */
 
@@ -302,6 +309,7 @@ int main(int argc, char *argv[])
 		if(tinfo[i].ti_argc) {
 			usleep((useconds_t) 2000);
 			pthread_create(&workers[i], NULL, &workthread, (void *)&tinfo[i]);
+			wrk_started = TRUE;
 		}
 
 		/* monitor logfile expiration, retention */
@@ -309,6 +317,7 @@ int main(int argc, char *argv[])
 		if(tinfo[i].ti_expire || tinfo[i].ti_retmin || tinfo[i].ti_retmax) {
 			usleep((useconds_t) 2000);
 			pthread_create(&expmons[i], NULL, &expthread, (void *)&tinfo[i]);
+			exp_started = TRUE;
 		}
 
 		/* monitor filesystem free space */
@@ -316,18 +325,31 @@ int main(int argc, char *argv[])
 		if(tinfo[i].ti_diskfree || tinfo[i].ti_inofree) {
 			usleep((useconds_t) 2000);
 			pthread_create(&dfsmons[i], NULL, &dfsthread, (void *)&tinfo[i]);
+			dfs_started = TRUE;
+		}
+
+		/* simple log monitor spec must meet several conditions */
+
+		if(tinfo[i].ti_argc == 0 && tinfo[i].ti_loglimit &&
+		   !(IS_NULL(tinfo[i].ti_template) && IS_NULL(tinfo[i].ti_pcrestr))) {
+			usleep((useconds_t) 2000);
+			pthread_create(&slmmons[i], NULL, &slmthread, (void *)&tinfo[i]);
+			slm_started = TRUE;
 		}
 	}
 
 	for(i = 0; i < nsect; i++) {
-		if(tinfo[i].ti_argc)
+		if(wrk_started)
 			pthread_join(workers[i], NULL);
 
-		if(tinfo[i].ti_expire || tinfo[i].ti_retmin || tinfo[i].ti_retmax)
+		if(exp_started)
 			pthread_join(expmons[i], NULL);
 
-		if(tinfo[i].ti_diskfree || tinfo[i].ti_inofree)
+		if(dfs_started)
 			pthread_join(dfsmons[i], NULL);
+
+		if(slm_started)
+			pthread_join(slmmons[i], NULL);
 	}
 
 	exit(EXIT_SUCCESS);

@@ -203,6 +203,7 @@ void   *workthread(void *arg)
 					/* loglimit or signaled to logrotate */
 
 					fprintf(stderr, "%s: rotate %s\n", ti->ti_section, ti->ti_filename);
+					ti->ti_sig = 0;				/* reset */
 					break;
 				}
 			}
@@ -215,7 +216,7 @@ void   *workthread(void *arg)
 			}
 
 			close(ti->ti_wfd);
-			waitpid(ti->ti_pid, &status, WUNTRACED | WCONTINUED);
+			waitpid(ti->ti_pid, &status, 0);
 			ti->ti_wfd = EOF;					/* done with this file */
 
 			/* if file is empty, write failed, e.g. */
@@ -223,9 +224,14 @@ void   *workthread(void *arg)
 
 			if(STAT(filename, stbuf) > 0) {
 				/* success */
-				postcmd(ti, filename);
+
+				if((status = postcmd(ti, filename)) != 0) {
+					fprintf(stderr, "%s: postcmd exit: %d\n", ti->ti_section, status);
+					sleep(5);					/* be nice */
+				}
 			} else {
 				/* fail */
+
 				remove(filename);
 				sleep(5);						/* be nice */
 			}

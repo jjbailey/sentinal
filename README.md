@@ -67,7 +67,7 @@ To monitor console logs in /opt/sentinal/log for 20% free disk space, and to ret
 
     [global]
     pidfile  = /run/diskfree-only.ini
-    
+
     [console]
     dirname  = /opt/sentinal/log
     subdirs  = 0
@@ -82,7 +82,7 @@ To monitor inode usage for 15% free and a maximum of 5M files where they are les
 
     [global]
     pidfile  = /run/inode-usage.pid
-    
+
     [files]
     dirname  = /path/to/appfiles
     subdirs  = 1
@@ -91,17 +91,28 @@ To monitor inode usage for 15% free and a maximum of 5M files where they are les
     expire   = 7D
     retmax   = 5M
 
-### Precedence of Keys
+### Simple Log Monitor
 
-`retmin` takes precedence over `diskfree`.
-`diskfree` and `inofree` take precedence over `expire`, `retmax`.
-The lesser of `expire` and `retmax` takes precedence over the other.
+sentinal can monitor logs and process them when they reach a given size.  In this example, sentinal runs logrotate on chattyapp.log once the log exceeds 5MiB in size:
+
+    [global]
+    pidfile  = /run/chattyapp.pid
+
+    [chattyapp]
+    dirname  = /var/log
+    subdirs  = 1
+    template = chattyapp.log
+    pcrestr  = chattyapp\.log\.
+    uid      = root
+    gid      = root
+    loglimit = 5M
+    postcmd  = /usr/sbin/logrotate -f /opt/sentinal/etc/chattyapp.conf
 
 ### Logfile Ingestion and Processing
 
-sentinal can ingest and process logs, rotate logs on demand or when they reach a given size, and optionally post-process logs after rotation.  For logfile processing, replace the application's logfile with a FIFO, and set sentinal to read from it.
+sentinal can ingest and process logs, rotate them on demand or when they reach a given size, and optionally post-process logs after rotation.  For logfile processing, replace the application's logfile with a FIFO, and set sentinal to read from it.
 
-For example, this configuration connects the dd program to example.log for log ingestion, and rotates and compresses the log when it reaches 5G in size:
+For example, this configuration connects the dd program to example.log for log ingestion, and rotates and compresses the log once it reaches 5G in size:
 
     [example]
     command  = /bin/dd bs=64K status=none
@@ -114,7 +125,7 @@ For example, this configuration connects the dd program to example.log for log i
     loglimit = 5G
     postcmd  = /usr/bin/zstd --rm -T0 %n 2>/dev/null
 
-This example does basically the same as above, but with on-the-fly compression (no intermediate files), and rotates the compressed log when it reaches 1G in size:
+This example does basically the same as above, but with on-the-fly compression (no intermediate files), and rotates the compressed log once it reaches 1G in size:
 
     [example]
     command  = /usr/bin/zstd -T0
@@ -125,6 +136,12 @@ This example does basically the same as above, but with on-the-fly compression (
     uid      = appowner
     gid      = appgroup
     loglimit = 1G
+
+### Precedence of Keys
+
+`retmin` takes precedence over `diskfree`.
+`diskfree` and `inofree` take precedence over `expire`, `retmax`.
+The lesser of `expire` and `retmax` takes precedence over the other.
 
 ### systemd unit file
 
@@ -149,7 +166,7 @@ sentinal runs as a systemd service.  The following is an example of a unit file:
 
 Note: if an application never needs root privileges to run and process logs, consider using the application's user and group IDs in the unit file.  User=root is useful (and likely necessary) when a single sentinal instance monitors several different applications.
 
-## sentinal status
+## sentinal Status
 
 The INI file tests/test4.ini is used here as an example.
 
@@ -181,18 +198,24 @@ sentinal requires the pcre-devel package for building the software.
     # make
     # make install
 
-    Example INI file
-    Edit /etc/systemd/system/sentinal.service to refer to the new INI file
+Create a systemd unit file and add it to the local systemd directory, or run
+
+    # make systemd
+
+to install an example as a starting point.
+
+    Edit /etc/systemd/system/sentinal.service as necessary.
+
     # systemctl daemon-reload
+
+## Test INI Files
+
+sentinal provides two options for testing INI files.  `-d` prints INI file sections as parsed, where the output is similar to the input.  `-v` prints INI file sections with the keys evaluated as they would be at run time, including symlink resolution and relative to full pathname conversion.
 
 ## Run
 
     # systemctl enable sentinal
     # systemctl start sentinal
-
-To rotate the logs:
-
-    # systemctl reload sentinal
 
 Useful commands for monitoring sentinal:
 
@@ -201,6 +224,12 @@ Useful commands for monitoring sentinal:
     $ ps -lT -p $(pidof sentinal)
     $ top -H -S -p $(pidof sentinal)
     # lslocks -p $(pidof sentinal)
+
+Examples of on-demand log rotation:
+
+    # systemctl reload sentinal
+    # pkill -HUP sentinal
+    # kill -HUP $(cat /path/to/pidfile)
 
 ## Notes
 

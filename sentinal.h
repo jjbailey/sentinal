@@ -43,7 +43,12 @@
 #define	KiB(n)		((size_t) (n) >> 10)		/* convert bytes to KiB */
 #define	MiB(n)		((size_t) (n) >> 20)		/* convert bytes to MiB */
 
-#define	PIPESIZ		(4L * ONE_MiB)				/* tunable, just a guess */
+#define	PIPESIZ		(64L * ONE_MiB)				/* tunable, just a guess */
+
+/*
+ some say this is better:
+ #define IS_NULL(s) !((s) && *(s))
+ */
 
 #define	IS_NULL(s)	((s) == NULL || *(s) == '\0')
 
@@ -88,19 +93,20 @@ int     logretention(char *);
 int     mylogfile(char *, pcre *);
 int     oldestfile(struct thread_info *, int, char *, char *, time_t *);
 int     runcmd(int, char **, char **);
+int     postcmd(struct thread_info *, char *);
 off_t   logsize(char *);
 pcre   *pcrecheck(char *, pcre *);
 size_t  strlcat(char *, const char *, size_t);
 size_t  strlcpy(char *, const char *, size_t);
 uid_t   verifyuid(char *);
 void    parent_signals(void);
-void    postcmd(struct thread_info *, char *);
 void    sigparent(int);
 void    sigreject(int);
 void    substrstr(char *, char *, char *);
 void    version(char *);
 void   *dfsthread(void *);
 void   *expthread(void *);
+void   *slmthread(void *);
 void   *workthread(void *);
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

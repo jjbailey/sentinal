@@ -12,33 +12,36 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
+#include <sys/wait.h>
 #include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include "sentinal.h"
 
+#define	ENV		"/usr/bin/env"
 #define	BASH	"/bin/bash"
 #define	PATH	"/usr/bin:/usr/sbin"
 
 extern struct utsname utsbuf;
 
-void postcmd(struct thread_info *ti, char *filename)
+int postcmd(struct thread_info *ti, char *filename)
 {
-	char   *home;
 	char    cmdbuf[BUFSIZ];
+	char   *home;
 	int     i;
+	int     status;
 	pid_t   pid;
 	struct passwd *p;
 
-	if(IS_NULL(ti->ti_postcmd))
-		return;
+	if(IS_NULL(ti->ti_postcmd))					/* should not be here */
+		return (0);
 
 	switch (pid = fork()) {
 
 	case -1:
 		fprintf(stderr, "%s: can't fork postcmd\n", ti->ti_section);
-		return;
+		return (-1);
 
 	case 0:
 		if(geteuid() == (uid_t) 0) {
@@ -54,6 +57,7 @@ void postcmd(struct thread_info *ti, char *filename)
 		substrstr(cmdbuf, _DIR_TOK, ti->ti_dirname);
 		substrstr(cmdbuf, _FILE_TOK, filename);
 		fprintf(stderr, "%s: %s\n", ti->ti_section, cmdbuf);
+
 #if 0
 		fprintf(stderr, "%s: postcmd pid: %d\n", ti->ti_section, getpid());
 #endif
@@ -70,13 +74,11 @@ void postcmd(struct thread_info *ti, char *filename)
 		setenv("PATH", PATH, TRUE);
 		setenv("SHELL", BASH, TRUE);
 
-		execl("/usr/bin/env", "-iS", BASH, "--noprofile", "-l", "-c",
-			  cmdbuf, (char *)NULL);
-
+		execl(ENV, "-iS", BASH, "--noprofile", "-l", "-c", cmdbuf, (char *)NULL);
 		exit(EXIT_FAILURE);
 
 	default:
-		return;
+		return (waitpid(pid, &status, 0) == -1 ? status : 0);
 	}
 }
 
