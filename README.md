@@ -235,7 +235,7 @@ Examples of on-demand log rotation:
 
 - Linux processes writing to pipes block when processes are not reading from them.  systemd manages sentinal to ensure sentinal is always running.  See README.fifo for more detail.
 
-- The default pipe size in Linux is either 64KB or 1MB. sentinal increases its pipe sizes on 3.x.x and newer kernels to 4MiB.  Consider this a tuning parameter that can affect performance.
+- The default pipe size in Linux is either 64KB or 1MB. sentinal increases its pipe sizes on 3.x.x and newer kernels to 64MiB.  Consider this a tuning parameter that can affect performance.
 
 - In the on-the-fly compression example, zstd can be changed to a different program, e.g., gzip or (p)bzip2, though they are slower and may impact the performance of the writer application.
 
