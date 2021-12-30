@@ -19,18 +19,11 @@ int mylogfile(char *fname, pcre * pcrecmp)
 {
 	int     ovec[OVECSIZE];
 
-	if(IS_NULL(fname))
+	if(IS_NULL(fname) || *fname == '.')			/* null or begins with . */
 		return (FALSE);
 
-	if(*fname == '-' || *fname == '.')			/* begins with - or . */
-		return (FALSE);
-
-	if(pcre_exec(pcrecmp, NULL, fname, strlen(fname), 0, 0, ovec, OVECSIZE) >= 0) {
-#if 0
-		fprintf(stderr, "%s\n", fname);
-#endif
+	if(pcre_exec(pcrecmp, NULL, fname, strlen(fname), 0, 0, ovec, OVECSIZE) >= 0)
 		return (TRUE);
-	}
 
 	return (FALSE);
 }
