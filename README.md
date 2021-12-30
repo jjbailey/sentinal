@@ -93,7 +93,7 @@ To monitor inode usage for 15% free and a maximum of 5M files where they are les
 
 ### Simple Log Monitor
 
-sentinal can monitor logs and process them when they reach a given size.  In this example, sentinal runs logrotate on chattyapp.log once the log exceeds 5MiB in size:
+sentinal can monitor logs and process them when they reach a given size.  In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 5MiB in size:
 
     [global]
     pidfile  = /run/chattyapp.pid
@@ -112,7 +112,7 @@ sentinal can monitor logs and process them when they reach a given size.  In thi
 
 sentinal can ingest and process logs, rotate them on demand or when they reach a given size, and optionally post-process logs after rotation.  For logfile processing, replace the application's logfile with a FIFO, and set sentinal to read from it.
 
-For example, this configuration connects the dd program to example.log for log ingestion, and rotates and compresses the log once it reaches 5G in size:
+For example, this configuration connects the dd program to example.log for log ingestion, and rotates and compresses the log when it reaches 5G in size:
 
     [example]
     command  = /bin/dd bs=64K status=none
@@ -125,7 +125,7 @@ For example, this configuration connects the dd program to example.log for log i
     loglimit = 5G
     postcmd  = /usr/bin/zstd --rm -T0 %n 2>/dev/null
 
-This example does basically the same as above, but with on-the-fly compression (no intermediate files), and rotates the compressed log once it reaches 1G in size:
+This example does basically the same as above, but with on-the-fly compression (no intermediate files), and rotates the compressed log when it reaches 1G in size:
 
     [example]
     command  = /usr/bin/zstd -T0
@@ -223,6 +223,7 @@ Useful commands for monitoring sentinal:
     $ journalctl -f _SYSTEMD_UNIT=example.service
     $ ps -lT -p $(pidof sentinal)
     $ top -H -S -p $(pidof sentinal)
+    $ htop -d 5 -p $(pidof sentinal)
     # lslocks -p $(pidof sentinal)
 
 Examples of on-demand log rotation:
