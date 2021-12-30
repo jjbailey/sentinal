@@ -241,7 +241,7 @@ void   *workthread(void *arg)
 	}
 
 	/* notreached */
-	exit(EXIT_SUCCESS);
+	return ((void *)0);
 }
 
 static void pipesize(char *section, char *pipename, long size)
