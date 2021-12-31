@@ -29,7 +29,7 @@
 #define	ROTATE(lim,n,sig)	((lim && n > lim) || sig == SIGHUP)
 #define	STAT(file,buf)	(stat(file, &buf) == -1 ? -1 : buf.st_size)
 
-static void pipesize(char *, char *, long);
+static void pipesize(char *, char *, int);
 
 void   *workthread(void *arg)
 {
@@ -92,7 +92,7 @@ void   *workthread(void *arg)
 			}
 
 			chown(ti->ti_pipename, ti->ti_uid, ti->ti_gid);
-			pipesize(ti->ti_section, ti->ti_pipename, PIPESIZ);
+			pipesize(ti->ti_section, ti->ti_pipename, FIFOSIZ);
 		}
 
 		if((logfd = open(ti->ti_pipename, O_RDONLY)) == -1) {
@@ -244,15 +244,15 @@ void   *workthread(void *arg)
 	return ((void *)0);
 }
 
-static void pipesize(char *section, char *pipename, long size)
+static void pipesize(char *section, char *pipename, int size)
 {
 	/* max pipesize is in /proc/sys/fs/pipe-max-size */
 	/* kernels 2.6.35 and newer */
 
 #ifdef	F_SETPIPE_SZ							/* undefined in < 2.6.35 kernels */
 
+	int     cursize;
 	int     fd;
-	long    cursize;
 
 	if((fd = open(pipename, O_RDONLY | O_NONBLOCK)) == -1)
 		return;
