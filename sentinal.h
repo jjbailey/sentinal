@@ -102,7 +102,7 @@ uid_t   verifyuid(char *);
 void    parent_signals(void);
 void    sigparent(int);
 void    sigreject(int);
-void    substrstr(char *, char *, char *);
+void    strreplace(char *, char *, char *);
 void    version(char *);
 void   *dfsthread(void *);
 void   *expthread(void *);

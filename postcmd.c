@@ -53,9 +53,9 @@ int postcmd(struct thread_info *ti, char *filename)
 			exit(EXIT_FAILURE);
 
 		strlcpy(cmdbuf, ti->ti_postcmd, BUFSIZ);
-		substrstr(cmdbuf, _HOST_TOK, utsbuf.nodename);
-		substrstr(cmdbuf, _DIR_TOK, ti->ti_dirname);
-		substrstr(cmdbuf, _FILE_TOK, filename);
+		strreplace(cmdbuf, _HOST_TOK, utsbuf.nodename);
+		strreplace(cmdbuf, _DIR_TOK, ti->ti_dirname);
+		strreplace(cmdbuf, _FILE_TOK, filename);
 		fprintf(stderr, "%s: %s\n", ti->ti_section, cmdbuf);
 
 #if 0

@@ -28,7 +28,7 @@ SENOBJS=	sentinal.o		\
 			slmthread.o		\
 			strlcat.o		\
 			strlcpy.o		\
-			substrstr.o		\
+			strreplace.o	\
 			threadname.o	\
 			verifyids.o		\
 			version.o		\
