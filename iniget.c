@@ -42,7 +42,10 @@ int get_sections(ini_t * inidata, int maxsect, char *sections[])
 
 	for(p = inidata->data; p < inidata->end; p++)
 		if(*p == '[') {
-			if(strcmp(p + 1, "global") == 0)	/* not a thread */
+			if(p > inidata->data && *(p - 1))	/* line does not start with [ */
+				continue;
+
+			if(strcmp(p + 1, "global") == 0)	/* global is not a thread */
 				continue;
 
 			sections[i++] = strdup(p + 1);
