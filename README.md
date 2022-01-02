@@ -47,15 +47,15 @@ Note the following conditions.  If:
 
 `command` is set, `template` must be set.
 
-`loglimit` is greater than zero, sentinal rotates the log after it reaches the given size.
+`loglimit` is greater than zero, sentinal rotates the log after it reaches the specified size.
 
 `diskfree` is greater than zero, sentinal creates a thread to discard logs to free disk space.
 
 `inofree` is greater than zero, sentinal creates a thread to discard logs (files) to free inodes.
 
-`expire` is greater than zero, sentinal removes logs older than the given time.
+`expire` is greater than zero, sentinal removes logs older than the specified time.
 
-`retmin` is greater than zero, sentinal retains `n` number of logs, regardless of expiration.
+`retmin` is greater than zero, sentinal retains `n` number of logs, regardless of expiration or available disk space.
 
 `retmax` is greater than zero, sentinal retains a maximum number of `n` logs, regardless of expiration.
 
@@ -93,7 +93,7 @@ To monitor inode usage for 15% free and a maximum of 5M files where they are les
 
 ### Simple Log Monitor
 
-sentinal can monitor logs and process them when they reach a given size.  In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 5MiB in size:
+sentinal can monitor logs and process them when they reach a specified size.  In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 5MiB in size:
 
     [global]
     pidfile  = /run/chattyapp.pid
@@ -110,7 +110,7 @@ sentinal can monitor logs and process them when they reach a given size.  In thi
 
 ### Logfile Ingestion and Processing
 
-sentinal can ingest and process logs, rotate them on demand or when they reach a given size, and optionally post-process logs after rotation.  For logfile processing, replace the application's logfile with a FIFO, and set sentinal to read from it.
+sentinal can ingest and process logs, rotate them on demand or when they reach a specified size, and optionally post-process logs after rotation.  For logfile processing, replace the application's logfile with a FIFO, and set sentinal to read from it.
 
 For example, this configuration connects the dd program to example.log for log ingestion, and rotates and compresses the log when it reaches 5G in size:
 
