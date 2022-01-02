@@ -52,7 +52,8 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
 
     postcmd:  command to run after the log closes or rotates, %n = filename
               string passed to bash -c, optional, working directory is dirname
-              unused when command is not defined
+              used when `command` is defined (log ingestion) or `template` is defined (slm)
+              unused when `command` and `template` are not defined
               default none
 
 ## Token Expansions
@@ -81,6 +82,7 @@ Thread names are assigned `<sectionname>_<taskname>`.  Task names and purposes:
           wrk:  worker thread
           dfs:  filesystem free space monitor thread
           exp:  logfile expire monitor thread
+          slm:  simple log monitor thread
 
 Example: file expire thread name for the section called `console`: `console_exp`
 

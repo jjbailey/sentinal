@@ -28,7 +28,7 @@ SENOBJS=	sentinal.o		\
 			slmthread.o		\
 			strlcat.o		\
 			strlcpy.o		\
-			substrstr.o		\
+			strreplace.o	\
 			threadname.o	\
 			verifyids.o		\
 			version.o		\
@@ -80,10 +80,10 @@ tests:		all
 
 systemd:
 			sed "s,INI_FILE,$(SEN_ETC),"	\
-				systemd/sentinal.systemd > sentinal.service
+				services/sentinal.systemd > sentinal.service
 			install -o root -g root -m 644 sentinal.service -t /etc/systemd/system
 			sed "s,INI_FILE,$(SEN_ETC),"	\
-				systemd/sentinalpipe.systemd > sentinalpipe.service
+				services/sentinalpipe.systemd > sentinalpipe.service
 			install -o root -g root -m 644 sentinalpipe.service -t /etc/systemd/system
 			# systemctl daemon-reload
 			# systemctl start sentinal sentinalpipe

@@ -65,7 +65,7 @@ void   *slmthread(void *arg)
 	}
 
 	/* notreached */
-	exit(EXIT_SUCCESS);
+	return ((void *)0);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

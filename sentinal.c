@@ -427,8 +427,9 @@ static void dump_thread_info(struct thread_info *ti)
 	} else
 		printf("execcmd:  \n");
 
-	substrstr(ti->ti_postcmd, _HOST_TOK, utsbuf.nodename);
-	substrstr(ti->ti_postcmd, _FILE_TOK, ti->ti_filename);
+	strreplace(ti->ti_postcmd, _HOST_TOK, utsbuf.nodename);
+	strreplace(ti->ti_postcmd, _DIR_TOK, ti->ti_dirname);
+	strreplace(ti->ti_postcmd, _FILE_TOK, ti->ti_filename);
 	printf("postcmd:  %s\n\n", ti->ti_postcmd);
 }
 

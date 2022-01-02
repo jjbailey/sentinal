@@ -43,7 +43,7 @@
 #define	KiB(n)		((size_t) (n) >> 10)		/* convert bytes to KiB */
 #define	MiB(n)		((size_t) (n) >> 20)		/* convert bytes to MiB */
 
-#define	PIPESIZ		(64L * ONE_MiB)				/* tunable, just a guess */
+#define	FIFOSIZ		(64L * ONE_MiB)				/* tunable, just a guess */
 
 /*
  some say this is better:
@@ -102,7 +102,7 @@ uid_t   verifyuid(char *);
 void    parent_signals(void);
 void    sigparent(int);
 void    sigreject(int);
-void    substrstr(char *, char *, char *);
+void    strreplace(char *, char *, char *);
 void    version(char *);
 void   *dfsthread(void *);
 void   *expthread(void *);
