@@ -2,7 +2,7 @@
  * sentinal.c
  * sentinal: Manage directory contents according to an INI file
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -31,7 +31,6 @@
 #include <limits.h>								/* for realpath() */
 #include <math.h>
 #include <pthread.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include "sentinal.h"

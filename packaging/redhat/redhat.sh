@@ -7,7 +7,7 @@
 # make install
 # make rpm
 
-# Copyright (c) 2021 jjb
+# Copyright (c) 2021, 2022 jjb
 # All rights reserved.
 #
 # This source code is licensed under the MIT license found
@@ -32,6 +32,7 @@ RPMFILE=sentinal-$MAJOR-$MINOR.x86_64.rpm
 
 rm -fr rpmbuild $BUILDIR
 mkdir -p rpmbuild $BUILDIR || exit 1
+CWD=$PWD
 (cd rpmbuild && rpmdev-setuptree)
 cp -pr --parents /opt/sentinal $BUILDIR
 find $BUILDIR -name '*~' -delete
@@ -67,11 +68,11 @@ EOF
 
     cd $BUILDIR || exit 1
 
-    for d in $(find opt/* -type d | sort); do
+    for d in $(find opt/sentinal/* -type d | sort); do
         echo "install -m 755 -d \$RPM_BUILD_ROOT/$d"
     done
 
-    for f in $(find opt/* -type f | sort); do
+    for f in $(find opt/sentinal/* -type f | sort); do
         [[ $f == */bin/* ]] && mode=755 || mode=644
         echo "install -m $mode $f \$RPM_BUILD_ROOT/$f"
     done
@@ -86,4 +87,5 @@ EOF
 
 rpmbuild -bb rpmbuild/SPECS/sentinal.spec
 [ -f rpmbuild/RPMS/x86_64/$RPMFILE ] && rpm -Vp rpmbuild/RPMS/x86_64/$RPMFILE
+find $CWD -name '*.rpm'
 exit 0

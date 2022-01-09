@@ -1,7 +1,7 @@
 /*
  * version.c
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include "basename.h"
 
-#define	VERSION_STRING	"1.1.1"
+#define	VERSION_STRING	"1.1.2"
 
 void version(char *prog)
 {

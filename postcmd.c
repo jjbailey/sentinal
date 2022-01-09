@@ -2,7 +2,7 @@
  * postcmd.c
  * Run command after the log closes or rotates.
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -14,7 +14,6 @@
 #include <sys/utsname.h>
 #include <sys/wait.h>
 #include <pwd.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include "sentinal.h"
