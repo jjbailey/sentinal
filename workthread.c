@@ -23,7 +23,7 @@
 #include "sentinal.h"
 #include "basename.h"
 
-#define	PIPEBUFSIZ	(64 * ONE_KiB)				/* better size for ipc i/o */
+#define	PIPEBUFSIZ	(64 * ONE_KiB)				/* better size for IPC i/o */
 
 #define	ROTATE(lim,n,sig)	((lim && n > lim) || sig == SIGHUP)
 #define	STAT(file,buf)	(stat(file, &buf) == -1 ? -1 : buf.st_size)
@@ -59,7 +59,7 @@ void   *workthread(void *arg)
 
 	for(;;) {
 		/*
-		 * create a FIFO, replace a file with a FIFO
+		 * create a FIFO
 		 * note: this permits symlinks to FIFOs
 		 */
 
@@ -69,13 +69,10 @@ void   *workthread(void *arg)
 			/* found something */
 
 			if(!S_ISFIFO(stbuf.st_mode)) {
-				char    pidbuf[BUFSIZ];
-				char    savebuf[BUFSIZ];
+				fprintf(stderr, "%s: not a FIFO: %s\n", ti->ti_section,
+						base(ti->ti_pipename));
 
-				snprintf(pidbuf, BUFSIZ, "%s.%05d", ti->ti_pipename, getpid());
-				fullpath(ti->ti_dirname, pidbuf, savebuf);
-				rename(ti->ti_pipename, savebuf);
-				pflag = TRUE;
+				exit(EXIT_FAILURE);
 			}
 		} else
 			pflag = TRUE;
@@ -108,7 +105,7 @@ void   *workthread(void *arg)
 		}
 
 		if(pipe(pipefd) == -1) {
-			fprintf(stderr, "%s: can't create ipc pipe\n", ti->ti_section);
+			fprintf(stderr, "%s: can't create IPC pipe\n", ti->ti_section);
 			exit(EXIT_FAILURE);
 		}
 
