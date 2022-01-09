@@ -2,7 +2,7 @@
  * strlcpy.c
  * NUL terminate when dsize > 0 and something is copied.
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -13,8 +13,8 @@
 
 size_t strlcpy(char *dst, char *src, size_t dsize)
 {
-	char   *sp = src;
 	char   *dp = dst;
+	char   *sp = src;
 	size_t  dleft = dsize - 1;
 
 	if(dleft > 0)

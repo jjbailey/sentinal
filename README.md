@@ -16,6 +16,8 @@ sentinal uses INI files for its runtime configuration.  Each section in the INI 
 
 ### INI File Description
 
+An INI file must contain a section called `global` for the pidfile definition, and up to 16 resources sections with unique names up to 11 characters in length.
+
     [global]
     pidfile:  sentinal process id and lock file, for manual logrotate
 
@@ -28,7 +30,7 @@ sentinal uses INI files for its runtime configuration.  Each section in the INI 
     pcrestr:  perl-compatible regex naming files to manage
     uid:      username or uid for command/postcmd; default = nobody
     gid:      groupname or gid for command/postcmd; default = nogroup
-    loglimit: rotate size, M = MiB, G = GiB; 0 = no rotate (off)
+    loglimit: rotate size, M = MiB, G = GiB; 0 = no rotate (unlimited)
     diskfree: percent blocks free; 0 = no monitor (off)
     inofree:  percent inodes free; 0 = no monitor (off)
     expire:   log retention, units = m, H, D, W, M, Y; 0 = no expiration (off)
@@ -41,7 +43,7 @@ sentinal uses INI files for its runtime configuration.  Each section in the INI 
 `pipename` is the path to the FIFO, either absolute or relative to dirname, created by sentinal, owned by uid, in group gid:
 
     # ls -l example.log
-    prw-r--r-- 1 sentinal sentinal 0 Dec  2 10:12 example.log
+    prw------- 1 sentinal sentinal 0 Dec  2 10:12 example.log
 
 Note the following conditions.  If:
 
@@ -49,9 +51,9 @@ Note the following conditions.  If:
 
 `loglimit` is greater than zero, sentinal rotates the log after it reaches the specified size.
 
-`diskfree` is greater than zero, sentinal creates a thread to discard logs to free disk space.
+`diskfree` is greater than zero, sentinal creates a thread to discard the oldest logs to free disk space.
 
-`inofree` is greater than zero, sentinal creates a thread to discard logs (files) to free inodes.
+`inofree` is greater than zero, sentinal creates a thread to discard the oldest logs (files) to free inodes.
 
 `expire` is greater than zero, sentinal removes logs older than the specified time.
 
@@ -112,7 +114,7 @@ sentinal can monitor logs and process them when they reach a specified size.  In
 
 sentinal can ingest and process logs, rotate them on demand or when they reach a specified size, and optionally post-process logs after rotation.  For logfile processing, replace the application's logfile with a FIFO, and set sentinal to read from it.
 
-For example, this configuration connects the dd program to example.log for log ingestion, and rotates and compresses the log when it reaches 5G in size:
+For example, this configuration connects the dd program to example.log for log ingestion, and rotates and compresses the log when it reaches 5GiB in size:
 
     [example]
     command  = /bin/dd bs=64K status=none
@@ -125,7 +127,7 @@ For example, this configuration connects the dd program to example.log for log i
     loglimit = 5G
     postcmd  = /usr/bin/zstd --rm -T0 %n 2>/dev/null
 
-This example does basically the same as above, but with on-the-fly compression (no intermediate files), and rotates the compressed log when it reaches 1G in size:
+This example does basically the same as above, but with on-the-fly compression (no intermediate files), and rotates the compressed log when it reaches 1GiB in size:
 
     [example]
     command  = /usr/bin/zstd -T0
@@ -149,14 +151,14 @@ sentinal runs as a systemd service.  The following is an example of a unit file:
 
     [Unit]
     Description=Shim to zstd-compress logs
-    StartLimitBurst=10
     StartLimitIntervalSec=0
+    StartLimitBurst=10
     After=network.target network-online.target systemd-networkd.service
 
     [Service]
     Type=simple
     Restart=always
-    RestartSec=1
+    RestartSec=2
     User=root
     ExecStart=/opt/sentinal/bin/sentinal -f /opt/sentinal/etc/sentinal.ini
     ExecReload=/bin/kill -s HUP $MAINPID
@@ -246,7 +248,7 @@ Examples of on-demand log rotation:
 
 - sentinal configuration without direct log handling (`command` and `pipename` are unset) does not start the worker thread, leaving the other threads to watch the logs and disk space as they would normally.
 
-- The `loglimit` key represents bytes written to disk.  When `command` specifies a compression program, log rotation occurs after sentinal writes `loglimit` bytes post-compression.
+- The `loglimit` key represents bytes written to disk.  When `command` specifies a compression program, log rotation occurs after sentinal writes `loglimit` bytes post-compression.  If unset or zero, some form of manual log rotation is required.
 
 - sentinal removes empty subdirectories within `dirname`.  To negate this behavior, create a file in the subdirectory, where the file name does not match `pcrestr`, for example, `.persist`.
 

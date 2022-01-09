@@ -1,7 +1,7 @@
 /*
  * sentinal.h
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -45,12 +45,8 @@
 
 #define	FIFOSIZ		(64L * ONE_MiB)				/* tunable, just a guess */
 
-/*
- some say this is better:
- #define IS_NULL(s) !((s) && *(s))
- */
-
-#define	IS_NULL(s)	((s) == NULL || *(s) == '\0')
+// #define  IS_NULL(s)  ((s) == NULL || *(s) == '\0')
+#define IS_NULL(s) !((s) && *(s))
 
 #define	_HOST_TOK	"%h"						/* hostname token */
 #define	_DIR_TOK	"%p"						/* dirname (path) token */
@@ -92,8 +88,8 @@ gid_t   verifygid(char *);
 int     logretention(char *);
 int     mylogfile(char *, pcre *);
 int     oldestfile(struct thread_info *, int, char *, char *, time_t *);
-int     runcmd(int, char **, char **);
 int     postcmd(struct thread_info *, char *);
+int     runcmd(int, char **, char **);
 off_t   logsize(char *);
 pcre   *pcrecheck(char *, pcre *);
 size_t  strlcat(char *, const char *, size_t);

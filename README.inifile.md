@@ -33,7 +33,7 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
               default nogroup
 
     loglimit: rotate size, M = MiB, G = GiB; 0 = no rotate (off)
-              default off
+              default unlimited
 
     diskfree: percent blocks free for unprivileged users; 0 = no monitor (off)
               default off
@@ -42,6 +42,7 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
               default off
 
     expire:   logfile retention, units = m, H, D, W, M, Y; 0 = no expiration (off)
+              default unit = D
               default off
 
     retmin:   minimum number of logs to retain, regardless of expiration; 0 = none (off)

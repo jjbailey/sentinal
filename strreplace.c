@@ -2,7 +2,7 @@
  * strreplace.c
  * Replace all occurrences of oldstr with newstr.
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -26,10 +26,10 @@ void strreplace(char *template, char *oldstr, char *newstr)
 	char   *p;
 	int     len;
 
-	if(IS_NULL(oldstr) || IS_NULL(newstr))
+	if(IS_NULL(oldstr) || IS_NULL(newstr))		/* null */
 		return;
 
-	if(strcmp(oldstr, newstr) == 0 || strstr(newstr, oldstr))
+	if(strstr(newstr, oldstr))					/* recursion */
 		return;
 
 	len = strlen(oldstr);

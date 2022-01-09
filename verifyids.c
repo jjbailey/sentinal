@@ -2,7 +2,7 @@
  * verifyids.c
  * Verify user and group ids.
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -13,7 +13,6 @@
 #include <ctype.h>
 #include <pwd.h>
 #include <grp.h>
-#include <stdlib.h>
 #include "sentinal.h"
 
 #define	NOBODY	((uid_t) 65534)
@@ -34,7 +33,7 @@ uid_t verifyuid(char *id)
 		return (uid);
 	}
 
-	/* root/0 ok past this point */
+	/* "root" ok past this point */
 
 	setpwent();
 
@@ -60,7 +59,7 @@ gid_t verifygid(char *id)
 		return (gid);
 	}
 
-	/* root/0 ok past this point */
+	/* "root" ok past this point */
 
 	setgrent();
 

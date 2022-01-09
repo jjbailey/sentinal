@@ -2,7 +2,7 @@
  * signals.c
  * Set signals for handing events.
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -14,7 +14,6 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <signal.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include "sentinal.h"
 
@@ -54,7 +53,7 @@ void sigparent(int sig)
 	int     status;
 	pid_t   pid;
 
-	signal(sig, sigparent);
+	signal(sig, sigparent);						/* reset */
 
 #if 0
 	fprintf(stderr, "sigparent caught signal %d\n", sig);
@@ -71,6 +70,7 @@ void sigparent(int sig)
 	}
 
 	/* marked the threads as signaled */
+	/* only workers use ti_wfd */
 
 	for(i = 0; i < MAXSECT; i++)
 		if(!IS_NULL(tinfo[i].ti_section))

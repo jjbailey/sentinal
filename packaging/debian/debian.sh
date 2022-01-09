@@ -7,11 +7,13 @@
 # make install
 # make deb
 
-# Copyright (c) 2021 jjb
+# Copyright (c) 2021, 2022 jjb
 # All rights reserved.
 #
 # This source code is licensed under the MIT license found
 # in the root directory of this source tree.
+
+unset CDPATH
 
 [ -x /opt/sentinal/bin/sentinal ] || {
     echo "sentinal is not installed"
@@ -28,6 +30,7 @@ PACKAGE=${VERSION}-1
 BUILDIR=sentinal_${PACKAGE}
 
 mkdir -p $BUILDIR/DEBIAN
+CWD=$PWD
 rm -fr $BUILDIR/opt
 cp -pr --parents /opt/sentinal $BUILDIR
 find $BUILDIR -name '*~' -delete
@@ -49,4 +52,5 @@ EOF
 
 dpkg-deb --build $BUILDIR
 [ -f $BUILDIR.deb ] && dpkg -c $BUILDIR.deb
+find $CWD -name '*.deb'
 exit 0

@@ -4,7 +4,7 @@
  * sent to processes writing to pipes.  Keep pipes given in the INI file, if
  * they exist, always open for reading.
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -17,7 +17,6 @@
 #include <libgen.h>
 #include <limits.h>								/* for realpath() */
 #include <signal.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include "sentinal.h"
 #include "basename.h"

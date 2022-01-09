@@ -3,7 +3,7 @@
  * Create FIFO if it does not exist.
  * Execute command, read input from a FIFO, write output to a logfile.
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -19,12 +19,11 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include "sentinal.h"
 #include "basename.h"
 
-#define	PIPEBUFSIZ	(64 * ONE_KiB)				/* better size for ipc i/o */
+#define	PIPEBUFSIZ	(64 * ONE_KiB)				/* better size for IPC i/o */
 
 #define	ROTATE(lim,n,sig)	((lim && n > lim) || sig == SIGHUP)
 #define	STAT(file,buf)	(stat(file, &buf) == -1 ? -1 : buf.st_size)
@@ -51,16 +50,16 @@ void   *workthread(void *arg)
 	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, "wrk", task));
 
-	if(ti->ti_argc)								/* if 0, we would not be here */
-		fprintf(stderr, "%s: command: %s\n", ti->ti_section, ti->ti_command);
+	if(ti->ti_argc == 0)						/* should not be here */
+		return ((void *)0);
 
-	if(ti->ti_loglimit)
-		fprintf(stderr, "%s: monitor log size: %ldMiB\n", ti->ti_section,
-				MiB(ti->ti_loglimit));
+	fprintf(stderr, "%s: command: %s\n", ti->ti_section, ti->ti_command);
+	fprintf(stderr, "%s: monitor log size: %ldMiB\n", ti->ti_section,
+			MiB(ti->ti_loglimit));
 
 	for(;;) {
 		/*
-		 * create a FIFO, replace a file with a FIFO
+		 * create a FIFO
 		 * note: this permits symlinks to FIFOs
 		 */
 
@@ -70,13 +69,10 @@ void   *workthread(void *arg)
 			/* found something */
 
 			if(!S_ISFIFO(stbuf.st_mode)) {
-				char    pidbuf[BUFSIZ];
-				char    savebuf[BUFSIZ];
+				fprintf(stderr, "%s: not a FIFO: %s\n", ti->ti_section,
+						base(ti->ti_pipename));
 
-				snprintf(pidbuf, BUFSIZ, "%s.%05d", ti->ti_pipename, getpid());
-				fullpath(ti->ti_dirname, pidbuf, savebuf);
-				rename(ti->ti_pipename, savebuf);
-				pflag = TRUE;
+				exit(EXIT_FAILURE);
 			}
 		} else
 			pflag = TRUE;
@@ -84,7 +80,7 @@ void   *workthread(void *arg)
 		if(pflag == TRUE) {
 			/* need a FIFO */
 
-			if(mkfifo(ti->ti_pipename, 0644) == -1) {
+			if(mkfifo(ti->ti_pipename, 0600) == -1) {
 				fprintf(stderr, "%s: can't mkfifo %s: %s\n", ti->ti_section,
 						base(ti->ti_pipename), strerror(errno));
 
@@ -109,7 +105,7 @@ void   *workthread(void *arg)
 		}
 
 		if(pipe(pipefd) == -1) {
-			fprintf(stderr, "%s: can't create ipc pipe\n", ti->ti_section);
+			fprintf(stderr, "%s: can't create IPC pipe\n", ti->ti_section);
 			exit(EXIT_FAILURE);
 		}
 
@@ -153,7 +149,7 @@ void   *workthread(void *arg)
 			dup2(pipefd[0], STDIN_FILENO);		/* new stdin */
 			close(STDOUT_FILENO);
 
-			if(open(filename, O_WRONLY | O_CREAT, 0644) == -1) {
+			if(open(filename, O_WRONLY | O_CREAT, 0600) == -1) {
 				/* shouldn't happen */
 
 				fprintf(stderr, "%s: can't create %s\n", ti->ti_section, ti->ti_filename);
@@ -222,16 +218,12 @@ void   *workthread(void *arg)
 			/* if file is empty, write failed, e.g. */
 			/* No space left on device (cannot write compressed block) */
 
-			if(STAT(filename, stbuf) > 0) {
-				/* success */
-
+			if(STAT(filename, stbuf) > 0) {		/* success */
 				if((status = postcmd(ti, filename)) != 0) {
 					fprintf(stderr, "%s: postcmd exit: %d\n", ti->ti_section, status);
 					sleep(5);					/* be nice */
 				}
-			} else {
-				/* fail */
-
+			} else {							/* fail */
 				remove(filename);
 				sleep(5);						/* be nice */
 			}
