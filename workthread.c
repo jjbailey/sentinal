@@ -266,6 +266,7 @@ static int fifoopen(struct thread_info *ti)
 			}
 
 			fifosize(ti, FIFOSIZ);
+			exit(EXIT_SUCCESS);
 		}
 
 		if(pid > 0)
