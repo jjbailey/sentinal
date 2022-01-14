@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
 		tinfo[i].ti_pid = (pid_t) 0;
 		tinfo[i].ti_uid = verifyuid(my_ini(inidata, sections[i], "uid"));
 		tinfo[i].ti_gid = verifygid(my_ini(inidata, sections[i], "gid"));
-		tinfo[i].ti_wfd = EOF;					/* only workers use this */
+		tinfo[i].ti_wfd = 0;					/* only workers use this */
 		tinfo[i].ti_loglimit = logsize(my_ini(inidata, sections[i], "loglimit"));
 		tinfo[i].ti_diskfree = fabs(atof(my_ini(inidata, sections[i], "diskfree")));
 		tinfo[i].ti_inofree = fabs(atof(my_ini(inidata, sections[i], "inofree")));
