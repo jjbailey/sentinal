@@ -12,6 +12,6 @@ LOGDIR=/opt/sentinal/tests
 # /opt/sentinal/tests/test4.sh
 
 LOGFILE=test4.fifo
-echo $LOGFILE
+echo "LOGFILE=$LOGFILE"
 dd if=/dev/urandom of=$LOGDIR/$LOGFILE bs=1M count=10240
 exit 0

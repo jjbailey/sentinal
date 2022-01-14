@@ -15,6 +15,7 @@ echo $LOGFILE
 
 for i in {1..10} ; do
     LOGFILE=test3.fifo
+    echo "LOGFILE=$LOGFILE"
     dd if=/dev/zero of=$LOGDIR/$LOGFILE bs=1M count=10240
     sleep 1
 done

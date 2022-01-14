@@ -13,7 +13,7 @@ LOGDIR=/opt/sentinal/tests
 
 for i in {1..100} ; do
     LOGFILE="console-$(date +%Y-%m-%d_%H-%M-%S).log"
-    echo $LOGFILE
+    echo "LOGFILE=$LOGFILE"
     timeout 5 dd if=/dev/urandom of=$LOGDIR/$LOGFILE bs=256K
     sleep 1
 done
