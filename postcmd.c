@@ -63,7 +63,7 @@ int postcmd(struct thread_info *ti, char *filename)
 
 		/* close parent's and unused fds */
 
-		for(i = 3; i < 20; i++)
+		for(i = 3; i < MAXFILES; i++)
 			close(i);
 
 		nice(1);

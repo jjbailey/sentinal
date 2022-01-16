@@ -118,7 +118,7 @@ void   *workthread(void *arg)
 			} else {
 				/* new stdout -- close parent's and unused fds */
 
-				for(i = 3; i < 20; i++)
+				for(i = 3; i < MAXFILES; i++)
 					close(i);
 
 				execv(ti->ti_path, zargv);
