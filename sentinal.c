@@ -293,6 +293,10 @@ int main(int argc, char *argv[])
 
 	parent_signals();
 
+	/* limit the number of open files */
+
+	rlimit(MAXFILES);
+
 	/* setup threads and run */
 
 	workers = (pthread_t *) malloc(nsect * sizeof(*workers));

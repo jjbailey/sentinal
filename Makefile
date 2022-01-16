@@ -1,6 +1,6 @@
 # Makefile
 #
-# Copyright (c) 2021 jjb
+# Copyright (c) 2021, 2022 jjb
 # All rights reserved.
 #
 # This source code is licensed under the MIT license found
@@ -23,6 +23,7 @@ SENOBJS=	sentinal.o		\
 			oldestfile.o	\
 			pcrecheck.o		\
 			postcmd.o		\
+			rlimit.o		\
 			runcmd.o		\
 			signals.o		\
 			slmthread.o		\
