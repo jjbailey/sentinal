@@ -97,7 +97,6 @@ size_t  strlcpy(char *, const char *, size_t);
 uid_t   verifyuid(char *);
 void    parent_signals(void);
 void    sigparent(int);
-void    sigreject(int);
 void    strreplace(char *, char *, char *);
 void    version(char *);
 void   *dfsthread(void *);

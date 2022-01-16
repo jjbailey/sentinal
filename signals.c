@@ -19,6 +19,8 @@
 
 extern struct thread_info tinfo[MAXSECT];
 
+static void sigreject(int);
+
 void parent_signals(void)
 {
 	/* parent signal setup */
@@ -77,7 +79,7 @@ void sigparent(int sig)
 			tinfo[i].ti_sig = tinfo[i].ti_wfd != EOF ? sig : 0;
 }
 
-void sigreject(int sig)
+static void sigreject(int sig)
 {
 	signal(sig, sigreject);
 
