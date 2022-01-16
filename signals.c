@@ -19,6 +19,7 @@
 
 extern struct thread_info tinfo[MAXSECT];
 
+static void sigparent(int);
 static void sigreject(int);
 
 void parent_signals(void)
@@ -47,7 +48,7 @@ void parent_signals(void)
 	sigaction(SIGCHLD, &saparent, NULL);
 }
 
-void sigparent(int sig)
+static void sigparent(int sig)
 {
 	/* parent signal handler */
 
