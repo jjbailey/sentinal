@@ -289,13 +289,8 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	/* important: signal handling */
-
-	parent_signals();
-
-	/* limit the number of open files */
-
-	rlimit(MAXFILES);
+	parent_signals();							/* important: signal handling */
+	rlimit(MAXFILES);							/* limit the number of open files */
 
 	/* setup threads and run */
 
@@ -307,7 +302,7 @@ int main(int argc, char *argv[])
 	/* usleep for systemd journal */
 
 	for(i = 0; i < nsect; i++) {
-		/* worker thread */
+		/* worker (log ingestion) thread */
 
 		if(tinfo[i].ti_argc) {
 			usleep((useconds_t) 2000);
