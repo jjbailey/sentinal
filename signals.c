@@ -53,7 +53,6 @@ void sigparent(int sig)
 
 	int     i;
 	int     status;
-	pid_t   pid;
 
 	signal(sig, sigparent);						/* reset */
 
@@ -65,7 +64,7 @@ void sigparent(int sig)
 		exit(EXIT_SUCCESS);
 
 	if(sig == SIGCHLD) {
-		while((pid = waitpid(-1, &status, WNOHANG)) > 0)
+		while(waitpid(-1, &status, WNOHANG) > 0)
 			;
 
 		return;
