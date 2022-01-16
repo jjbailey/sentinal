@@ -83,7 +83,13 @@ void   *workthread(void *arg)
 			fprintf(stderr, "%s ", zargv[i]);
 		fprintf(stderr, "> %s\n", ti->ti_filename);	/* show redirect */
 
-		if((ti->ti_pid = fork()) == 0) {
+		switch (ti->ti_pid = fork()) {
+
+		case -1:
+			fprintf(stderr, "%s: can't fork command\n", ti->ti_section);
+			SLOWEXIT(EXIT_FAILURE);
+
+		case 0:
 			/*
 			 * child: command reads from sentinal, writes to stdout
 			 * application -> FIFO -> sentinal -> IPC pipe -> command -> logfile
@@ -125,7 +131,8 @@ void   *workthread(void *arg)
 			}
 
 			exit(EXIT_FAILURE);
-		} else {
+
+		default:
 			/*
 			 * parent: sentinal reads from FIFO, writes to stdout
 			 * application -> FIFO -> sentinal -> IPC pipe -> command -> logfile
