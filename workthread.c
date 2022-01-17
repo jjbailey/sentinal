@@ -83,6 +83,8 @@ void   *workthread(void *arg)
 			fprintf(stderr, "%s ", zargv[i]);
 		fprintf(stderr, "> %s\n", ti->ti_filename);	/* show redirect */
 
+		/* get going */
+
 		switch (ti->ti_pid = fork()) {
 
 		case -1:
@@ -280,7 +282,10 @@ static int fifoopen(struct thread_info *ti)
 			waitpid(pid, &status, 0);
 	}
 
+	/* reenforce in case these were changed externally */
+
 	chown(ti->ti_pipename, ti->ti_uid, ti->ti_gid);
+	chmod(ti->ti_pipename, 0600);
 
 	if((fd = open(ti->ti_pipename, O_RDONLY)) == -1) {
 		/* systemctl restart can cause EINTR */
