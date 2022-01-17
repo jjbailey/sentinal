@@ -28,7 +28,10 @@
 #define	ROTATE(lim,n,sig)	((lim && n > lim) || sig == SIGHUP)
 #define	STAT(file,buf)	(stat(file, &buf) == -1 ? -1 : buf.st_size)
 
-static void pipesize(char *, char *, int);
+#define	SLOWEXIT(code)		{ sleep(5); exit(code); }
+
+static int fifoopen(struct thread_info *);
+static void fifosize(struct thread_info *, int);
 
 void   *workthread(void *arg)
 {
@@ -40,7 +43,6 @@ void   *workthread(void *arg)
 	int     i;
 	int     logfd;
 	int     n;
-	int     pflag;
 	int     pipefd[2];
 	int     status;
 	struct stat stbuf;
@@ -58,50 +60,11 @@ void   *workthread(void *arg)
 			MiB(ti->ti_loglimit));
 
 	for(;;) {
-		/*
-		 * create a FIFO
-		 * note: this permits symlinks to FIFOs
-		 */
+		/* set up pipes */
 
-		pflag = FALSE;
-
-		if(lstat(ti->ti_pipename, &stbuf) == 0) {
-			/* found something */
-
-			if(!S_ISFIFO(stbuf.st_mode)) {
-				fprintf(stderr, "%s: not a FIFO: %s\n", ti->ti_section,
-						base(ti->ti_pipename));
-
-				exit(EXIT_FAILURE);
-			}
-		} else
-			pflag = TRUE;
-
-		if(pflag == TRUE) {
-			/* need a FIFO */
-
-			if(mkfifo(ti->ti_pipename, 0600) == -1) {
-				fprintf(stderr, "%s: can't mkfifo %s: %s\n", ti->ti_section,
-						base(ti->ti_pipename), strerror(errno));
-
-				exit(EXIT_FAILURE);
-			}
-
-			chown(ti->ti_pipename, ti->ti_uid, ti->ti_gid);
-			pipesize(ti->ti_section, ti->ti_pipename, FIFOSIZ);
-		}
-
-		if((logfd = open(ti->ti_pipename, O_RDONLY)) == -1) {
-			/* systemctl restart can cause EINTR */
-
-			if(errno != EINTR) {
-				fprintf(stderr, "%s: can't open %s: %s\n", ti->ti_section,
-						base(ti->ti_pipename), strerror(errno));
-
-				exit(EXIT_FAILURE);
-			}
-
-			exit(EXIT_SUCCESS);
+		if((logfd = fifoopen(ti)) == -1) {
+			/* open/crate FIFO failed */
+			SLOWEXIT(EXIT_FAILURE);
 		}
 
 		if(pipe(pipefd) == -1) {
@@ -120,7 +83,13 @@ void   *workthread(void *arg)
 			fprintf(stderr, "%s ", zargv[i]);
 		fprintf(stderr, "> %s\n", ti->ti_filename);	/* show redirect */
 
-		if((ti->ti_pid = fork()) == 0) {
+		switch (ti->ti_pid = fork()) {
+
+		case -1:
+			fprintf(stderr, "%s: can't fork command\n", ti->ti_section);
+			SLOWEXIT(EXIT_FAILURE);
+
+		case 0:
 			/*
 			 * child: command reads from sentinal, writes to stdout
 			 * application -> FIFO -> sentinal -> IPC pipe -> command -> logfile
@@ -135,14 +104,12 @@ void   *workthread(void *arg)
 				fprintf(stderr, "%s: insufficient permissions for %s\n",
 						ti->ti_section, ti->ti_dirname);
 
-				sleep(5);						/* be nice */
-				exit(EXIT_FAILURE);
+				SLOWEXIT(EXIT_FAILURE);
 			}
 
 			if(chdir(ti->ti_dirname) == -1) {
 				fprintf(stderr, "%s: can't cd to %s\n", ti->ti_section, ti->ti_dirname);
-				sleep(5);						/* be nice */
-				exit(EXIT_FAILURE);
+				SLOWEXIT(EXIT_FAILURE);
 			}
 
 			close(pipefd[1]);					/* close unused write end */
@@ -157,14 +124,15 @@ void   *workthread(void *arg)
 			} else {
 				/* new stdout -- close parent's and unused fds */
 
-				for(i = 3; i < 20; i++)
+				for(i = 3; i < MAXFILES; i++)
 					close(i);
 
 				execv(ti->ti_path, zargv);
 			}
 
 			exit(EXIT_FAILURE);
-		} else {
+
+		default:
 			/*
 			 * parent: sentinal reads from FIFO, writes to stdout
 			 * application -> FIFO -> sentinal -> IPC pipe -> command -> logfile
@@ -236,7 +204,7 @@ void   *workthread(void *arg)
 	return ((void *)0);
 }
 
-static void pipesize(char *section, char *pipename, int size)
+static void fifosize(struct thread_info *ti, int size)
 {
 	/* max pipesize is in /proc/sys/fs/pipe-max-size */
 	/* kernels 2.6.35 and newer */
@@ -246,7 +214,7 @@ static void pipesize(char *section, char *pipename, int size)
 	int     cursize;
 	int     fd;
 
-	if((fd = open(pipename, O_RDONLY | O_NONBLOCK)) == -1)
+	if((fd = open(ti->ti_pipename, O_RDONLY | O_NONBLOCK)) == -1)
 		return;
 
 	if((cursize = fcntl(fd, F_GETPIPE_SZ)) != size)
@@ -260,12 +228,69 @@ static void pipesize(char *section, char *pipename, int size)
 	else
 		snprintf(buf, BUFSIZ, "%ldKiB", KiB(cursize));
 
-	fprintf(stderr, "%s: %s pipesize: %s\n", section, base(pipename), buf);
+	fprintf(stderr, "%s: %s pipesize: %s\n", ti->ti_section, base(ti->ti_pipename), buf);
 # endif
 
 	close(fd);
 
 #endif											/* F_SETPIPE_SZ */
+}
+
+static int fifoopen(struct thread_info *ti)
+{
+	int     fd;
+	int     pflag = FALSE;
+	int     status;
+	pid_t   pid;
+	struct stat stbuf;
+
+	/* create a FIFO. note: this permits symlinks to FIFOs */
+
+	if(lstat(ti->ti_pipename, &stbuf) == 0) {	/* found something */
+		if(!S_ISFIFO(stbuf.st_mode)) {
+			fprintf(stderr, "%s: not a FIFO: %s\n", ti->ti_section,
+					base(ti->ti_pipename));
+
+			return (-1);
+		}
+	} else
+		pflag = TRUE;
+
+	if(pflag == TRUE) {							/* need a FIFO */
+		/* fork to set ids */
+
+		if((pid = fork()) == 0) {
+			if(geteuid() == (uid_t) 0) {
+				setgid(ti->ti_gid);
+				setuid(ti->ti_uid);
+			}
+
+			if(mkfifo(ti->ti_pipename, 0600) == -1) {
+				fprintf(stderr, "%s: can't mkfifo %s: %s\n", ti->ti_section,
+						base(ti->ti_pipename), strerror(errno));
+
+				exit(EXIT_FAILURE);
+			}
+
+			fifosize(ti, FIFOSIZ);
+			exit(EXIT_SUCCESS);
+		}
+
+		if(pid > 0)
+			waitpid(pid, &status, 0);
+	}
+
+	chown(ti->ti_pipename, ti->ti_uid, ti->ti_gid);
+
+	if((fd = open(ti->ti_pipename, O_RDONLY)) == -1) {
+		/* systemctl restart can cause EINTR */
+
+		if(errno != EINTR)
+			fprintf(stderr, "%s: can't open %s: %s\n", ti->ti_section,
+					base(ti->ti_pipename), strerror(errno));
+	}
+
+	return (fd);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

@@ -19,6 +19,9 @@
 
 extern struct thread_info tinfo[MAXSECT];
 
+static void sigparent(int);
+static void sigreject(int);
+
 void parent_signals(void)
 {
 	/* parent signal setup */
@@ -45,13 +48,12 @@ void parent_signals(void)
 	sigaction(SIGCHLD, &saparent, NULL);
 }
 
-void sigparent(int sig)
+static void sigparent(int sig)
 {
 	/* parent signal handler */
 
 	int     i;
 	int     status;
-	pid_t   pid;
 
 	signal(sig, sigparent);						/* reset */
 
@@ -63,7 +65,7 @@ void sigparent(int sig)
 		exit(EXIT_SUCCESS);
 
 	if(sig == SIGCHLD) {
-		while((pid = waitpid(-1, &status, WNOHANG)) > 0)
+		while(waitpid(-1, &status, WNOHANG) > 0)
 			;
 
 		return;
@@ -77,7 +79,7 @@ void sigparent(int sig)
 			tinfo[i].ti_sig = tinfo[i].ti_wfd != EOF ? sig : 0;
 }
 
-void sigreject(int sig)
+static void sigreject(int sig)
 {
 	signal(sig, sigreject);
 

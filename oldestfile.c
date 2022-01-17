@@ -3,7 +3,7 @@
  * Check dir and possibly subdirs for the oldest file matching pcrestr.
  * Returns the number of files in dir.
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -43,6 +43,7 @@ int oldestfile(struct thread_info *ti, int top, char *dir, char *oldfile,
 			continue;
 
 		if(S_ISDIR(stbuf.st_mode) && *ti->ti_subdirs == '1') {
+			/* search subdirectory */
 			fc += oldestfile(ti, FALSE, filename, oldfile, oldtime);
 			continue;
 		}

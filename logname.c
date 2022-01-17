@@ -2,7 +2,7 @@
  * logname.c
  * Generate a logfile name based on the current time.
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -23,7 +23,7 @@
 #define	_SEC	"%S"
 #define	_ESEC	"%s"
 
-static void substrval(char *, char *, int);
+static void substrval(char *, char *, time_t);
 
 char   *logname(char *template, char *filename)
 {
@@ -44,12 +44,12 @@ char   *logname(char *template, char *filename)
 	substrval(filename, _HOUR, tbuf.tm_hour);
 	substrval(filename, _MIN, tbuf.tm_min);
 	substrval(filename, _SEC, tbuf.tm_sec);
-	substrval(filename, _ESEC, (int)curtime);
+	substrval(filename, _ESEC, curtime);
 
 	return (filename);
 }
 
-static void substrval(char *template, char *token, int value)
+static void substrval(char *template, char *token, time_t value)
 {
 	/* replace all occurrences of token with value */
 
@@ -57,6 +57,7 @@ static void substrval(char *template, char *token, int value)
 	char    search[PATH_MAX];
 	char    valbuf[PATH_MAX];
 	char   *p;
+	int     len;
 
 	if(IS_NULL(token) || *token != '%')
 		return;
@@ -64,14 +65,15 @@ static void substrval(char *template, char *token, int value)
 	if(strstr(template, token) == NULL)
 		return;
 
+	len = strlen(token);
 	strlcpy(search, template, PATH_MAX);
 
 	while(p = strstr(search, token)) {
 		memset(newbuf, '\0', PATH_MAX);
 		strlcpy(newbuf, search, (p - search) + 1);
-		snprintf(valbuf, PATH_MAX, "%02d", value);
+		snprintf(valbuf, PATH_MAX, "%02ld", value);
 		strlcat(newbuf, valbuf, PATH_MAX);
-		strlcat(newbuf, p + 2, PATH_MAX);
+		strlcat(newbuf, p + len, PATH_MAX);
 		strlcpy(search, newbuf, PATH_MAX);
 	}
 

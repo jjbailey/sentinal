@@ -2,7 +2,7 @@
  * slmthread.c
  * simple log monitor thread
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -46,7 +46,6 @@ void   *slmthread(void *arg)
 	fprintf(stderr, "%s: monitor log size: %ldMiB\n", ti->ti_section,
 			MiB(ti->ti_loglimit));
 
-	ti->ti_wfd = 0;								/* only workers use this */
 	ti->ti_sig = 0;								/* reset */
 
 	for(;;) {

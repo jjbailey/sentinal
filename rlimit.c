@@ -1,5 +1,6 @@
 /*
- * version.c
+ * rlimit.c
+ * Set max open files.
  *
  * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
@@ -8,14 +9,16 @@
  * in the root directory of this source tree.
  */
 
-#include <stdio.h>
-#include "basename.h"
+#include <sys/resource.h>
 
-#define	VERSION_STRING	"1.2.0"
-
-void version(char *prog)
+void rlimit(int maxfiles)
 {
-	fprintf(stderr, "%s: version %s\n", base(prog), VERSION_STRING);
+	struct rlimit lim;
+
+	lim.rlim_cur = (rlim_t) maxfiles;
+	lim.rlim_max = (rlim_t) maxfiles;
+
+	setrlimit(RLIMIT_NOFILE, &lim);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

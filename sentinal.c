@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
 		tinfo[i].ti_pid = (pid_t) 0;
 		tinfo[i].ti_uid = verifyuid(my_ini(inidata, sections[i], "uid"));
 		tinfo[i].ti_gid = verifygid(my_ini(inidata, sections[i], "gid"));
-		tinfo[i].ti_wfd = EOF;					/* only workers use this */
+		tinfo[i].ti_wfd = 0;					/* only workers use this */
 		tinfo[i].ti_loglimit = logsize(my_ini(inidata, sections[i], "loglimit"));
 		tinfo[i].ti_diskfree = fabs(atof(my_ini(inidata, sections[i], "diskfree")));
 		tinfo[i].ti_inofree = fabs(atof(my_ini(inidata, sections[i], "inofree")));
@@ -289,9 +289,8 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	/* important: signal handling */
-
-	parent_signals();
+	parent_signals();							/* important: signal handling */
+	rlimit(MAXFILES);							/* limit the number of open files */
 
 	/* setup threads and run */
 
@@ -303,7 +302,7 @@ int main(int argc, char *argv[])
 	/* usleep for systemd journal */
 
 	for(i = 0; i < nsect; i++) {
-		/* worker thread */
+		/* worker (log ingestion) thread */
 
 		if(tinfo[i].ti_argc) {
 			usleep((useconds_t) 2000);

@@ -21,6 +21,8 @@
 #define	MAXARGS		32
 #define	MAXSECT		16							/* arbitrary, can be more */
 
+#define	MAXFILES	1024						/* max open files */
+
 #ifndef PATH_MAX
 # define	PATH_MAX	256
 #endif
@@ -96,8 +98,7 @@ size_t  strlcat(char *, const char *, size_t);
 size_t  strlcpy(char *, const char *, size_t);
 uid_t   verifyuid(char *);
 void    parent_signals(void);
-void    sigparent(int);
-void    sigreject(int);
+void    rlimit(int);
 void    strreplace(char *, char *, char *);
 void    version(char *);
 void   *dfsthread(void *);
