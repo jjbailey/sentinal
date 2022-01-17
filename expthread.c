@@ -2,7 +2,7 @@
  * expthread.c
  * log expiration thread
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -13,7 +13,6 @@
 
 #include <stdio.h>
 #include <sys/types.h>
-#include <dirent.h>
 #include <pthread.h>
 #include <unistd.h>
 #include "sentinal.h"
@@ -23,7 +22,6 @@
 
 void   *expthread(void *arg)
 {
-	DIR    *dirp;
 	char    ebuf[BUFSIZ];
 	char    oldfile[PATH_MAX];
 	char    task[TASK_COMM_LEN];
@@ -36,11 +34,6 @@ void   *expthread(void *arg)
 
 	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, "exp", task));
-
-	if((dirp = opendir(ti->ti_dirname)) == NULL)
-		return ((void *)0);
-
-	closedir(dirp);
 
 	if(ti->ti_expire)
 		fprintf(stderr, "%s: monitor log expiration: %s\n", ti->ti_section,
@@ -91,7 +84,6 @@ void   *expthread(void *arg)
 	}
 
 	/* notreached */
-	closedir(dirp);
 	return ((void *)0);
 }
 
