@@ -30,7 +30,7 @@ struct pipeinfo {
 struct pipeinfo pipelist[MAXSECT];				/* list of pipes and open fds */
 
 static void help(char *);
-static void open_pipe(int);
+static void pipeopen(int);
 static void sigcatch(int);
 static void systemd_signals(void);
 
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 
 	for(;;) {
 		for(i = 0; i < nsect; i++)
-			open_pipe(i);
+			pipeopen(i);
 
 		sleep(ONE_MINUTE);
 	}
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 	exit(EXIT_SUCCESS);
 }
 
-void open_pipe(int i)
+static void pipeopen(int i)
 {
 	/* keep pipes open by opening a new fd before closing the old fd */
 
@@ -155,7 +155,7 @@ void open_pipe(int i)
 	}
 }
 
-void systemd_signals(void)
+static void systemd_signals(void)
 {
 	/* catch signals sent by systemctl commands */
 
@@ -170,7 +170,7 @@ void systemd_signals(void)
 		sigaction(i, &sacatch, NULL);
 }
 
-void sigcatch(int sig)
+static void sigcatch(int sig)
 {
 	/*
 	 * keep pipes open for application restarts, e.g., if someone runs:
