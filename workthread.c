@@ -118,7 +118,7 @@ void   *workthread(void *arg)
 			dup2(pipefd[0], STDIN_FILENO);		/* new stdin */
 			close(STDOUT_FILENO);
 
-			if(open(filename, O_WRONLY | O_CREAT, 0600) == -1) {
+			if(open(filename, O_WRONLY | O_CREAT, 0644) == -1) {
 				/* shouldn't happen */
 
 				fprintf(stderr, "%s: can't create %s\n", ti->ti_section, ti->ti_filename);

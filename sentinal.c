@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 	short   slm_started = FALSE;
 	short   wrk_started = FALSE;
 
-	umask(022);
+	umask(umask(0) & ~022);						/* don't set less restrictive */
 	*inifile = '\0';
 	setvbuf(stderr, stderrbuf, _IOLBF, sizeof(stderrbuf));
 
