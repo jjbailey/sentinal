@@ -41,16 +41,20 @@ void   *dfsthread(void *arg)
 	time_t  curtime;
 	time_t  oldtime;
 
+	if(ti->ti_diskfree == 0 && ti->ti_inofree == 0) {
+		/* should not be here */
+		return ((void *)0);
+	}
+
 	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, "dfs", task));
 
 	findmnt(ti->ti_dirname, mountdir);			/* actual mountpoint */
+	memset(&svbuf, '\0', sizeof(svbuf));
 
-	if(ti->ti_diskfree || ti->ti_inofree) {		/* filesystem precheck */
-		memset(&svbuf, '\0', sizeof(svbuf));
-
-		if(statvfs(mountdir, &svbuf) == -1)
-			return ((void *)0);
+	if(statvfs(mountdir, &svbuf) == -1) {
+		fprintf(stderr, "%s: cannot stat: %s\n", ti->ti_section, mountdir);
+		return ((void *)0);
 	}
 
 	if(ti->ti_diskfree) {
