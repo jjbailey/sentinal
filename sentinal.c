@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
+#include <dirent.h>
 #include <libgen.h>
 #include <limits.h>								/* for realpath() */
 #include <math.h>
@@ -58,6 +59,7 @@ void    print_section(ini_t *, char *);
 
 int main(int argc, char *argv[])
 {
+	DIR    *dirp;
 	char    inifile[PATH_MAX];
 	char    rbuf[PATH_MAX];
 	char    tbuf[PATH_MAX];
@@ -78,7 +80,7 @@ int main(int argc, char *argv[])
 	short   slm_started = FALSE;
 	short   wrk_started = FALSE;
 
-	umask(022);
+	umask(umask(0) & ~022);						/* don't set less restrictive */
 	*inifile = '\0';
 	setvbuf(stderr, stderrbuf, _IOLBF, sizeof(stderrbuf));
 
@@ -201,6 +203,15 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "%s: missing or bad dirname\n", sections[i]);
 			exit(EXIT_FAILURE);
 		}
+
+		/* is ti_dirname a directory */
+
+		if((dirp = opendir(tinfo[i].ti_dirname)) == NULL) {
+			fprintf(stderr, "%s: dirname is not a directory\n", sections[i]);
+			exit(EXIT_FAILURE);
+		}
+
+		closedir(dirp);
 
 		/* directory recursion */
 

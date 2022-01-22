@@ -2,7 +2,7 @@
  * dfsthread.c
  * filesystem monitor thread
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -14,7 +14,6 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/statvfs.h>
-#include <dirent.h>
 #include <math.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -27,7 +26,6 @@
 
 void   *dfsthread(void *arg)
 {
-	DIR    *dirp;
 	char    mountdir[PATH_MAX];
 	char    oldfile[PATH_MAX];
 	char    task[TASK_COMM_LEN];
@@ -43,21 +41,20 @@ void   *dfsthread(void *arg)
 	time_t  curtime;
 	time_t  oldtime;
 
+	if(ti->ti_diskfree == 0 && ti->ti_inofree == 0) {
+		/* should not be here */
+		return ((void *)0);
+	}
+
 	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, "dfs", task));
 
-	if((dirp = opendir(ti->ti_dirname)) == NULL)
-		return ((void *)0);
-
-	closedir(dirp);
-
 	findmnt(ti->ti_dirname, mountdir);			/* actual mountpoint */
+	memset(&svbuf, '\0', sizeof(svbuf));
 
-	if(ti->ti_diskfree || ti->ti_inofree) {		/* filesystem precheck */
-		memset(&svbuf, '\0', sizeof(svbuf));
-
-		if(statvfs(mountdir, &svbuf) == -1)
-			return ((void *)0);
+	if(statvfs(mountdir, &svbuf) == -1) {
+		fprintf(stderr, "%s: cannot stat: %s\n", ti->ti_section, mountdir);
+		return ((void *)0);
 	}
 
 	if(ti->ti_diskfree) {
@@ -178,7 +175,6 @@ void   *dfsthread(void *arg)
 		rptstatus = TRUE;
 	}
 
-	closedir(dirp);
 	return ((void *)0);
 }
 
