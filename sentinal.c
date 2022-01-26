@@ -263,11 +263,6 @@ int main(int argc, char *argv[])
 		tinfo[i].ti_pcrestr = my_ini(inidata, sections[i], "pcrestr");
 		tinfo[i].ti_pcrecmp = pcrecheck(tinfo[i].ti_pcrestr, tinfo[i].ti_pcrecmp);
 
-		if(IS_NULL(tinfo[i].ti_pcrestr) || tinfo[i].ti_pcrecmp == NULL) {
-			fprintf(stderr, "%s: missing or bad pcre\n", sections[i]);
-			exit(EXIT_FAILURE);
-		}
-
 		tinfo[i].ti_filename = malloc(PATH_MAX);
 		memset(tinfo[i].ti_filename, '\0', PATH_MAX);
 
@@ -288,6 +283,15 @@ int main(int argc, char *argv[])
 
 		if(verbose == TRUE)
 			dump_thread_info(&tinfo[i]);
+
+		/* when pcrestr is required in INI file */
+
+		if(tinfo[i].ti_diskfree || tinfo[i].ti_inofree || tinfo[i].ti_expire) {
+			if(IS_NULL(tinfo[i].ti_pcrestr) || tinfo[i].ti_pcrecmp == NULL) {
+				fprintf(stderr, "%s: missing or bad pcre\n", sections[i]);
+				exit(EXIT_FAILURE);
+			}
+		}
 	}
 
 	if(verbose == TRUE)
@@ -339,8 +343,8 @@ int main(int argc, char *argv[])
 
 		/* simple log monitor spec must meet several conditions */
 
-		if(tinfo[i].ti_argc == 0 && tinfo[i].ti_loglimit &&
-		   !(IS_NULL(tinfo[i].ti_template) && IS_NULL(tinfo[i].ti_pcrestr))) {
+		if(tinfo[i].ti_diskfree == 0 && tinfo[i].ti_inofree == 0 &&
+		   tinfo[i].ti_expire == 0) {
 			usleep((useconds_t) 2000);
 			pthread_create(&slmmons[i], NULL, &slmthread, (void *)&tinfo[i]);
 			slm_started = TRUE;
