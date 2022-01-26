@@ -1,6 +1,6 @@
 /*
  * oldestfile.c
- * Check dir and possibly subdirs for the oldest file matching pcrestr.
+ * Check dir and possibly subdirs for the oldest file matching pcrestr (pcrecmp).
  * Returns the number of files in dir.
  *
  * Copyright (c) 2021, 2022 jjb
