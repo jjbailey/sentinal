@@ -9,7 +9,6 @@
  * in the root directory of this source tree.
  *
  * examples of commands to monitor activity:
- *
  *  $ journalctl -f -n 20 -t sentinal
  *  $ journalctl -f _SYSTEMD_UNIT=example.service
  *  $ ps -lT -p $(pidof sentinal)
@@ -286,12 +285,11 @@ int main(int argc, char *argv[])
 
 		/* when pcrestr is required in INI file */
 
-		if(tinfo[i].ti_diskfree || tinfo[i].ti_inofree || tinfo[i].ti_expire) {
+		if(tinfo[i].ti_diskfree || tinfo[i].ti_inofree || tinfo[i].ti_expire)
 			if(IS_NULL(tinfo[i].ti_pcrestr) || tinfo[i].ti_pcrecmp == NULL) {
 				fprintf(stderr, "%s: missing or bad pcre\n", sections[i]);
 				exit(EXIT_FAILURE);
 			}
-		}
 	}
 
 	if(verbose == TRUE)
@@ -314,10 +312,9 @@ int main(int argc, char *argv[])
 	expmons = (pthread_t *) malloc(nsect * sizeof(*expmons));
 	slmmons = (pthread_t *) malloc(nsect * sizeof(*slmmons));
 
-	/* usleep for systemd journal */
-
 	for(i = 0; i < nsect; i++) {
 		/* worker (log ingestion) thread */
+		/* usleep for systemd journal */
 
 		if(tinfo[i].ti_argc) {
 			usleep((useconds_t) 2000);
