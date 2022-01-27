@@ -401,7 +401,7 @@ static void dump_thread_info(struct thread_info *ti)
 	int     i;
 	int     n;
 
-	printf("name:     %s\n", ti->ti_section);
+	printf("section:  %s\n", ti->ti_section);
 	printf("command:  %s\n", ti->ti_command);
 	printf("argc:     %d\n", ti->ti_argc);
 	printf("path:     %s\n", ti->ti_path);
