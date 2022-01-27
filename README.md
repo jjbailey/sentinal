@@ -80,7 +80,8 @@ To monitor console logs in /opt/sentinal/log for 20% free disk space, and to ret
 
 ### Inode Usage Example
 
-To monitor inode usage for 15% free and a maximum of 5M files where they are less than a week old:
+Remove appdata- files when inode free falls below 15%,
+or when the files are older than 7 days, or when there are more than 5M files:
 
     [global]
     pidfile  = /run/inode-usage.pid
