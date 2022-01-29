@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 	short   wrk_started = FALSE;
 	struct thread_info *ti;
 
-	umask(umask(0) & ~022);						/* don't set less restrictive */
+	umask(umask(0) | 022);						/* don't set less restrictive */
 	*inifile = '\0';
 	setvbuf(stderr, stderrbuf, _IOLBF, sizeof(stderrbuf));
 
