@@ -26,7 +26,7 @@ An INI file must contain a section called `global` for the pidfile definition, a
     dirname:  thread and postcmd working directory, logfile location
     subdirs:  option to search subdirectories for matching files
     pipename: named pipe/fifo fifo location
-    template: output file name, date(1) sequences %Y %m %d %H %M %S %s
+    template: output file name, date(1) sequences %F %Y %m %d %H %M %S %s
     pcrestr:  perl-compatible regex naming files to manage
     uid:      username or uid for command/postcmd; default = nobody
     gid:      groupname or gid for command/postcmd; default = nogroup

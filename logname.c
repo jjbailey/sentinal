@@ -15,6 +15,9 @@
 #include <time.h>
 #include "sentinal.h"
 
+#define	_FULL	"%F"
+#define	_YMD	"%Y-%m-%d"
+
 #define	_YEAR	"%Y"
 #define	_MONTH	"%m"
 #define	_DAY	"%d"
@@ -30,13 +33,18 @@ char   *logname(char *template, char *filename)
 	struct tm tbuf;
 	time_t  curtime;
 
-	/* filename becomes the completed template */
-	/* example: console-%Y-%m-%d_%H-%M-%S.log.zst */
+	/*
+	 * filename becomes the completed template
+	 * example: console-%Y-%m-%d_%H-%M-%S.log.zst
+	 *          console-%F_%H-%M-%S.log.zst
+	 */
 
 	strlcpy(filename, template, PATH_MAX);
 
 	time(&curtime);
 	localtime_r(&curtime, &tbuf);
+
+	strreplace(filename, _FULL, _YMD);
 
 	substrval(filename, _YEAR, tbuf.tm_year + 1900);
 	substrval(filename, _MONTH, tbuf.tm_mon + 1);
