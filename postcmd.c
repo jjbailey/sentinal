@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
 #include <pwd.h>
@@ -72,6 +73,8 @@ int postcmd(struct thread_info *ti, char *filename)
 		setenv("HOME", home, TRUE);
 		setenv("PATH", PATH, TRUE);
 		setenv("SHELL", BASH, TRUE);
+
+		umask(umask(0) | 022);					/* don't set less restrictive */
 
 		execl(ENV, "-iS", BASH, "--noprofile", "-l", "-c", cmdbuf, (char *)NULL);
 		exit(EXIT_FAILURE);
