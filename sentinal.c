@@ -9,7 +9,6 @@
  * in the root directory of this source tree.
  *
  * examples of commands to monitor activity:
- *
  *  $ journalctl -f -n 20 -t sentinal
  *  $ journalctl -f _SYSTEMD_UNIT=example.service
  *  $ ps -lT -p $(pidof sentinal)
@@ -79,8 +78,9 @@ int main(int argc, char *argv[])
 	short   exp_started = FALSE;
 	short   slm_started = FALSE;
 	short   wrk_started = FALSE;
+	struct thread_info *ti;
 
-	umask(umask(0) & ~022);						/* don't set less restrictive */
+	umask(umask(0) | 022);						/* don't set less restrictive */
 	*inifile = '\0';
 	setvbuf(stderr, stderrbuf, _IOLBF, sizeof(stderrbuf));
 
@@ -162,51 +162,53 @@ int main(int argc, char *argv[])
 	/* INI thread settings */
 
 	for(i = 0; i < nsect; i++) {
-		tinfo[i].ti_section = sections[i];
-		tinfo[i].ti_command = strdup(my_ini(inidata, sections[i], "command"));
-		tinfo[i].ti_argc = parsecmd(tinfo[i].ti_command, tinfo[i].ti_argv);
+		ti = &tinfo[i];							/* shorthand */
 
-		if(!IS_NULL(tinfo[i].ti_command) && tinfo[i].ti_argc) {
-			tinfo[i].ti_path = tinfo[i].ti_argv[0];
+		ti->ti_section = sections[i];
+		ti->ti_command = strdup(my_ini(inidata, sections[i], "command"));
+		ti->ti_argc = parsecmd(ti->ti_command, ti->ti_argv);
+
+		if(!IS_NULL(ti->ti_command) && ti->ti_argc) {
+			ti->ti_path = ti->ti_argv[0];
 
 			/* get real path of argv[0] */
 
-			if(IS_NULL(tinfo[i].ti_path) || *tinfo[i].ti_path != '/') {
+			if(IS_NULL(ti->ti_path) || *ti->ti_path != '/') {
 				fprintf(stderr, "%s: command path is null or not absolute\n",
 						sections[i]);
 				exit(EXIT_FAILURE);
 			}
 
-			if(realpath(tinfo[i].ti_path, rbuf) == NULL) {
+			if(realpath(ti->ti_path, rbuf) == NULL) {
 				fprintf(stderr, "%s: missing or bad command path\n", sections[i]);
 				exit(EXIT_FAILURE);
 			}
 		}
 
-		tinfo[i].ti_path = strdup(tinfo[i].ti_argc ? rbuf : "");
+		ti->ti_path = strdup(ti->ti_argc ? rbuf : "");
 
 		/* get real path of directory */
 
-		tinfo[i].ti_dirname = my_ini(inidata, sections[i], "dirname");
+		ti->ti_dirname = my_ini(inidata, sections[i], "dirname");
 
-		if(IS_NULL(tinfo[i].ti_dirname) || *tinfo[i].ti_dirname != '/') {
+		if(IS_NULL(ti->ti_dirname) || *ti->ti_dirname != '/') {
 			fprintf(stderr, "%s: dirname is null or not absolute\n", sections[i]);
 			exit(EXIT_FAILURE);
 		}
 
-		if(realpath(tinfo[i].ti_dirname, rbuf) == NULL)
+		if(realpath(ti->ti_dirname, rbuf) == NULL)
 			*rbuf = '\0';
 
-		tinfo[i].ti_dirname = strdup(rbuf);
+		ti->ti_dirname = strdup(rbuf);
 
-		if(IS_NULL(tinfo[i].ti_dirname) || strcmp(tinfo[i].ti_dirname, "/") == 0) {
+		if(IS_NULL(ti->ti_dirname) || strcmp(ti->ti_dirname, "/") == 0) {
 			fprintf(stderr, "%s: missing or bad dirname\n", sections[i]);
 			exit(EXIT_FAILURE);
 		}
 
 		/* is ti_dirname a directory */
 
-		if((dirp = opendir(tinfo[i].ti_dirname)) == NULL) {
+		if((dirp = opendir(ti->ti_dirname)) == NULL) {
 			fprintf(stderr, "%s: dirname is not a directory\n", sections[i]);
 			exit(EXIT_FAILURE);
 		}
@@ -215,79 +217,82 @@ int main(int argc, char *argv[])
 
 		/* directory recursion */
 
-		tinfo[i].ti_subdirs = my_ini(inidata, sections[i], "subdirs");
+		ti->ti_subdirs = my_ini(inidata, sections[i], "subdirs");
 
-		if(strcasecmp(tinfo[i].ti_subdirs, "1") == 0 ||
-		   strcasecmp(tinfo[i].ti_subdirs, "true") == 0)
-			tinfo[i].ti_subdirs = strdup("1");
+		if(strcasecmp(ti->ti_subdirs, "1") == 0 ||
+		   strcasecmp(ti->ti_subdirs, "true") == 0)
+			ti->ti_subdirs = strdup("1");
 		else
-			tinfo[i].ti_subdirs = strdup("0");
+			ti->ti_subdirs = strdup("0");
 
 		/*
 		 * get/generate/vett real path of pipe
 		 * pipe might not exist, or it might not be in dirname
 		 */
 
-		tinfo[i].ti_pipename = my_ini(inidata, sections[i], "pipename");
+		ti->ti_pipename = my_ini(inidata, sections[i], "pipename");
 
-		if(!IS_NULL(tinfo[i].ti_pipename)) {
-			if(strstr(tinfo[i].ti_pipename, "..")) {
+		if(!IS_NULL(ti->ti_pipename)) {
+			if(strstr(ti->ti_pipename, "..")) {
 				fprintf(stderr, "%s: bad pipename\n", sections[i]);
 				exit(EXIT_FAILURE);
 			}
 
-			fullpath(tinfo[i].ti_dirname, tinfo[i].ti_pipename, tbuf);
+			fullpath(ti->ti_dirname, ti->ti_pipename, tbuf);
 
 			if(realpath(dirname(tbuf), rbuf) == NULL) {
 				fprintf(stderr, "%s: missing or bad pipedir\n", sections[i]);
 				exit(EXIT_FAILURE);
 			}
 
-			fullpath(rbuf, base(tinfo[i].ti_pipename), tbuf);
-			tinfo[i].ti_pipename = strdup(tbuf);
+			fullpath(rbuf, base(ti->ti_pipename), tbuf);
+			ti->ti_pipename = strdup(tbuf);
 		}
 
-		if(tinfo[i].ti_argc && IS_NULL(tinfo[i].ti_pipename)) {
+		if(ti->ti_argc && IS_NULL(ti->ti_pipename)) {
 			fprintf(stderr, "%s: command needs a pipe defined\n", sections[i]);
 			exit(EXIT_FAILURE);
 		}
 
-		tinfo[i].ti_template = strdup(base(my_ini(inidata, sections[i], "template")));
+		ti->ti_template = strdup(base(my_ini(inidata, sections[i], "template")));
 
-		if(IS_NULL(tinfo[i].ti_template))
-			if(!IS_NULL(tinfo[i].ti_command)) {
+		if(IS_NULL(ti->ti_template))
+			if(!IS_NULL(ti->ti_command)) {
 				fprintf(stderr, "%s: command requires a template\n", sections[i]);
 				exit(EXIT_FAILURE);
 			}
 
-		tinfo[i].ti_pcrestr = my_ini(inidata, sections[i], "pcrestr");
-		tinfo[i].ti_pcrecmp = pcrecheck(tinfo[i].ti_pcrestr, tinfo[i].ti_pcrecmp);
+		ti->ti_pcrestr = my_ini(inidata, sections[i], "pcrestr");
+		ti->ti_pcrecmp = pcrecheck(ti->ti_pcrestr, ti->ti_pcrecmp);
 
-		if(IS_NULL(tinfo[i].ti_pcrestr) || tinfo[i].ti_pcrecmp == NULL) {
-			fprintf(stderr, "%s: missing or bad pcre\n", sections[i]);
-			exit(EXIT_FAILURE);
-		}
+		ti->ti_filename = malloc(PATH_MAX);
+		memset(ti->ti_filename, '\0', PATH_MAX);
 
-		tinfo[i].ti_filename = malloc(PATH_MAX);
-		memset(tinfo[i].ti_filename, '\0', PATH_MAX);
+		ti->ti_pid = (pid_t) 0;
+		ti->ti_uid = verifyuid(my_ini(inidata, sections[i], "uid"));
+		ti->ti_gid = verifygid(my_ini(inidata, sections[i], "gid"));
+		ti->ti_wfd = 0;							/* only workers use this */
+		ti->ti_loglimit = logsize(my_ini(inidata, sections[i], "loglimit"));
+		ti->ti_diskfree = fabs(atof(my_ini(inidata, sections[i], "diskfree")));
+		ti->ti_inofree = fabs(atof(my_ini(inidata, sections[i], "inofree")));
+		ti->ti_expire = logretention(my_ini(inidata, sections[i], "expire"));
+		ti->ti_retmin = logsize(my_ini(inidata, sections[i], "retmin"));
+		ti->ti_retmax = logsize(my_ini(inidata, sections[i], "retmax"));
 
-		tinfo[i].ti_pid = (pid_t) 0;
-		tinfo[i].ti_uid = verifyuid(my_ini(inidata, sections[i], "uid"));
-		tinfo[i].ti_gid = verifygid(my_ini(inidata, sections[i], "gid"));
-		tinfo[i].ti_wfd = 0;					/* only workers use this */
-		tinfo[i].ti_loglimit = logsize(my_ini(inidata, sections[i], "loglimit"));
-		tinfo[i].ti_diskfree = fabs(atof(my_ini(inidata, sections[i], "diskfree")));
-		tinfo[i].ti_inofree = fabs(atof(my_ini(inidata, sections[i], "inofree")));
-		tinfo[i].ti_expire = logretention(my_ini(inidata, sections[i], "expire"));
-		tinfo[i].ti_retmin = logsize(my_ini(inidata, sections[i], "retmin"));
-		tinfo[i].ti_retmax = logsize(my_ini(inidata, sections[i], "retmax"));
-
-		tinfo[i].ti_postcmd = malloc(BUFSIZ);
-		memset(tinfo[i].ti_postcmd, '\0', BUFSIZ);
-		strlcpy(tinfo[i].ti_postcmd, my_ini(inidata, sections[i], "postcmd"), BUFSIZ);
+		ti->ti_postcmd = malloc(BUFSIZ);
+		memset(ti->ti_postcmd, '\0', BUFSIZ);
+		strlcpy(ti->ti_postcmd, my_ini(inidata, sections[i], "postcmd"), BUFSIZ);
 
 		if(verbose == TRUE)
-			dump_thread_info(&tinfo[i]);
+			dump_thread_info(ti);
+
+		/* when pcrestr is required in INI file */
+
+		if(ti->ti_diskfree || ti->ti_inofree || ti->ti_expire)
+			if(IS_NULL(ti->ti_pcrestr) || ti->ti_pcrecmp == NULL) {
+				fprintf(stderr, "%s: missing or bad pcre\n", sections[i]);
+				exit(EXIT_FAILURE);
+			}
 	}
 
 	if(verbose == TRUE)
@@ -310,39 +315,39 @@ int main(int argc, char *argv[])
 	expmons = (pthread_t *) malloc(nsect * sizeof(*expmons));
 	slmmons = (pthread_t *) malloc(nsect * sizeof(*slmmons));
 
-	/* usleep for systemd journal */
-
 	for(i = 0; i < nsect; i++) {
 		/* worker (log ingestion) thread */
+		/* usleep for systemd journal */
 
-		if(tinfo[i].ti_argc) {
+		ti = &tinfo[i];							/* shorthand */
+
+		if(ti->ti_argc) {
 			usleep((useconds_t) 2000);
-			pthread_create(&workers[i], NULL, &workthread, (void *)&tinfo[i]);
+			pthread_create(&workers[i], NULL, &workthread, (void *)ti);
 			wrk_started = TRUE;
 		}
 
 		/* monitor logfile expiration, retention */
 
-		if(tinfo[i].ti_expire || tinfo[i].ti_retmin || tinfo[i].ti_retmax) {
+		if(ti->ti_expire || ti->ti_retmin || ti->ti_retmax) {
 			usleep((useconds_t) 2000);
-			pthread_create(&expmons[i], NULL, &expthread, (void *)&tinfo[i]);
+			pthread_create(&expmons[i], NULL, &expthread, (void *)ti);
 			exp_started = TRUE;
 		}
 
 		/* monitor filesystem free space */
 
-		if(tinfo[i].ti_diskfree || tinfo[i].ti_inofree) {
+		if(ti->ti_diskfree || ti->ti_inofree) {
 			usleep((useconds_t) 2000);
-			pthread_create(&dfsmons[i], NULL, &dfsthread, (void *)&tinfo[i]);
+			pthread_create(&dfsmons[i], NULL, &dfsthread, (void *)ti);
 			dfs_started = TRUE;
 		}
 
 		/* simple log monitor spec must meet several conditions */
 
-		if(tinfo[i].ti_argc == 0 && tinfo[i].ti_loglimit &&
-		   !(IS_NULL(tinfo[i].ti_template) && IS_NULL(tinfo[i].ti_pcrestr))) {
+		if(ti->ti_diskfree == 0 && ti->ti_inofree == 0 && ti->ti_expire == 0) {
 			usleep((useconds_t) 2000);
-			pthread_create(&slmmons[i], NULL, &slmthread, (void *)&tinfo[i]);
+			pthread_create(&slmmons[i], NULL, &slmthread, (void *)ti);
 			slm_started = TRUE;
 		}
 	}
@@ -400,7 +405,7 @@ static void dump_thread_info(struct thread_info *ti)
 	int     i;
 	int     n;
 
-	printf("name:     %s\n", ti->ti_section);
+	printf("section:  %s\n", ti->ti_section);
 	printf("command:  %s\n", ti->ti_command);
 	printf("argc:     %d\n", ti->ti_argc);
 	printf("path:     %s\n", ti->ti_path);

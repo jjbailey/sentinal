@@ -32,7 +32,7 @@ void   *slmthread(void *arg)
 	struct stat stbuf;
 	struct thread_info *ti = arg;
 
-	if(IS_NULL(ti->ti_template) || IS_NULL(ti->ti_pcrestr)) {
+	if(IS_NULL(ti->ti_template)) {
 		/* should not be here */
 		return ((void *)0);
 	}
@@ -43,8 +43,9 @@ void   *slmthread(void *arg)
 	fullpath(ti->ti_dirname, ti->ti_template, filename);
 	fprintf(stderr, "%s: monitor log: %s\n", ti->ti_section, filename);
 
-	fprintf(stderr, "%s: monitor log size: %ldMiB\n", ti->ti_section,
-			MiB(ti->ti_loglimit));
+	if(ti->ti_loglimit)
+		fprintf(stderr, "%s: monitor log size: %ldMiB\n", ti->ti_section,
+				MiB(ti->ti_loglimit));
 
 	ti->ti_sig = 0;								/* reset */
 

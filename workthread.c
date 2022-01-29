@@ -56,8 +56,10 @@ void   *workthread(void *arg)
 		return ((void *)0);
 
 	fprintf(stderr, "%s: command: %s\n", ti->ti_section, ti->ti_command);
-	fprintf(stderr, "%s: monitor log size: %ldMiB\n", ti->ti_section,
-			MiB(ti->ti_loglimit));
+
+	if(ti->ti_loglimit)
+		fprintf(stderr, "%s: monitor log size: %ldMiB\n", ti->ti_section,
+				MiB(ti->ti_loglimit));
 
 	for(;;) {
 		/* set up pipes */
@@ -122,7 +124,7 @@ void   *workthread(void *arg)
 				/* shouldn't happen */
 
 				fprintf(stderr, "%s: can't create %s\n", ti->ti_section, ti->ti_filename);
-				sleep(5);						/* be nice */
+				SLOWEXIT(EXIT_FAILURE);
 			} else {
 				/* new stdout -- close parent's and unused fds */
 
@@ -130,9 +132,8 @@ void   *workthread(void *arg)
 					close(i);
 
 				execv(ti->ti_path, zargv);
+				exit(EXIT_FAILURE);
 			}
-
-			exit(EXIT_FAILURE);
 
 		default:
 			/*
@@ -282,17 +283,17 @@ static int fifoopen(struct thread_info *ti)
 			waitpid(pid, &status, 0);
 	}
 
-	/* reenforce in case these were changed externally */
-
-	chown(ti->ti_pipename, ti->ti_uid, ti->ti_gid);
-	chmod(ti->ti_pipename, 0600);
-
 	if((fd = open(ti->ti_pipename, O_RDONLY)) == -1) {
 		/* systemctl restart can cause EINTR */
 
 		if(errno != EINTR)
 			fprintf(stderr, "%s: can't open %s: %s\n", ti->ti_section,
 					base(ti->ti_pipename), strerror(errno));
+	} else {
+		/* reenforce in case these were changed externally */
+
+		chown(ti->ti_pipename, ti->ti_uid, ti->ti_gid);
+		chmod(ti->ti_pipename, 0600);
 	}
 
 	return (fd);

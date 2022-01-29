@@ -47,7 +47,6 @@
 
 #define	FIFOSIZ		(64L * ONE_MiB)				/* tunable, just a guess */
 
-// #define  IS_NULL(s)  ((s) == NULL || *(s) == '\0')
 #define IS_NULL(s) !((s) && *(s))
 
 #define	_HOST_TOK	"%h"						/* hostname token */

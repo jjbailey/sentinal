@@ -80,7 +80,8 @@ To monitor console logs in /opt/sentinal/log for 20% free disk space, and to ret
 
 ### Inode Usage Example
 
-To monitor inode usage for 15% free and a maximum of 5M files where they are less than a week old:
+Remove appdata- files when inode free falls below 15%,
+or when the files are older than 7 days, or when there are more than 5M files:
 
     [global]
     pidfile  = /run/inode-usage.pid
@@ -95,7 +96,7 @@ To monitor inode usage for 15% free and a maximum of 5M files where they are les
 
 ### Simple Log Monitor
 
-sentinal can monitor logs and process them when they reach a specified size.  In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 5MiB in size:
+sentinal can monitor and process logs when they reach a specified size.  In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 5MiB in size:
 
     [global]
     pidfile  = /run/chattyapp.pid
@@ -104,7 +105,6 @@ sentinal can monitor logs and process them when they reach a specified size.  In
     dirname  = /var/log
     subdirs  = 1
     template = chattyapp.log
-    pcrestr  = chattyapp\.log\.
     uid      = root
     gid      = root
     loglimit = 5M
@@ -166,7 +166,7 @@ sentinal runs as a systemd service.  The following is an example of a unit file:
     [Install]
     WantedBy=multi-user.target
 
-Note: if an application never needs root privileges to run and process logs, consider using the application's user and group IDs in the unit file.  User=root is useful (and likely necessary) when a single sentinal instance monitors several different applications.
+Note: if an application never needs root privileges to run and process logs, consider using the application's user and group IDs in the unit file.  User=root is helpful (and likely necessary) when a single sentinal instance monitors several different applications.
 
 ## sentinal Status
 
@@ -242,9 +242,9 @@ Examples of on-demand log rotation:
 
 - In the on-the-fly compression example, zstd can be changed to a different program, e.g., gzip or (p)bzip2, though they are slower and may impact the performance of the writer application.
 
-- For inode management, sentinal counts the number of files and directories in `dirname`, not the number of inodes in the filesystem.
+- For inode management, sentinal counts inodes in `dirname`, not inodes in the filesystem.
 
-- sentinal reports free space for unprivileged users, which may be less than the privileged users' values reported by disk utility programs.
+- sentinal reports free space for unprivileged users, which may be less than privileged users' values reported by disk utility programs.
 
 - sentinal configuration without direct log handling (`command` and `pipename` are unset) does not start the worker thread, leaving the other threads to watch the logs and disk space as they would normally.
 
