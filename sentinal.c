@@ -400,8 +400,8 @@ static int parsecmd(char *cmd, char *argv[])
 
 static void dump_thread_info(struct thread_info *ti)
 {
-	char   *zargv[MAXARGS];
 	char    ebuf[BUFSIZ];
+	char   *zargv[MAXARGS];
 	int     i;
 	int     n;
 
