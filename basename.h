@@ -2,7 +2,7 @@
  * basename.h
  * replace basename(3) with inline code
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -16,6 +16,8 @@
 
 static inline char *base(char *s)
 {
+	/* assumes no trailing slash */
+
 	char   *p;
 
 	return ((p = strrchr(s, '/')) ? p + 1 : s);
