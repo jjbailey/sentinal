@@ -70,11 +70,12 @@ The `template` key can contain tokens similar to the date command:
           %S:  second
           %s:  seconds since epoch
 
-The `postcmd` key can contain the current directory, file, and hostname:
+The `postcmd` key can contain the current directory, file, hostname, and section:
 
           %h:  system hostname (nodename)
           %p:  current dirname (path)
           %n:  current filename
+          %s:  section name
 
 ## Threads
 

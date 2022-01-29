@@ -52,6 +52,7 @@
 #define	_HOST_TOK	"%h"						/* hostname token */
 #define	_DIR_TOK	"%p"						/* dirname (path) token */
 #define	_FILE_TOK	"%n"						/* filename token */
+#define	_SECT_TOK	"%s"						/* INI section token */
 
 struct thread_info {
 	char   *ti_section;							/* section name */

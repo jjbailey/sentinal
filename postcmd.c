@@ -56,6 +56,7 @@ int postcmd(struct thread_info *ti, char *filename)
 		strreplace(cmdbuf, _HOST_TOK, utsbuf.nodename);
 		strreplace(cmdbuf, _DIR_TOK, ti->ti_dirname);
 		strreplace(cmdbuf, _FILE_TOK, filename);
+		strreplace(cmdbuf, _SECT_TOK, ti->ti_section);
 		fprintf(stderr, "%s: %s\n", ti->ti_section, cmdbuf);
 
 #if 0
