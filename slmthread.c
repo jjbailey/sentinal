@@ -40,6 +40,8 @@ void   *slmthread(void *arg)
 	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, "slm", task));
 
+	/* for slm, ti->ti_template is the logname */
+
 	fullpath(ti->ti_dirname, ti->ti_template, filename);
 	fprintf(stderr, "%s: monitor log: %s\n", ti->ti_section, filename);
 
