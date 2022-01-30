@@ -10,6 +10,7 @@ all:		sentinal		\
 			sentinalpipe
 
 SENOBJS=	sentinal.o		\
+			convexpire.o	\
 			dfsthread.o		\
 			expthread.o		\
 			findmnt.o		\
