@@ -72,11 +72,21 @@ To monitor console logs in /opt/sentinal/log for 20% free disk space, and to ret
 
     [console]
     dirname  = /opt/sentinal/log
-    subdirs  = 0
     pcrestr  = console
     diskfree = 20
     retmin   = 3
     retmax   = 50
+
+This INI configuration removes gzipped files in /var/log and subdirectories after two weeks:
+
+    [global]
+    pidfile  = /run/varlog.pid
+
+    [zipped]
+    dirname  = /var/log
+    subdirs  = 1
+    pcrestr  = .*\.gz
+    expire   = 2w
 
 ### Inode Usage Example
 
@@ -96,7 +106,7 @@ or when the files are older than 7 days, or when there are more than 5M files:
 
 ### Simple Log Monitor
 
-sentinal can monitor and process logs when they reach a specified size.  In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 5MiB in size:
+sentinal can monitor and process logs when they reach a specified size.  In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 50MiB in size:
 
     [global]
     pidfile  = /run/chattyapp.pid
@@ -107,7 +117,7 @@ sentinal can monitor and process logs when they reach a specified size.  In this
     template = chattyapp.log
     uid      = root
     gid      = root
-    loglimit = 5M
+    loglimit = 50M
     postcmd  = /usr/sbin/logrotate -f /opt/sentinal/etc/chattyapp.conf
 
 ### Logfile Ingestion and Processing
