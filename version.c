@@ -15,7 +15,7 @@
 
 void version(char *prog)
 {
-	fprintf(stderr, "%s: version %s\n", base(prog), VERSION_STRING);
+	fprintf(stdout, "%s: version %s\n", base(prog), VERSION_STRING);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
