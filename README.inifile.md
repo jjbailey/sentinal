@@ -75,7 +75,7 @@ The `postcmd` key can contain the current directory, file, hostname, and section
           %h:  system hostname (nodename)
           %p:  current dirname (path)
           %n:  current filename
-          %s:  section name
+          %t:  section name
 
 ## Threads
 
