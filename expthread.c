@@ -32,13 +32,18 @@ void   *expthread(void *arg)
 	time_t  curtime;
 	time_t  oldtime;
 
-	pthread_detach(pthread_self());
-	pthread_setname_np(pthread_self(), threadname(ti->ti_section, "exp", task));
+	if(!ti->ti_pcrecmp) {
+		/* should not be here */
+		return ((void *)0);
+	}
 
 	if(ti->ti_expire == 0 && ti->ti_retmin == 0 && ti->ti_retmax == 0) {
 		/* should not be here */
 		return ((void *)0);
 	}
+
+	pthread_detach(pthread_self());
+	pthread_setname_np(pthread_self(), threadname(ti->ti_section, "exp", task));
 
 	if(ti->ti_expire)
 		fprintf(stderr, "%s: monitor log expiration: %s\n", ti->ti_section,

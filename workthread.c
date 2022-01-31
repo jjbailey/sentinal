@@ -49,11 +49,18 @@ void   *workthread(void *arg)
 	struct thread_info *ti = arg;
 	extern int errno;
 
+	if(ti->ti_argc == 0) {
+		/* should not be here */
+		return ((void *)0);
+	}
+
+	if(IS_NULL(ti->ti_pipename)) {
+		/* should not be here */
+		return ((void *)0);
+	}
+
 	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, "wrk", task));
-
-	if(ti->ti_argc == 0)						/* should not be here */
-		return ((void *)0);
 
 	fprintf(stderr, "%s: command: %s\n", ti->ti_section, ti->ti_command);
 

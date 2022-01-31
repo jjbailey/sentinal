@@ -41,6 +41,11 @@ void   *dfsthread(void *arg)
 	time_t  curtime;
 	time_t  oldtime;
 
+	if(!ti->ti_pcrecmp) {
+		/* should not be here */
+		return ((void *)0);
+	}
+
 	if(ti->ti_diskfree == 0 && ti->ti_inofree == 0) {
 		/* should not be here */
 		return ((void *)0);
