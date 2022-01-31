@@ -250,17 +250,16 @@ int main(int argc, char *argv[])
 		}
 
 		if(ti->ti_argc && IS_NULL(ti->ti_pipename)) {
-			fprintf(stderr, "%s: command needs a pipe defined\n", sections[i]);
+			fprintf(stderr, "%s: command requires a pipe\n", sections[i]);
 			exit(EXIT_FAILURE);
 		}
 
 		ti->ti_template = strdup(base(my_ini(inidata, sections[i], "template")));
 
-		if(IS_NULL(ti->ti_template))
-			if(!IS_NULL(ti->ti_command)) {
-				fprintf(stderr, "%s: command requires a template\n", sections[i]);
-				exit(EXIT_FAILURE);
-			}
+		if(ti->ti_argc && IS_NULL(ti->ti_template)) {
+			fprintf(stderr, "%s: command requires a template\n", sections[i]);
+			exit(EXIT_FAILURE);
+		}
 
 		ti->ti_pcrestr = my_ini(inidata, sections[i], "pcrestr");
 		ti->ti_pcrecmp = pcrecheck(ti->ti_pcrestr, ti->ti_pcrecmp);
@@ -268,7 +267,7 @@ int main(int argc, char *argv[])
 		ti->ti_filename = malloc(PATH_MAX);
 		memset(ti->ti_filename, '\0', PATH_MAX);
 
-		ti->ti_pid = (pid_t) 0;
+		ti->ti_pid = (pid_t) 0;					/* only workers use this */
 		ti->ti_uid = verifyuid(my_ini(inidata, sections[i], "uid"));
 		ti->ti_gid = verifygid(my_ini(inidata, sections[i], "gid"));
 		ti->ti_wfd = 0;							/* only workers use this */
@@ -293,6 +292,15 @@ int main(int argc, char *argv[])
 				fprintf(stderr, "%s: missing or bad pcre\n", sections[i]);
 				exit(EXIT_FAILURE);
 			}
+
+		/* undefined behavior if retmin is greater than retmax */
+
+		if(ti->ti_retmin > ti->ti_retmax) {
+			if(verbose == TRUE)
+				fprintf(stderr, "%s: retmin is greater than retmax\n", sections[i]);
+
+			ti->ti_retmax = ti->ti_retmin;
+		}
 	}
 
 	if(verbose == TRUE)
