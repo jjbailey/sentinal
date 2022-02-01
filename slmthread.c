@@ -37,6 +37,11 @@ void   *slmthread(void *arg)
 		return ((void *)0);
 	}
 
+	if(ti->ti_expire || ti->ti_retmin || ti->ti_retmax) {
+		/* should not be here */
+		return ((void *)0);
+	}
+
 	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, "slm", task));
 

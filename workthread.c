@@ -54,7 +54,7 @@ void   *workthread(void *arg)
 		return ((void *)0);
 	}
 
-	if(IS_NULL(ti->ti_pipename)) {
+	if(IS_NULL(ti->ti_pipename) || IS_NULL(ti->ti_template)) {
 		/* should not be here */
 		return ((void *)0);
 	}
