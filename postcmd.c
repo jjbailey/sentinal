@@ -37,8 +37,10 @@ int postcmd(struct thread_info *ti, char *filename)
 	pid_t   pid;
 	struct passwd *p;
 
-	if(IS_NULL(ti->ti_postcmd))					/* should not be here */
+	if(IS_NULL(ti->ti_postcmd)) {
+		/* should not be here */
 		return (0);
+	}
 
 	switch (pid = fork()) {
 
@@ -71,14 +73,13 @@ int postcmd(struct thread_info *ti, char *filename)
 		for(i = 3; i < MAXFILES; i++)
 			close(i);
 
-		nice(1);
-
 		home = (p = getpwuid(ti->ti_uid)) ? p->pw_dir : "/tmp";
 		snprintf(envhome, BUFSIZ, "HOME=%s", home);
 		snprintf(envpath, BUFSIZ, "PATH=%s", PATH);
 		snprintf(envshell, BUFSIZ, "SHELL=%s", BASH);
 
 		umask(umask(0) | 022);					/* don't set less restrictive */
+		nice(1);
 
 		execl(ENV, "-S", "-",
 			  envhome, envpath, envshell,
