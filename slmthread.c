@@ -32,7 +32,7 @@ void   *slmthread(void *arg)
 	struct stat stbuf;
 	struct thread_info *ti = arg;
 
-	if(IS_NULL(ti->ti_template)) {
+	if(IS_NULL(ti->ti_template) || IS_NULL(ti->ti_postcmd)) {
 		/* should not be here */
 		return ((void *)0);
 	}

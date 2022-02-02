@@ -306,11 +306,17 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		if(ti->ti_diskfree == 0 && ti->ti_inofree == 0 && ti->ti_expire == 0)
+		if(ti->ti_diskfree == 0 && ti->ti_inofree == 0 && ti->ti_expire == 0) {
 			if(IS_NULL(ti->ti_template)) {
 				fprintf(stderr, "%s: slm requires a template\n", sections[i]);
 				exit(EXIT_FAILURE);
 			}
+
+			if(IS_NULL(ti->ti_postcmd)) {
+				fprintf(stderr, "%s: slm requires a postcmd\n", sections[i]);
+				exit(EXIT_FAILURE);
+			}
+		}
 	}
 
 	if(verbose == TRUE)
