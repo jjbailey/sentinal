@@ -28,6 +28,9 @@ extern struct utsname utsbuf;
 int postcmd(struct thread_info *ti, char *filename)
 {
 	char    cmdbuf[BUFSIZ];
+	char    envhome[BUFSIZ];
+	char    envpath[BUFSIZ];
+	char    envshell[BUFSIZ];
 	char   *home;
 	int     i;
 	int     status;
@@ -71,13 +74,16 @@ int postcmd(struct thread_info *ti, char *filename)
 		nice(1);
 
 		home = (p = getpwuid(ti->ti_uid)) ? p->pw_dir : "/tmp";
-		setenv("HOME", home, TRUE);
-		setenv("PATH", PATH, TRUE);
-		setenv("SHELL", BASH, TRUE);
+		snprintf(envhome, BUFSIZ, "HOME=%s", home);
+		snprintf(envpath, BUFSIZ, "PATH=%s", PATH);
+		snprintf(envshell, BUFSIZ, "SHELL=%s", BASH);
 
 		umask(umask(0) | 022);					/* don't set less restrictive */
 
-		execl(ENV, "-iS", BASH, "--noprofile", "-l", "-c", cmdbuf, (char *)NULL);
+		execl(ENV, "-S", "-",
+			  envhome, envpath, envshell,
+			  BASH, "--noprofile", "--norc", "-c", cmdbuf, (char *)NULL);
+
 		exit(EXIT_FAILURE);
 
 	default:
