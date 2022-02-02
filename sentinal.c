@@ -298,7 +298,7 @@ int main(int argc, char *argv[])
 				exit(EXIT_FAILURE);
 			}
 
-			if(ti->ti_retmin > ti->ti_retmax) {
+			if(ti->ti_retmax && ti->ti_retmin > ti->ti_retmax) {
 				if(verbose == TRUE)
 					fprintf(stderr, "%s: retmin is greater than retmax\n", sections[i]);
 
