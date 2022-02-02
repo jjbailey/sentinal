@@ -106,14 +106,17 @@ or when the files are older than 7 days, or when there are more than 5M files:
 
 ### Simple Log Monitor
 
-sentinal can monitor and process logs when they reach a specified size.  In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 50MiB in size:
+sentinal can monitor and process logs when they reach a specified size.
+A sentinal section for SLM must have diskfree, inofree, and expire all set to zero (off),
+and template and postcmd must be set.
+
+In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 50MiB in size:
 
     [global]
     pidfile  = /run/chattyapp.pid
 
     [chattyapp]
     dirname  = /var/log
-    subdirs  = 1
     template = chattyapp.log
     uid      = root
     gid      = root
