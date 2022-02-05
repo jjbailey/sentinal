@@ -26,7 +26,7 @@ An INI file must contain a section called `global` for the pidfile definition, a
     dirname:  thread and postcmd working directory, logfile location
     subdirs:  option to search subdirectories for matching files
     pipename: named pipe/fifo fifo location
-    template: output file name, date(1) sequences %Y %m %d %H %M %S %s
+    template: output file name, date(1) sequences %F %Y %m %d %H %M %S %s
     pcrestr:  perl-compatible regex naming files to manage
     uid:      username or uid for command/postcmd; default = nobody
     gid:      groupname or gid for command/postcmd; default = nogroup
@@ -72,11 +72,21 @@ To monitor console logs in /opt/sentinal/log for 20% free disk space, and to ret
 
     [console]
     dirname  = /opt/sentinal/log
-    subdirs  = 0
     pcrestr  = console
     diskfree = 20
     retmin   = 3
     retmax   = 50
+
+This INI configuration removes gzipped files in /var/log and subdirectories after two weeks:
+
+    [global]
+    pidfile  = /run/varlog.pid
+
+    [zipped]
+    dirname  = /var/log
+    subdirs  = 1
+    pcrestr  = .*\.gz
+    expire   = 2w
 
 ### Inode Usage Example
 
@@ -96,18 +106,21 @@ or when the files are older than 7 days, or when there are more than 5M files:
 
 ### Simple Log Monitor
 
-sentinal can monitor and process logs when they reach a specified size.  In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 5MiB in size:
+sentinal can monitor and process logs when they reach a specified size.
+A sentinal section for SLM must have diskfree, inofree, and expire all set to zero (off),
+and template and postcmd must be set.
+
+In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 50MiB in size:
 
     [global]
     pidfile  = /run/chattyapp.pid
 
     [chattyapp]
     dirname  = /var/log
-    subdirs  = 1
     template = chattyapp.log
     uid      = root
     gid      = root
-    loglimit = 5M
+    loglimit = 50M
     postcmd  = /usr/sbin/logrotate -f /opt/sentinal/etc/chattyapp.conf
 
 ### Logfile Ingestion and Processing

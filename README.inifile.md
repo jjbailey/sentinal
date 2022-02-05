@@ -20,7 +20,7 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
     pipename: named pipe/fifo fifo location
               absolute or relative path, required when command is defined
 
-    template: output file name, date(1) sequences %Y %m %d %H %M %S %s
+    template: output file name, date(1) sequences %F %Y %m %d %H %M %S %s
               relative to dirname, required when command is set
 
     pcrestr:  perl-compatible regex naming files to manage
@@ -61,6 +61,7 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
 
 The `template` key can contain tokens similar to the date command:
 
+          %F:  %Y-%m-%d
           %Y:  year
           %m:  month
           %d:  day
@@ -69,11 +70,12 @@ The `template` key can contain tokens similar to the date command:
           %S:  second
           %s:  seconds since epoch
 
-The `postcmd` key can contain the current directory, file, and hostname:
+The `postcmd` key can contain the current directory, file, hostname, and section:
 
           %h:  system hostname (nodename)
           %p:  current dirname (path)
           %n:  current filename
+          %t:  section name
 
 ## Threads
 

@@ -11,11 +11,11 @@
 #include <stdio.h>
 #include "basename.h"
 
-#define	VERSION_STRING	"1.2.2"
+#define	VERSION_STRING	"1.2.3"
 
 void version(char *prog)
 {
-	fprintf(stderr, "%s: version %s\n", base(prog), VERSION_STRING);
+	fprintf(stdout, "%s: version %s\n", base(prog), VERSION_STRING);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

@@ -1,8 +1,8 @@
 /*
  * mylogfile.c
- * Return TRUE if this is a file we're watching for.
+ * Return TRUE if this is a file we're watching.
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -15,17 +15,14 @@
 
 #define	OVECSIZE	32
 
-int mylogfile(char *fname, pcre * pcrecmp)
+int mylogfile(char *f, pcre *p)
 {
 	int     ovec[OVECSIZE];
 
-	if(IS_NULL(fname) || *fname == '.')			/* null or begins with . */
+	if(IS_NULL(f) || *f == '.')					/* null or begins with . */
 		return (FALSE);
 
-	if(pcre_exec(pcrecmp, NULL, fname, strlen(fname), 0, 0, ovec, OVECSIZE) >= 0)
-		return (TRUE);
-
-	return (FALSE);
+	return (pcre_exec(p, NULL, f, strlen(f), 0, 0, ovec, OVECSIZE) >= 0);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

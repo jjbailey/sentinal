@@ -38,6 +38,7 @@
 #include "ini.h"
 
 static int create_pid_file(char *);
+static int emptyconfig(struct thread_info *);
 static int parsecmd(char *, char **);
 static void dump_thread_info(struct thread_info *);
 static void help(char *);
@@ -249,26 +250,12 @@ int main(int argc, char *argv[])
 			ti->ti_pipename = strdup(tbuf);
 		}
 
-		if(ti->ti_argc && IS_NULL(ti->ti_pipename)) {
-			fprintf(stderr, "%s: command needs a pipe defined\n", sections[i]);
-			exit(EXIT_FAILURE);
-		}
-
 		ti->ti_template = strdup(base(my_ini(inidata, sections[i], "template")));
-
-		if(IS_NULL(ti->ti_template))
-			if(!IS_NULL(ti->ti_command)) {
-				fprintf(stderr, "%s: command requires a template\n", sections[i]);
-				exit(EXIT_FAILURE);
-			}
-
 		ti->ti_pcrestr = my_ini(inidata, sections[i], "pcrestr");
 		ti->ti_pcrecmp = pcrecheck(ti->ti_pcrestr, ti->ti_pcrecmp);
-
 		ti->ti_filename = malloc(PATH_MAX);
 		memset(ti->ti_filename, '\0', PATH_MAX);
-
-		ti->ti_pid = (pid_t) 0;
+		ti->ti_pid = (pid_t) 0;					/* only workers use this */
 		ti->ti_uid = verifyuid(my_ini(inidata, sections[i], "uid"));
 		ti->ti_gid = verifygid(my_ini(inidata, sections[i], "gid"));
 		ti->ti_wfd = 0;							/* only workers use this */
@@ -278,7 +265,6 @@ int main(int argc, char *argv[])
 		ti->ti_expire = logretention(my_ini(inidata, sections[i], "expire"));
 		ti->ti_retmin = logsize(my_ini(inidata, sections[i], "retmin"));
 		ti->ti_retmax = logsize(my_ini(inidata, sections[i], "retmax"));
-
 		ti->ti_postcmd = malloc(BUFSIZ);
 		memset(ti->ti_postcmd, '\0', BUFSIZ);
 		strlcpy(ti->ti_postcmd, my_ini(inidata, sections[i], "postcmd"), BUFSIZ);
@@ -286,13 +272,51 @@ int main(int argc, char *argv[])
 		if(verbose == TRUE)
 			dump_thread_info(ti);
 
-		/* when pcrestr is required in INI file */
+		/* INI option combo checks */
 
-		if(ti->ti_diskfree || ti->ti_inofree || ti->ti_expire)
-			if(IS_NULL(ti->ti_pcrestr) || ti->ti_pcrecmp == NULL) {
+		if(emptyconfig(ti)) {
+			fprintf(stderr, "%s: nothing to do\n", sections[i]);
+			exit(EXIT_FAILURE);
+		}
+
+		if(ti->ti_argc) {
+			if(IS_NULL(ti->ti_pipename)) {
+				fprintf(stderr, "%s: command requires a pipe\n", sections[i]);
+				exit(EXIT_FAILURE);
+			}
+
+			if(IS_NULL(ti->ti_template)) {
+				fprintf(stderr, "%s: command requires a template\n", sections[i]);
+				exit(EXIT_FAILURE);
+			}
+		}
+
+		if(ti->ti_diskfree || ti->ti_inofree ||
+		   ti->ti_expire || ti->ti_retmin || ti->ti_retmax) {
+			if(!ti->ti_pcrecmp) {
 				fprintf(stderr, "%s: missing or bad pcre\n", sections[i]);
 				exit(EXIT_FAILURE);
 			}
+
+			if(ti->ti_retmax && ti->ti_retmin > ti->ti_retmax) {
+				if(verbose == TRUE)
+					fprintf(stderr, "%s: retmin is greater than retmax\n", sections[i]);
+
+				ti->ti_retmax = ti->ti_retmin;
+			}
+		}
+
+		if(ti->ti_diskfree == 0 && ti->ti_inofree == 0 && ti->ti_expire == 0) {
+			if(IS_NULL(ti->ti_template)) {
+				fprintf(stderr, "%s: slm requires a template\n", sections[i]);
+				exit(EXIT_FAILURE);
+			}
+
+			if(IS_NULL(ti->ti_postcmd)) {
+				fprintf(stderr, "%s: slm requires a postcmd\n", sections[i]);
+				exit(EXIT_FAILURE);
+			}
+		}
 	}
 
 	if(verbose == TRUE)
@@ -321,7 +345,7 @@ int main(int argc, char *argv[])
 
 		ti = &tinfo[i];							/* shorthand */
 
-		if(ti->ti_argc) {
+		if(ti->ti_argc && !IS_NULL(ti->ti_pipename)) {
 			usleep((useconds_t) 2000);
 			pthread_create(&workers[i], NULL, &workthread, (void *)ti);
 			wrk_started = TRUE;
@@ -400,8 +424,8 @@ static int parsecmd(char *cmd, char *argv[])
 
 static void dump_thread_info(struct thread_info *ti)
 {
-	char   *zargv[MAXARGS];
 	char    ebuf[BUFSIZ];
+	char   *zargv[MAXARGS];
 	int     i;
 	int     n;
 
@@ -444,6 +468,7 @@ static void dump_thread_info(struct thread_info *ti)
 	strreplace(ti->ti_postcmd, _HOST_TOK, utsbuf.nodename);
 	strreplace(ti->ti_postcmd, _DIR_TOK, ti->ti_dirname);
 	strreplace(ti->ti_postcmd, _FILE_TOK, ti->ti_filename);
+	strreplace(ti->ti_postcmd, _SECT_TOK, ti->ti_section);
 	printf("postcmd:  %s\n\n", ti->ti_postcmd);
 }
 
@@ -472,6 +497,21 @@ static int create_pid_file(char *pidfile)
 	}
 
 	return (FALSE);
+}
+
+static int emptyconfig(struct thread_info *ti)
+{
+	/* 
+	 * is there anything to do
+	 * note: config might be rejected during parsing
+	 */
+
+	if(ti->ti_argc ||
+	   ti->ti_diskfree || ti->ti_inofree ||
+	   ti->ti_expire || ti->ti_retmin || ti->ti_retmax)
+		return (FALSE);
+
+	return (TRUE);
 }
 
 static void help(char *prog)

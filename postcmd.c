@@ -28,14 +28,19 @@ extern struct utsname utsbuf;
 int postcmd(struct thread_info *ti, char *filename)
 {
 	char    cmdbuf[BUFSIZ];
+	char    envhome[BUFSIZ];
+	char    envpath[BUFSIZ];
+	char    envshell[BUFSIZ];
 	char   *home;
 	int     i;
 	int     status;
 	pid_t   pid;
 	struct passwd *p;
 
-	if(IS_NULL(ti->ti_postcmd))					/* should not be here */
+	if(IS_NULL(ti->ti_postcmd)) {
+		/* should not be here */
 		return (0);
+	}
 
 	switch (pid = fork()) {
 
@@ -56,6 +61,7 @@ int postcmd(struct thread_info *ti, char *filename)
 		strreplace(cmdbuf, _HOST_TOK, utsbuf.nodename);
 		strreplace(cmdbuf, _DIR_TOK, ti->ti_dirname);
 		strreplace(cmdbuf, _FILE_TOK, filename);
+		strreplace(cmdbuf, _SECT_TOK, ti->ti_section);
 		fprintf(stderr, "%s: %s\n", ti->ti_section, cmdbuf);
 
 #if 0
@@ -67,16 +73,18 @@ int postcmd(struct thread_info *ti, char *filename)
 		for(i = 3; i < MAXFILES; i++)
 			close(i);
 
-		nice(1);
-
 		home = (p = getpwuid(ti->ti_uid)) ? p->pw_dir : "/tmp";
-		setenv("HOME", home, TRUE);
-		setenv("PATH", PATH, TRUE);
-		setenv("SHELL", BASH, TRUE);
+		snprintf(envhome, BUFSIZ, "HOME=%s", home);
+		snprintf(envpath, BUFSIZ, "PATH=%s", PATH);
+		snprintf(envshell, BUFSIZ, "SHELL=%s", BASH);
 
 		umask(umask(0) | 022);					/* don't set less restrictive */
+		nice(1);
 
-		execl(ENV, "-iS", BASH, "--noprofile", "-l", "-c", cmdbuf, (char *)NULL);
+		execl(ENV, "-S", "-",
+			  envhome, envpath, envshell,
+			  BASH, "--noprofile", "--norc", "-c", cmdbuf, (char *)NULL);
+
 		exit(EXIT_FAILURE);
 
 	default:

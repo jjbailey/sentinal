@@ -2,7 +2,7 @@
  * pcrecheck.c
  * Check and compile a regex for later use.
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include "sentinal.h"
 
-pcre   *pcrecheck(char *pcrestr, pcre * pcrecmp)
+pcre   *pcrecheck(char *pcrestr, pcre *pcrecmp)
 {
 	const char *errptr;
 	int     erroffset;

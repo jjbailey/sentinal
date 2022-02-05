@@ -1,8 +1,8 @@
 /*
  * fullpath.c
- * return the full path of a file
+ * Return the full path of a file.
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -14,7 +14,7 @@
 
 char   *fullpath(char *dir, char *file, char *path)
 {
-	if(*dir && *file) {
+	if(!IS_NULL(dir) && !IS_NULL(file)) {
 		if(*file == '/')
 			strlcpy(path, file, PATH_MAX);
 		else

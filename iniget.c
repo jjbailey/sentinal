@@ -1,8 +1,9 @@
 /*
  * iniget.c
- * functions to read INI files
+ * Functions to read INI files.
+ * Wrapper for rxi ini_get() along with a couple of utility functions.
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found

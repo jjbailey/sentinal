@@ -32,13 +32,20 @@ void   *slmthread(void *arg)
 	struct stat stbuf;
 	struct thread_info *ti = arg;
 
-	if(IS_NULL(ti->ti_template)) {
+	if(IS_NULL(ti->ti_template) || IS_NULL(ti->ti_postcmd)) {
+		/* should not be here */
+		return ((void *)0);
+	}
+
+	if(ti->ti_expire || ti->ti_retmin || ti->ti_retmax) {
 		/* should not be here */
 		return ((void *)0);
 	}
 
 	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, "slm", task));
+
+	/* for slm, ti->ti_template is the logname */
 
 	fullpath(ti->ti_dirname, ti->ti_template, filename);
 	fprintf(stderr, "%s: monitor log: %s\n", ti->ti_section, filename);

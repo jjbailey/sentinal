@@ -1,6 +1,6 @@
 /*
  * dfsthread.c
- * filesystem monitor thread
+ * Filesystem monitor thread.
  *
  * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
@@ -40,6 +40,11 @@ void   *dfsthread(void *arg)
 	struct thread_info *ti = arg;
 	time_t  curtime;
 	time_t  oldtime;
+
+	if(!ti->ti_pcrecmp) {
+		/* should not be here */
+		return ((void *)0);
+	}
 
 	if(ti->ti_diskfree == 0 && ti->ti_inofree == 0) {
 		/* should not be here */
@@ -93,6 +98,11 @@ void   *dfsthread(void *arg)
 			fprintf(stderr, "%s: %s: %.2Lf%% inodes free\n",
 					ti->ti_section, ti->ti_dirname, pc_ffree);
 		}
+	}
+
+	if(ti->ti_diskfree == 0 && ti->ti_inofree == 0) {
+		/* nothing to do here */
+		return ((void *)0);
 	}
 
 	for(;;) {

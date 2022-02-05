@@ -60,21 +60,4 @@ int logretention(char *str)
 	return (n * ONE_DAY);
 }
 
-char   *convexpire(int expire, char *str)
-{
-	if(expire >= ONE_YEAR)
-		snprintf(str, BUFSIZ, "%dM", (int)(expire / ONE_MONTH));
-	else if(expire >= ONE_MONTH)
-		snprintf(str, BUFSIZ, "%dD", (int)(expire / ONE_DAY));
-	else if(expire >= ONE_WEEK)
-		snprintf(str, BUFSIZ, "%dD", (int)(expire / ONE_DAY));
-	else if(expire >= ONE_DAY)
-		snprintf(str, BUFSIZ, "%dH", (int)(expire / ONE_HOUR));
-	else
-		/* >= ONE_HOUR */
-		snprintf(str, BUFSIZ, "%dm", (int)(expire / ONE_MINUTE));
-
-	return (str);
-}
-
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
