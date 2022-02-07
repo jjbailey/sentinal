@@ -32,12 +32,8 @@ void   *slmthread(void *arg)
 	struct stat stbuf;
 	struct thread_info *ti = arg;
 
-	if(IS_NULL(ti->ti_template) || IS_NULL(ti->ti_postcmd)) {
-		/* should not be here */
-		return ((void *)0);
-	}
-
-	if(ti->ti_expire || ti->ti_retmin || ti->ti_retmax) {
+	if((IS_NULL(ti->ti_template) || IS_NULL(ti->ti_postcmd)) ||
+	   (ti->ti_expire || ti->ti_retmin || ti->ti_retmax)) {
 		/* should not be here */
 		return ((void *)0);
 	}

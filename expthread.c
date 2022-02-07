@@ -32,12 +32,8 @@ void   *expthread(void *arg)
 	time_t  curtime;
 	time_t  oldtime;
 
-	if(!ti->ti_pcrecmp) {
-		/* should not be here */
-		return ((void *)0);
-	}
-
-	if(ti->ti_expire == 0 && ti->ti_retmin == 0 && ti->ti_retmax == 0) {
+	if(!ti->ti_pcrecmp ||
+	   (ti->ti_expire == 0 && ti->ti_retmin == 0 && ti->ti_retmax == 0)) {
 		/* should not be here */
 		return ((void *)0);
 	}
