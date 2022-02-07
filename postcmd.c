@@ -54,8 +54,10 @@ int postcmd(struct thread_info *ti, char *filename)
 			setuid(ti->ti_uid);
 		}
 
-		if(chdir(ti->ti_dirname) == -1)
+		if(chdir(ti->ti_dirname) == -1) {
+			fprintf(stderr, "%s: can't cd to %s\n", ti->ti_section, ti->ti_dirname);
 			exit(EXIT_FAILURE);
+		}
 
 		strlcpy(cmdbuf, ti->ti_postcmd, BUFSIZ);
 		strreplace(cmdbuf, _HOST_TOK, utsbuf.nodename);
