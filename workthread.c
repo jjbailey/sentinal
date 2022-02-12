@@ -49,12 +49,7 @@ void   *workthread(void *arg)
 	struct thread_info *ti = arg;
 	extern int errno;
 
-	if(ti->ti_argc == 0) {
-		/* should not be here */
-		return ((void *)0);
-	}
-
-	if(IS_NULL(ti->ti_pipename) || IS_NULL(ti->ti_template)) {
+	if(ti->ti_argc == 0 || (IS_NULL(ti->ti_pipename) || IS_NULL(ti->ti_template))) {
 		/* should not be here */
 		return ((void *)0);
 	}
