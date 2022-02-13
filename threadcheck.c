@@ -25,7 +25,8 @@ int threadcheck(struct thread_info *ti, char *tname)
 			(ti->ti_expire == 0 && ti->ti_retmin == 0 && ti->ti_retmax == 0);
 
 	else if(strcmp(tname, "slm") == 0)			/* simple log monitor */
-		fail = IS_NULL(ti->ti_template) || IS_NULL(ti->ti_postcmd) ||
+		fail = !IS_NULL(ti->ti_command) ||
+			IS_NULL(ti->ti_template) || IS_NULL(ti->ti_postcmd) ||
 			ti->ti_loglimit == (off_t) 0;
 
 	else if(strcmp(tname, "wrk") == 0)			/* worker (log ingestion) thread */
