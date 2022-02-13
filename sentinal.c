@@ -317,6 +317,9 @@ int main(int argc, char *argv[])
 				exit(EXIT_FAILURE);
 			}
 		}
+
+		if(verbose == TRUE)
+			activethreads(ti);
 	}
 
 	if(verbose == TRUE)
@@ -340,36 +343,29 @@ int main(int argc, char *argv[])
 	slmmons = (pthread_t *) malloc(nsect * sizeof(*slmmons));
 
 	for(i = 0; i < nsect; i++) {
-		/* worker (log ingestion) thread */
 		/* usleep for systemd journal */
 
 		ti = &tinfo[i];							/* shorthand */
 
-		if(ti->ti_argc && !IS_NULL(ti->ti_pipename)) {
+		if(threadcheck(ti, "wrk")) {			/* worker (log ingestion) thread */
 			usleep((useconds_t) 2000);
 			pthread_create(&workers[i], NULL, &workthread, (void *)ti);
 			wrk_started = TRUE;
 		}
 
-		/* monitor logfile expiration, retention */
-
-		if(ti->ti_expire || ti->ti_retmin || ti->ti_retmax) {
+		if(threadcheck(ti, "exp")) {			/* logfile expiration, retention */
 			usleep((useconds_t) 2000);
 			pthread_create(&expmons[i], NULL, &expthread, (void *)ti);
 			exp_started = TRUE;
 		}
 
-		/* monitor filesystem free space */
-
-		if(ti->ti_diskfree || ti->ti_inofree) {
+		if(threadcheck(ti, "dfs")) {			/* filesystem free space */
 			usleep((useconds_t) 2000);
 			pthread_create(&dfsmons[i], NULL, &dfsthread, (void *)ti);
 			dfs_started = TRUE;
 		}
 
-		/* simple log monitor spec must meet several conditions */
-
-		if(ti->ti_diskfree == 0 && ti->ti_inofree == 0 && ti->ti_expire == 0) {
+		if(threadcheck(ti, "slm")) {			/* simple log monitor */
 			usleep((useconds_t) 2000);
 			pthread_create(&slmmons[i], NULL, &slmthread, (void *)ti);
 			slm_started = TRUE;
@@ -429,6 +425,7 @@ static void dump_thread_info(struct thread_info *ti)
 	int     i;
 	int     n;
 
+	printf("\n");
 	printf("section:  %s\n", ti->ti_section);
 	printf("command:  %s\n", ti->ti_command);
 	printf("argc:     %d\n", ti->ti_argc);
@@ -469,7 +466,7 @@ static void dump_thread_info(struct thread_info *ti)
 	strreplace(ti->ti_postcmd, _DIR_TOK, ti->ti_dirname);
 	strreplace(ti->ti_postcmd, _FILE_TOK, ti->ti_filename);
 	strreplace(ti->ti_postcmd, _SECT_TOK, ti->ti_section);
-	printf("postcmd:  %s\n\n", ti->ti_postcmd);
+	printf("postcmd:  %s\n", ti->ti_postcmd);
 }
 
 static int create_pid_file(char *pidfile)
@@ -507,6 +504,7 @@ static int emptyconfig(struct thread_info *ti)
 	 */
 
 	if(ti->ti_argc ||
+	   ti->ti_loglimit ||
 	   ti->ti_diskfree || ti->ti_inofree ||
 	   ti->ti_expire || ti->ti_retmin || ti->ti_retmax)
 		return (FALSE);
