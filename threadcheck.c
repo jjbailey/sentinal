@@ -19,17 +19,17 @@ int threadcheck(struct thread_info *ti, char *tname)
 {
 	short   pass = FALSE;
 
-	if(strcmp(tname, "dfs") == 0)				/* filesystem free space */
+	if(strcmp(tname, _DFS_THR) == 0)			/* filesystem free space */
 		pass = ti->ti_pcrecmp && (ti->ti_diskfree || ti->ti_inofree);
 
-	else if(strcmp(tname, "exp") == 0)			/* logfile expiration, retention */
+	else if(strcmp(tname, _EXP_THR) == 0)		/* logfile expiration, retention */
 		pass = ti->ti_pcrecmp && (ti->ti_expire || ti->ti_retmin || ti->ti_retmax);
 
-	else if(strcmp(tname, "slm") == 0)			/* simple log monitor */
+	else if(strcmp(tname, _SLM_THR) == 0)		/* simple log monitor */
 		pass = IS_NULL(ti->ti_command) &&
 			ti->ti_template && ti->ti_postcmd && ti->ti_loglimit;
 
-	else if(strcmp(tname, "wrk") == 0)			/* worker (log ingestion) thread */
+	else if(strcmp(tname, _WRK_THR) == 0)		/* worker (log ingestion) thread */
 		pass = ti->ti_argc && ti->ti_pipename && ti->ti_template;
 
 	return (pass);
@@ -38,8 +38,8 @@ int threadcheck(struct thread_info *ti, char *tname)
 void activethreads(struct thread_info *ti)
 {
 	fprintf(stderr, "threads:  free: %s  expire: %s  slm: %s  worker: %s\n",
-			THRCHECK(ti, "dfs"), THRCHECK(ti, "exp"),
-			THRCHECK(ti, "slm"), THRCHECK(ti, "wrk"));
+			THRCHECK(ti, _DFS_THR), THRCHECK(ti, _EXP_THR),
+			THRCHECK(ti, _SLM_THR), THRCHECK(ti, _WRK_THR));
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

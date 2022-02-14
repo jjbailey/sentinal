@@ -48,11 +48,11 @@ void   *workthread(void *arg)
 	struct thread_info *ti = arg;
 	extern int errno;
 
-	if(threadcheck(ti, "wrk") == FALSE)			/* should not be here */
+	if(threadcheck(ti, _WRK_THR) == FALSE)		/* should not be here */
 		return ((void *)0);
 
 	pthread_detach(pthread_self());
-	pthread_setname_np(pthread_self(), threadname(ti->ti_section, "wrk", task));
+	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _WRK_THR, task));
 
 	fprintf(stderr, "%s: command: %s\n", ti->ti_section, ti->ti_command);
 

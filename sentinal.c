@@ -347,25 +347,25 @@ int main(int argc, char *argv[])
 
 		ti = &tinfo[i];							/* shorthand */
 
-		if(threadcheck(ti, "wrk")) {			/* worker (log ingestion) thread */
+		if(threadcheck(ti, _WRK_THR)) {			/* worker (log ingestion) thread */
 			usleep((useconds_t) 2000);
 			pthread_create(&workers[i], NULL, &workthread, (void *)ti);
 			wrk_started = TRUE;
 		}
 
-		if(threadcheck(ti, "exp")) {			/* logfile expiration, retention */
+		if(threadcheck(ti, _EXP_THR)) {			/* logfile expiration, retention */
 			usleep((useconds_t) 2000);
 			pthread_create(&expmons[i], NULL, &expthread, (void *)ti);
 			exp_started = TRUE;
 		}
 
-		if(threadcheck(ti, "dfs")) {			/* filesystem free space */
+		if(threadcheck(ti, _DFS_THR)) {			/* filesystem free space */
 			usleep((useconds_t) 2000);
 			pthread_create(&dfsmons[i], NULL, &dfsthread, (void *)ti);
 			dfs_started = TRUE;
 		}
 
-		if(threadcheck(ti, "slm")) {			/* simple log monitor */
+		if(threadcheck(ti, _SLM_THR)) {			/* simple log monitor */
 			usleep((useconds_t) 2000);
 			pthread_create(&slmmons[i], NULL, &slmthread, (void *)ti);
 			slm_started = TRUE;
