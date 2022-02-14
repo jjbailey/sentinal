@@ -13,38 +13,33 @@
 #include <string.h>
 #include "sentinal.h"
 
+#define	THRCHECK(ti,n)	threadcheck(ti, n) ? "true" : "false"
+
 int threadcheck(struct thread_info *ti, char *tname)
 {
-	short   fail = TRUE;
+	short   pass = FALSE;
 
 	if(strcmp(tname, "dfs") == 0)				/* filesystem free space */
-		fail = !ti->ti_pcrecmp || (ti->ti_diskfree == 0 && ti->ti_inofree == 0);
+		pass = ti->ti_pcrecmp && (ti->ti_diskfree || ti->ti_inofree);
 
 	else if(strcmp(tname, "exp") == 0)			/* logfile expiration, retention */
-		fail = !ti->ti_pcrecmp ||
-			(ti->ti_expire == 0 && ti->ti_retmin == 0 && ti->ti_retmax == 0);
+		pass = ti->ti_pcrecmp && (ti->ti_expire || ti->ti_retmin || ti->ti_retmax);
 
 	else if(strcmp(tname, "slm") == 0)			/* simple log monitor */
-		fail = !IS_NULL(ti->ti_command) ||
-			IS_NULL(ti->ti_template) || IS_NULL(ti->ti_postcmd) ||
-			ti->ti_loglimit == (off_t) 0;
+		pass = IS_NULL(ti->ti_command) &&
+			ti->ti_template && ti->ti_postcmd && ti->ti_loglimit;
 
 	else if(strcmp(tname, "wrk") == 0)			/* worker (log ingestion) thread */
-		fail = ti->ti_argc == 0 || IS_NULL(ti->ti_pipename) || IS_NULL(ti->ti_template);
+		pass = ti->ti_argc && ti->ti_pipename && ti->ti_template;
 
-	/* return true if thread should run, false if not */
-
-	return (fail == TRUE ? FALSE : TRUE);
+	return (pass);
 }
 
 void activethreads(struct thread_info *ti)
 {
-	char   *f = "false";
-	char   *t = "true";
-
 	fprintf(stderr, "threads:  free: %s  expire: %s  slm: %s  worker: %s\n",
-			threadcheck(ti, "dfs") ? t : f, threadcheck(ti, "exp") ? t : f,
-			threadcheck(ti, "slm") ? t : f, threadcheck(ti, "wrk") ? t : f);
+			THRCHECK(ti, "dfs"), THRCHECK(ti, "exp"),
+			THRCHECK(ti, "slm"), THRCHECK(ti, "wrk"));
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
