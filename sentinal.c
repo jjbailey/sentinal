@@ -220,8 +220,7 @@ int main(int argc, char *argv[])
 
 		ti->ti_subdirs = my_ini(inidata, sections[i], "subdirs");
 
-		if(strcasecmp(ti->ti_subdirs, "1") == 0 ||
-		   strcasecmp(ti->ti_subdirs, "true") == 0)
+		if(strcmp(ti->ti_subdirs, "1") == 0 || strcasecmp(ti->ti_subdirs, "true") == 0)
 			ti->ti_subdirs = strdup("1");
 		else
 			ti->ti_subdirs = strdup("0");
