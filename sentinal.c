@@ -135,11 +135,11 @@ int main(int argc, char *argv[])
 
 #if 0
 	if(debug == TRUE || verbose == TRUE) {
-		printf("sysname:  %s\n", utsbuf.sysname);
-		printf("nodename: %s\n", utsbuf.nodename);
-		printf("release:  %s\n", utsbuf.release);
-		printf("version:  %s\n", utsbuf.version);
-		printf("\n");
+		fprintf(stderr, "sysname:  %s\n", utsbuf.sysname);
+		fprintf(stderr, "nodename: %s\n", utsbuf.nodename);
+		fprintf(stderr, "release:  %s\n", utsbuf.release);
+		fprintf(stderr, "version:  %s\n", utsbuf.version);
+		fprintf(stderr, "\n");
 	}
 #endif
 
@@ -425,48 +425,48 @@ static void dump_thread_info(struct thread_info *ti)
 	int     i;
 	int     n;
 
-	printf("\n");
-	printf("section:  %s\n", ti->ti_section);
-	printf("command:  %s\n", ti->ti_command);
-	printf("argc:     %d\n", ti->ti_argc);
-	printf("path:     %s\n", ti->ti_path);
+	fprintf(stderr, "\n");
+	fprintf(stderr, "section:  %s\n", ti->ti_section);
+	fprintf(stderr, "command:  %s\n", ti->ti_command);
+	fprintf(stderr, "argc:     %d\n", ti->ti_argc);
+	fprintf(stderr, "path:     %s\n", ti->ti_path);
 
-	printf("argv:     ");
+	fprintf(stderr, "argv:     ");
 	for(i = 1; i < ti->ti_argc; i++)
-		printf("%s ", ti->ti_argv[i]);
-	printf("\n");
+		fprintf(stderr, "%s ", ti->ti_argv[i]);
+	fprintf(stderr, "\n");
 
-	printf("dirname:  %s\n", ti->ti_dirname);
-	printf("subdirs:  %s\n", ti->ti_subdirs);
-	printf("pipename: %s\n", ti->ti_pipename);
-	printf("template: %s\n", ti->ti_template);
-	printf("pcrestr:  %s\n", ti->ti_pcrestr);
-	printf("uid:      %d\n", ti->ti_uid);
-	printf("gid:      %d\n", ti->ti_gid);
-	printf("loglimit: %ldMiB\n", MiB(ti->ti_loglimit));
-	printf("diskfree: %.2Lf\n", ti->ti_diskfree);
-	printf("inofree:  %.2Lf\n", ti->ti_inofree);
-	printf("expire:   %s\n", convexpire(ti->ti_expire, ebuf));
-	printf("retmin:   %d\n", ti->ti_retmin);
-	printf("retmax:   %d\n", ti->ti_retmax);
+	fprintf(stderr, "dirname:  %s\n", ti->ti_dirname);
+	fprintf(stderr, "subdirs:  %s\n", ti->ti_subdirs);
+	fprintf(stderr, "pipename: %s\n", ti->ti_pipename);
+	fprintf(stderr, "template: %s\n", ti->ti_template);
+	fprintf(stderr, "pcrestr:  %s\n", ti->ti_pcrestr);
+	fprintf(stderr, "uid:      %d\n", ti->ti_uid);
+	fprintf(stderr, "gid:      %d\n", ti->ti_gid);
+	fprintf(stderr, "loglimit: %ldMiB\n", MiB(ti->ti_loglimit));
+	fprintf(stderr, "diskfree: %.2Lf\n", ti->ti_diskfree);
+	fprintf(stderr, "inofree:  %.2Lf\n", ti->ti_inofree);
+	fprintf(stderr, "expire:   %s\n", convexpire(ti->ti_expire, ebuf));
+	fprintf(stderr, "retmin:   %d\n", ti->ti_retmin);
+	fprintf(stderr, "retmax:   %d\n", ti->ti_retmax);
 
 	logname(ti->ti_template, ti->ti_filename);
 
 	if(ti->ti_argc) {
 		n = runcmd(ti->ti_argc, ti->ti_argv, zargv);
 
-		printf("execcmd:  ");
+		fprintf(stderr, "execcmd:  ");
 		for(i = 0; i < n; i++)
-			printf("%s ", zargv[i]);
-		printf("> %s\n", ti->ti_filename);		/* show redirect */
+			fprintf(stderr, "%s ", zargv[i]);
+		fprintf(stderr, "> %s\n", ti->ti_filename);	/* show redirect */
 	} else
-		printf("execcmd:  \n");
+		fprintf(stderr, "execcmd:  \n");
 
 	strreplace(ti->ti_postcmd, _HOST_TOK, utsbuf.nodename);
 	strreplace(ti->ti_postcmd, _DIR_TOK, ti->ti_dirname);
 	strreplace(ti->ti_postcmd, _FILE_TOK, ti->ti_filename);
 	strreplace(ti->ti_postcmd, _SECT_TOK, ti->ti_section);
-	printf("postcmd:  %s\n", ti->ti_postcmd);
+	fprintf(stderr, "postcmd:  %s\n", ti->ti_postcmd);
 }
 
 static int create_pid_file(char *pidfile)
