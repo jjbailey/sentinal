@@ -38,7 +38,6 @@ static int strcmpci(char *a, char *b)
 		a++, b++;
 	}
 }
-
 #endif
 
 #define	strcmpci	strcasecmp					/* jjb */
