@@ -123,6 +123,21 @@ In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 5
     loglimit = 50M
     postcmd  = /usr/sbin/logrotate -f /opt/sentinal/etc/chattyapp.conf
 
+This example is the same as above, adding a 20% diskfree check:
+
+    [global]
+    pidfile  = /run/chattyapp.pid
+        
+    [chattyapp]
+    dirname  = /var/log
+    template = chattyapp.log
+    pcrestr  = chattyapp\.
+    uid      = root
+    gid      = root
+    loglimit = 50M
+    diskfree = 20
+    postcmd  = /usr/sbin/logrotate -f /opt/sentinal/etc/chattyapp.conf
+
 ### Logfile Ingestion and Processing
 
 sentinal can ingest and process logs, rotate them on demand or when they reach a specified size, and optionally post-process logs after rotation.  For logfile processing, replace the application's logfile with a FIFO, and set sentinal to read from it.

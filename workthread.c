@@ -1,6 +1,5 @@
 /*
  * workthread.c
- * Create FIFO if it does not exist.
  * Execute command, read input from a FIFO, write output to a logfile.
  *
  * Copyright (c) 2021, 2022 jjb
@@ -49,13 +48,11 @@ void   *workthread(void *arg)
 	struct thread_info *ti = arg;
 	extern int errno;
 
-	if(ti->ti_argc == 0 || (IS_NULL(ti->ti_pipename) || IS_NULL(ti->ti_template))) {
-		/* should not be here */
+	if(threadcheck(ti, _WRK_THR) == FALSE)		/* should not be here */
 		return ((void *)0);
-	}
 
 	pthread_detach(pthread_self());
-	pthread_setname_np(pthread_self(), threadname(ti->ti_section, "wrk", task));
+	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _WRK_THR, task));
 
 	fprintf(stderr, "%s: command: %s\n", ti->ti_section, ti->ti_command);
 

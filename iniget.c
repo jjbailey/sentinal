@@ -63,7 +63,7 @@ void print_section(ini_t * inidata, char *section)
 	/* dumps an INI section */
 	/* debugging only */
 
-	printf("[%s]\n", section);
+	printf("\n[%s]\n", section);
 	printf("command  = %s\n", my_ini(inidata, section, "command"));
 	printf("dirname  = %s\n", my_ini(inidata, section, "dirname"));
 	printf("subdirs  = %s\n", my_ini(inidata, section, "subdirs"));
@@ -79,7 +79,6 @@ void print_section(ini_t * inidata, char *section)
 	printf("retmin   = %s\n", my_ini(inidata, section, "retmin"));
 	printf("retmax   = %s\n", my_ini(inidata, section, "retmax"));
 	printf("postcmd  = %s\n", my_ini(inidata, section, "postcmd"));
-	printf("\n");
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

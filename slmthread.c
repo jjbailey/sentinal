@@ -1,6 +1,6 @@
 /*
  * slmthread.c
- * simple log monitor thread
+ * Simple log monitor thread.
  *
  * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
@@ -32,14 +32,11 @@ void   *slmthread(void *arg)
 	struct stat stbuf;
 	struct thread_info *ti = arg;
 
-	if((IS_NULL(ti->ti_template) || IS_NULL(ti->ti_postcmd)) ||
-	   (ti->ti_expire || ti->ti_retmin || ti->ti_retmax)) {
-		/* should not be here */
+	if(threadcheck(ti, _SLM_THR) == FALSE)		/* should not be here */
 		return ((void *)0);
-	}
 
 	pthread_detach(pthread_self());
-	pthread_setname_np(pthread_self(), threadname(ti->ti_section, "slm", task));
+	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _SLM_THR, task));
 
 	/* for slm, ti->ti_template is the logname */
 

@@ -31,6 +31,7 @@ SENOBJS=	sentinal.o		\
 			strlcat.o		\
 			strlcpy.o		\
 			strreplace.o	\
+			threadcheck.o	\
 			threadname.o	\
 			verifyids.o		\
 			version.o		\

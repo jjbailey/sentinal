@@ -54,6 +54,11 @@
 #define	_FILE_TOK	"%n"						/* filename token */
 #define	_SECT_TOK	"%t"						/* INI section token */
 
+#define	_DFS_THR	"dfs"						/* filesystem free space */
+#define	_EXP_THR	"exp"						/* logfile expiration, retention */
+#define	_SLM_THR	"slm"						/* simple log monitor */
+#define	_WRK_THR	"wrk"						/* worker (log ingestion) thread */
+
 struct thread_info {
 	char   *ti_section;							/* section name */
 	char   *ti_command;							/* thread command */
@@ -92,11 +97,13 @@ int     mylogfile(char *, pcre *);
 int     oldestfile(struct thread_info *, int, char *, char *, time_t *);
 int     postcmd(struct thread_info *, char *);
 int     runcmd(int, char **, char **);
+int     threadcheck(struct thread_info *, char *);
 off_t   logsize(char *);
 pcre   *pcrecheck(char *, pcre *);
 size_t  strlcat(char *, const char *, size_t);
 size_t  strlcpy(char *, const char *, size_t);
 uid_t   verifyuid(char *);
+void    activethreads(struct thread_info *);
 void    parent_signals(void);
 void    rlimit(int);
 void    strreplace(char *, char *, char *);
