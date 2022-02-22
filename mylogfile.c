@@ -15,7 +15,7 @@
 
 #define	OVECSIZE	32
 
-int mylogfile(char *f, pcre *p)
+short mylogfile(char *f, pcre * p)
 {
 	int     ovec[OVECSIZE];
 

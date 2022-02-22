@@ -31,11 +31,11 @@ void   *dfsthread(void *arg)
 	char    task[TASK_COMM_LEN];
 	int     fc;
 	int     interval = SCANRATE;
-	int     rptlowres = TRUE;
-	int     rptstatus = FALSE;
-	int     skip = FALSE;
 	long double pc_bfree = 0.0;
 	long double pc_ffree = 0.0;
+	short   rptlowres = TRUE;
+	short   rptstatus = FALSE;
+	short   skip = FALSE;
 	struct statvfs svbuf;
 	struct thread_info *ti = arg;
 	time_t  curtime;
@@ -101,7 +101,7 @@ void   *dfsthread(void *arg)
 	for(;;) {
 		sleep(interval);						/* filesystem monitor rate */
 
-		if(skip == FALSE) {
+		if(!skip) {
 			/* performance: halve the statvfs and math work */
 
 			if(statvfs(mountdir, &svbuf) == -1) {
@@ -121,7 +121,7 @@ void   *dfsthread(void *arg)
 		if(pc_bfree >= ti->ti_diskfree && pc_ffree >= ti->ti_inofree) {
 			/* desired state */
 
-			if(rptstatus == TRUE) {
+			if(rptstatus) {
 				if(ti->ti_diskfree)
 					fprintf(stderr, "%s: %s: %.2Lf%% blocks free\n",
 							ti->ti_section, ti->ti_dirname, pc_bfree);
@@ -130,8 +130,8 @@ void   *dfsthread(void *arg)
 					fprintf(stderr, "%s: %s: %.2Lf%% inodes free\n",
 							ti->ti_section, ti->ti_dirname, pc_ffree);
 
-				rptstatus = FALSE;				/* quiet */
-				rptlowres = TRUE;				/* reset alert */
+				rptstatus = FALSE;				/* mute status alert */
+				rptlowres = TRUE;				/* reset lowres alert */
 			}
 
 			if(interval != SCANRATE)
@@ -141,7 +141,7 @@ void   *dfsthread(void *arg)
 		} else {
 			/* low resources */
 
-			if(rptlowres == TRUE) {
+			if(rptlowres) {
 				if(ti->ti_diskfree && pc_bfree < ti->ti_diskfree)
 					fprintf(stderr, "%s: low free blocks %s: %.2Lf%% < %.2Lf%%\n",
 							ti->ti_section, ti->ti_dirname, pc_bfree, ti->ti_diskfree);
@@ -150,7 +150,7 @@ void   *dfsthread(void *arg)
 					fprintf(stderr, "%s: low free inodes %s: %.2Lf%% < %.2Lf%%\n",
 							ti->ti_section, ti->ti_dirname, pc_ffree, ti->ti_inofree);
 
-				rptlowres = FALSE;				/* quiet */
+				rptlowres = FALSE;				/* mute lowres alert */
 			}
 
 			interval = 0;						/* 1 sec is too slow for inodes */
@@ -163,8 +163,11 @@ void   *dfsthread(void *arg)
 		fc = oldestfile(ti, TRUE, ti->ti_dirname, oldfile, &oldtime);
 
 		if(!fc || (ti->ti_retmin && fc <= ti->ti_retmin)) {
-			/* desired state */
-			interval = SCANRATE;				/* return to normal */
+			/* no work */
+
+			if(interval != SCANRATE)
+				interval = SCANRATE;			/* return to normal */
+
 			continue;
 		}
 
@@ -175,9 +178,10 @@ void   *dfsthread(void *arg)
 
 		fprintf(stderr, "%s: remove %s\n", ti->ti_section, base(oldfile));
 		remove(oldfile);
-		rptstatus = TRUE;
+		rptstatus = TRUE;						/* enable status alert */
 	}
 
+	/* notreached */
 	return ((void *)0);
 }
 

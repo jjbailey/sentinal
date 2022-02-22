@@ -37,9 +37,9 @@
 #include "basename.h"
 #include "ini.h"
 
-static int create_pid_file(char *);
-static int emptyconfig(struct thread_info *);
 static int parsecmd(char *, char **);
+static short create_pid_file(char *);
+static short emptyconfig(struct thread_info *);
 static void dump_thread_info(struct thread_info *);
 static void help(char *);
 
@@ -66,7 +66,6 @@ int main(int argc, char *argv[])
 	char   *pidfile;
 	char   *sections[MAXSECT];
 	ini_t  *inidata;
-	int     debug = FALSE;
 	int     i;
 	int     nsect;
 	int     opt;
@@ -74,10 +73,11 @@ int main(int argc, char *argv[])
 	pthread_t *expmons;
 	pthread_t *slmmons;
 	pthread_t *workers;
-	short   verbose = FALSE;
+	short   debug = FALSE;
 	short   dfs_started = FALSE;
 	short   exp_started = FALSE;
 	short   slm_started = FALSE;
+	short   verbose = FALSE;
 	short   wrk_started = FALSE;
 	struct thread_info *ti;
 
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
 	uname(&utsbuf);								/* for debug/token expansion */
 
 #if 0
-	if(debug == TRUE || verbose == TRUE) {
+	if(debug || verbose) {
 		fprintf(stderr, "sysname:  %s\n", utsbuf.sysname);
 		fprintf(stderr, "nodename: %s\n", utsbuf.nodename);
 		fprintf(stderr, "release:  %s\n", utsbuf.release);
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 	}
 #endif
 
-	if(debug == TRUE) {
+	if(debug) {
 		for(i = 0; i < nsect; i++)
 			print_section(inidata, sections[i]);
 
@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
 		memset(ti->ti_postcmd, '\0', BUFSIZ);
 		strlcpy(ti->ti_postcmd, my_ini(inidata, sections[i], "postcmd"), BUFSIZ);
 
-		if(verbose == TRUE)
+		if(verbose)
 			dump_thread_info(ti);
 
 		/* INI option combo checks */
@@ -298,7 +298,7 @@ int main(int argc, char *argv[])
 			}
 
 			if(ti->ti_retmax && ti->ti_retmin > ti->ti_retmax) {
-				if(verbose == TRUE)
+				if(verbose)
 					fprintf(stderr, "%s: retmin is greater than retmax\n", sections[i]);
 
 				ti->ti_retmax = ti->ti_retmin;
@@ -317,11 +317,11 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		if(verbose == TRUE)
+		if(verbose)
 			activethreads(ti);
 	}
 
-	if(verbose == TRUE)
+	if(verbose)
 		exit(EXIT_SUCCESS);
 
 	/* for systemd */
@@ -468,7 +468,7 @@ static void dump_thread_info(struct thread_info *ti)
 	fprintf(stderr, "postcmd:  %s\n", ti->ti_postcmd);
 }
 
-static int create_pid_file(char *pidfile)
+static short create_pid_file(char *pidfile)
 {
 	FILE   *fp;
 
@@ -495,7 +495,7 @@ static int create_pid_file(char *pidfile)
 	return (FALSE);
 }
 
-static int emptyconfig(struct thread_info *ti)
+static short emptyconfig(struct thread_info *ti)
 {
 	/* 
 	 * is there anything to do
