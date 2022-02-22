@@ -2,7 +2,7 @@
  * runcmd.c
  * Create a command in zargv[] for execv().
  *
- * Copyright (c) 2021 jjb
+ * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -18,6 +18,7 @@ static char *compprogs[] = {
 	"gzip",
 	"pbzip2",
 	"pigz",
+	"pzstd",
 	"zstd"
 };
 
