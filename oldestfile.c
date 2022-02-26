@@ -17,7 +17,7 @@
 #include <string.h>
 #include "sentinal.h"
 
-int oldestfile(struct thread_info *ti, int top, char *dir, char *oldfile,
+int oldestfile(struct thread_info *ti, short top, char *dir, char *oldfile,
 			   time_t * oldtime)
 {
 	DIR    *dirp;
@@ -65,7 +65,7 @@ int oldestfile(struct thread_info *ti, int top, char *dir, char *oldfile,
 
 	closedir(dirp);
 
-	if(entries == 0 && top == FALSE)			/* directory is empty */
+	if(entries == 0 && !top)					/* directory is empty */
 		remove(dir);
 
 	return (fc);

@@ -16,8 +16,8 @@
 # include <pcre.h>
 #endif
 
-#define	TRUE		1
-#define	FALSE		0
+#define	TRUE		(short)1
+#define	FALSE		(short)0
 #define	MAXARGS		32
 #define	MAXSECT		16							/* arbitrary, can be more */
 
@@ -93,13 +93,13 @@ char   *logname(char *, char *);
 char   *threadname(char *, char *, char *);
 gid_t   verifygid(char *);
 int     logretention(char *);
-int     mylogfile(char *, pcre *);
-int     oldestfile(struct thread_info *, int, char *, char *, time_t *);
+int     oldestfile(struct thread_info *, short, char *, char *, time_t *);
 int     postcmd(struct thread_info *, char *);
 int     runcmd(int, char **, char **);
 int     threadcheck(struct thread_info *, char *);
 off_t   logsize(char *);
 pcre   *pcrecheck(char *, pcre *);
+short   mylogfile(char *, pcre *);
 size_t  strlcat(char *, const char *, size_t);
 size_t  strlcpy(char *, const char *, size_t);
 uid_t   verifyuid(char *);

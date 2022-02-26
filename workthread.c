@@ -241,9 +241,9 @@ static void fifosize(struct thread_info *ti, int size)
 static int fifoopen(struct thread_info *ti)
 {
 	int     fd;
-	int     pflag = FALSE;
 	int     status;
 	pid_t   pid;
+	short   pflag = FALSE;
 	struct stat stbuf;
 
 	/* create a FIFO. note: this permits symlinks to FIFOs */
@@ -258,7 +258,7 @@ static int fifoopen(struct thread_info *ti)
 	} else
 		pflag = TRUE;
 
-	if(pflag == TRUE) {							/* need a FIFO */
+	if(pflag) {									/* need a FIFO */
 		/* fork to set ids */
 
 		if((pid = fork()) == 0) {

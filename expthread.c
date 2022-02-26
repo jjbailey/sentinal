@@ -60,9 +60,14 @@ void   *expthread(void *arg)
 		/* full path to oldest file, its time, and the number of files found */
 		fc = oldestfile(ti, TRUE, ti->ti_dirname, oldfile, &oldtime);
 
-#if 0
-		fprintf(stderr, "%s: filecount = %d\n", ti->ti_section, fc);
-#endif
+		if(!fc) {
+			/* no work */
+
+			if(interval != SCANRATE)
+				interval = SCANRATE;			/* return to normal */
+
+			continue;
+		}
 
 		if(time(&curtime) - oldtime < ONE_MINUTE) {
 			/* wait for another thread to remove a file older than this one */

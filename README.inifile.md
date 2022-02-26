@@ -9,27 +9,27 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
 ## Log Section Keys
 
     command:  command line to run
-              absolute path, optional, working directory is dirname
+              absolute path, optional, working directory is `dirname`
 
-    dirname:  thread and postcmd working directory, logfile location
+    dirname:  thread and `postcmd` working directory, logfile location
               absolute path, required
 
     subdirs:  option to search subdirectories, 1/true, 0/false
               default 0/false
 
     pipename: named pipe/fifo fifo location
-              absolute or relative path, required when command is defined
+              absolute or relative path, required when `command` is defined
 
     template: output file name, date(1) sequences %F %Y %m %d %H %M %S %s
-              relative to dirname, required when command is set
+              relative to dirname, required when `command` is defined
 
     pcrestr:  perl-compatible regex naming files to manage
-              valid perl-compatible regex, required
+              valid perl-compatible regex, required for dfs and exp threads
 
-    uid:      worker thread username or uid, username root ok, uid 0 not ok
+    uid:      worker and `postcmd` username or uid, username root ok, uid 0 not ok
               default nobody
 
-    gid:      worker thread groupname or gid, groupname root ok, gid 0 not ok
+    gid:      worker and `postcmd` groupname or gid, groupname root ok, gid 0 not ok
               default nogroup
 
     loglimit: rotate size, M = MiB, G = GiB; 0 = no rotate (off)
@@ -52,7 +52,7 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
               default off
 
     postcmd:  command to run after the log closes or rotates, %n = filename
-              string passed to bash -c, optional, working directory is dirname
+              string passed to bash -c, optional, working directory is `dirname`
               used when `command` is defined (log ingestion) or `template` is defined (slm)
               unused when `command` and `template` are not defined
               default none
