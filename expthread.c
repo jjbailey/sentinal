@@ -32,8 +32,11 @@ void   *expthread(void *arg)
 	time_t  curtime;
 	time_t  oldtime;
 
-	if(threadcheck(ti, _EXP_THR) == FALSE)		/* should not be here */
-		return ((void *)0);
+	/*
+	 * this thread requires:
+	 *  - ti_pcrecmp
+	 *  - ti_expire or ti_retmin or ti_retmax
+	 */
 
 	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _EXP_THR, task));

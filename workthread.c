@@ -48,8 +48,12 @@ void   *workthread(void *arg)
 	struct thread_info *ti = arg;
 	extern int errno;
 
-	if(threadcheck(ti, _WRK_THR) == FALSE)		/* should not be here */
-		return ((void *)0);
+	/*
+	 * this thread requires:
+	 *  - ti_command
+	 *  - ti_pipename
+	 *  - ti_template
+	 */
 
 	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _WRK_THR, task));
