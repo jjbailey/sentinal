@@ -127,7 +127,7 @@ This example is the same as above, adding a 20% diskfree check for logs processe
 
     [global]
     pidfile  = /run/chattyapp.pid
-        
+
     [chattyapp]
     dirname  = /var/log
     template = chattyapp.log
