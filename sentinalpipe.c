@@ -38,6 +38,8 @@ static void systemd_signals(void);
 char   *my_ini(ini_t *, char *, char *);
 int     get_sections(ini_t *, int, char **);
 
+void    version(char *, FILE *);
+
 int main(int argc, char *argv[])
 {
 	char    filename[PATH_MAX];
@@ -61,7 +63,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'V':								/* print version */
-			version(argv[0]);
+			version(argv[0], stdout);
 			exit(EXIT_SUCCESS);
 
 		case '?':								/* print usage */

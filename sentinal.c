@@ -57,6 +57,8 @@ char   *my_ini(ini_t *, char *, char *);
 int     get_sections(ini_t *, int, char **);
 void    print_section(ini_t *, char *);
 
+void    version(char *, FILE *);
+
 int main(int argc, char *argv[])
 {
 	DIR    *dirp;
@@ -101,7 +103,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'V':								/* print version */
-			version(argv[0]);
+			version(argv[0], stdout);
 			exit(EXIT_SUCCESS);
 
 		case '?':								/* print usage */
@@ -341,6 +343,9 @@ int main(int argc, char *argv[])
 	expmons = (pthread_t *) malloc(nsect * sizeof(*expmons));
 	slmmons = (pthread_t *) malloc(nsect * sizeof(*slmmons));
 
+	/* version banner */
+	version(argv[0], stderr);
+
 	for(i = 0; i < nsect; i++) {
 		/* usleep for systemd journal */
 
@@ -497,7 +502,7 @@ static short create_pid_file(char *pidfile)
 
 static short emptyconfig(struct thread_info *ti)
 {
-	/* 
+	/*
 	 * is there anything to do
 	 * note: config might be rejected during parsing
 	 */

@@ -13,9 +13,9 @@
 
 #define	VERSION_STRING	"1.2.7"
 
-void version(char *prog)
+void version(char *prog, FILE *fp)
 {
-	fprintf(stdout, "%s: version %s\n", base(prog), VERSION_STRING);
+	fprintf(fp, "%s: version %s\n", base(prog), VERSION_STRING);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
