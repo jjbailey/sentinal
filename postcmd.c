@@ -30,7 +30,9 @@ int postcmd(struct thread_info *ti, char *filename)
 	char    cmdbuf[BUFSIZ];
 	char    envhome[BUFSIZ];
 	char    envpath[BUFSIZ];
+	char    envpcre[BUFSIZ];
 	char    envshell[BUFSIZ];
+	char    envtmpl[BUFSIZ];
 	char   *home;
 	int     i;
 	int     status;
@@ -77,14 +79,19 @@ int postcmd(struct thread_info *ti, char *filename)
 
 		home = (p = getpwuid(ti->ti_uid)) ? p->pw_dir : "/tmp";
 		snprintf(envhome, BUFSIZ, "HOME=%s", home);
+
 		snprintf(envpath, BUFSIZ, "PATH=%s", PATH);
 		snprintf(envshell, BUFSIZ, "SHELL=%s", BASH);
+
+		snprintf(envtmpl, BUFSIZ, "TEMPLATE=%s", ti->ti_template);
+		snprintf(envpcre, BUFSIZ, "PCRESTR=%s", ti->ti_pcrestr);
 
 		umask(umask(0) | 022);					/* don't set less restrictive */
 		nice(1);
 
 		execl(ENV, "-S", "-",
 			  envhome, envpath, envshell,
+			  envtmpl, envpcre,
 			  BASH, "--noprofile", "--norc", "-c", cmdbuf, (char *)NULL);
 
 		exit(EXIT_FAILURE);

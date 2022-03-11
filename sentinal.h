@@ -107,7 +107,6 @@ void    activethreads(struct thread_info *);
 void    parent_signals(void);
 void    rlimit(int);
 void    strreplace(char *, char *, char *);
-void    version(char *);
 void   *dfsthread(void *);
 void   *expthread(void *);
 void   *slmthread(void *);

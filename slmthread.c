@@ -32,8 +32,13 @@ void   *slmthread(void *arg)
 	struct stat stbuf;
 	struct thread_info *ti = arg;
 
-	if(threadcheck(ti, _SLM_THR) == FALSE)		/* should not be here */
-		return ((void *)0);
+	/*
+	 * this thread requires:
+	 *  - ti_command unset
+	 *  - ti_template
+	 *  - ti_postcmd
+	 *  - ti_loglimit
+	 */
 
 	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _SLM_THR, task));

@@ -89,3 +89,52 @@ Thread names are assigned `<sectionname>_<taskname>`.  Task names and purposes:
 
 Example: file expire thread name for the section called `console`: `console_exp`
 
+## Debugging INI Files
+
+sentinal accepts two flags for debugging.
+`-d` prints INI files as parsed.
+`-v` prints INI files as interpreted, and prints the threads that will run.
+
+    $ /opt/sentinal/bin/sentinal -f /opt/sentinal/tests/test4.ini -d
+
+    [test4]
+    command  = /usr/bin/zstd -1 -T4
+    dirname  = /opt/sentinal/tests
+    subdirs  = 1
+    pipename = test4.fifo
+    template = test4-%Y-%m-%d_%H-%M-%S.log.zst
+    pcrestr  = test4-
+    uid      = sentinal
+    gid      = sentinal
+    loglimit = 1G
+    diskfree = 85
+    inofree  =
+    expire   =
+    retmin   = 3
+    retmax   = 25
+    postcmd  = dir=%p/$(date +%d/%H/%M) ; mkdir -p $dir ; mv %n $dir
+
+    $ /opt/sentinal/bin/sentinal -f /opt/sentinal/tests/test4.ini -v
+
+    section:  test4
+    command:  /usr/bin/zstd -1 -T4
+    argc:     3
+    path:     /usr/bin/zstd
+    argv:     -1 -T4
+    dirname:  /opt/sentinal/tests
+    subdirs:  1
+    pipename: /opt/sentinal/tests/test4.fifo
+    template: test4-%Y-%m-%d_%H-%M-%S.log.zst
+    pcrestr:  test4-
+    uid:      1324
+    gid:      1324
+    loglimit: 1024MiB
+    diskfree: 85.00
+    inofree:  0.00
+    expire:   0m
+    retmin:   3
+    retmax:   25
+    execcmd:  zstd -f -1 -T4 > test4-2021-12-06_10-59-06.log.zst
+    postcmd:  dir=/opt/sentinal/tests/$(date +%d/%H/%M) ; mkdir -p $dir ; mv test4-2021-12-06_10-59-06.log.zst $dir
+    threads:  dfs: true  exp: true  slm: false  wrk: true
+

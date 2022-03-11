@@ -41,8 +41,11 @@ void   *dfsthread(void *arg)
 	time_t  curtime;
 	time_t  oldtime;
 
-	if(threadcheck(ti, _DFS_THR) == FALSE)		/* should not be here */
-		return ((void *)0);
+	/*
+	 * this thread requires:
+	 *  - ti_pcrecmp
+	 *  - ti_diskfree or ti_inofree
+	 */
 
 	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _DFS_THR, task));
