@@ -57,35 +57,46 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
               unused when `command` and `template` are not defined
               default none
 
+The keys `template` and `pcrestr` are available as postcmd environment variables.
+
 ## Token Expansions
 
 The `template` key can contain tokens similar to the date command:
 
-          %F:  %Y-%m-%d
-          %Y:  year
-          %m:  month
-          %d:  day
-          %H:  hour
-          %M:  minute
-          %S:  second
-          %s:  seconds since epoch
+    %F:  %Y-%m-%d
+    %Y:  year
+    %m:  month
+    %d:  day
+    %H:  hour
+    %M:  minute
+    %S:  second
+    %s:  seconds since epoch
 
 The `postcmd` key can contain the current directory, file, hostname, and section:
 
-          %h:  system hostname (nodename)
-          %p:  current dirname (path)
-          %n:  current filename
-          %t:  section name
+    (version 1.3.0+)
+
+    %host:  system hostname (nodename)
+    %path:  current dirname (path)
+    %file:  current filename
+    %sect:  section name
+
+    (pre-version 1.3.0, deprecated)
+
+    %h:  system hostname (nodename)
+    %p:  current dirname (path)
+    %n:  current filename
+    %t:  section name
 
 ## Threads
 
 Thread names have a kernel-imposed length limit of 16 characters (15 + nul).
 Thread names are assigned `<sectionname>_<taskname>`.  Task names and purposes:
 
-          wrk:  worker thread
-          dfs:  filesystem free space monitor thread
-          exp:  logfile expire monitor thread
-          slm:  simple log monitor thread
+    wrk:  worker thread
+    dfs:  filesystem free space monitor thread
+    exp:  logfile expire monitor thread
+    slm:  simple log monitor thread
 
 Example: file expire thread name for the section called `console`: `console_exp`
 
