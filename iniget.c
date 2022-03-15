@@ -63,22 +63,22 @@ void print_section(ini_t * inidata, char *section)
 	/* dumps an INI section */
 	/* debugging only */
 
-	printf("\n[%s]\n", section);
-	printf("command  = %s\n", my_ini(inidata, section, "command"));
-	printf("dirname  = %s\n", my_ini(inidata, section, "dirname"));
-	printf("subdirs  = %s\n", my_ini(inidata, section, "subdirs"));
-	printf("pipename = %s\n", my_ini(inidata, section, "pipename"));
-	printf("template = %s\n", my_ini(inidata, section, "template"));
-	printf("pcrestr  = %s\n", my_ini(inidata, section, "pcrestr"));
-	printf("uid      = %s\n", my_ini(inidata, section, "uid"));
-	printf("gid      = %s\n", my_ini(inidata, section, "gid"));
-	printf("loglimit = %s\n", my_ini(inidata, section, "loglimit"));
-	printf("diskfree = %s\n", my_ini(inidata, section, "diskfree"));
-	printf("inofree  = %s\n", my_ini(inidata, section, "inofree"));
-	printf("expire   = %s\n", my_ini(inidata, section, "expire"));
-	printf("retmin   = %s\n", my_ini(inidata, section, "retmin"));
-	printf("retmax   = %s\n", my_ini(inidata, section, "retmax"));
-	printf("postcmd  = %s\n", my_ini(inidata, section, "postcmd"));
+	fprintf(stdout, "\n[%s]\n", section);
+	fprintf(stdout, "command  = %s\n", my_ini(inidata, section, "command"));
+	fprintf(stdout, "dirname  = %s\n", my_ini(inidata, section, "dirname"));
+	fprintf(stdout, "subdirs  = %s\n", my_ini(inidata, section, "subdirs"));
+	fprintf(stdout, "pipename = %s\n", my_ini(inidata, section, "pipename"));
+	fprintf(stdout, "template = %s\n", my_ini(inidata, section, "template"));
+	fprintf(stdout, "pcrestr  = %s\n", my_ini(inidata, section, "pcrestr"));
+	fprintf(stdout, "uid      = %s\n", my_ini(inidata, section, "uid"));
+	fprintf(stdout, "gid      = %s\n", my_ini(inidata, section, "gid"));
+	fprintf(stdout, "loglimit = %s\n", my_ini(inidata, section, "loglimit"));
+	fprintf(stdout, "diskfree = %s\n", my_ini(inidata, section, "diskfree"));
+	fprintf(stdout, "inofree  = %s\n", my_ini(inidata, section, "inofree"));
+	fprintf(stdout, "expire   = %s\n", my_ini(inidata, section, "expire"));
+	fprintf(stdout, "retmin   = %s\n", my_ini(inidata, section, "retmin"));
+	fprintf(stdout, "retmax   = %s\n", my_ini(inidata, section, "retmax"));
+	fprintf(stdout, "postcmd  = %s\n", my_ini(inidata, section, "postcmd"));
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
