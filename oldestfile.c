@@ -42,7 +42,7 @@ int oldestfile(struct thread_info *ti, short top, char *dir, char *oldfile,
 		if(stat(filename, &stbuf) == -1)
 			continue;
 
-		if(S_ISDIR(stbuf.st_mode) && *ti->ti_subdirs == '1') {
+		if(S_ISDIR(stbuf.st_mode) && *ti->ti_subdirs == 't') {
 			/* search subdirectory */
 			fc += oldestfile(ti, FALSE, filename, oldfile, oldtime);
 			continue;
