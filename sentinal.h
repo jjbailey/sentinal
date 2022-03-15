@@ -49,10 +49,21 @@
 
 #define IS_NULL(s) !((s) && *(s))
 
-#define	_HOST_TOK	"%h"						/* hostname token */
-#define	_DIR_TOK	"%p"						/* dirname (path) token */
-#define	_FILE_TOK	"%n"						/* filename token */
-#define	_SECT_TOK	"%t"						/* INI section token */
+/* postcmd tokens (1.3.0+) */
+
+#define	_HOST_TOK	"%host"						/* hostname token */
+#define	_PATH_TOK	"%path"						/* dirname (path) token */
+#define	_FILE_TOK	"%file"						/* filename token */
+#define	_SECT_TOK	"%sect"						/* INI section token */
+
+/* deprecated postcmd tokens (pre-1.3.0) */
+
+#define	_OLD_HOST_TOK	"%h"					/* hostname token */
+#define	_OLD_DIR_TOK	"%p"					/* dirname (path) token */
+#define	_OLD_FILE_TOK	"%n"					/* filename token */
+#define	_OLD_SECT_TOK	"%t"					/* INI section token */
+
+/* thread names */
 
 #define	_DFS_THR	"dfs"						/* filesystem free space */
 #define	_EXP_THR	"exp"						/* logfile expiration, retention */
