@@ -62,10 +62,21 @@ int postcmd(struct thread_info *ti, char *filename)
 		}
 
 		strlcpy(cmdbuf, ti->ti_postcmd, BUFSIZ);
+
+		/* postcmd tokens (1.3.0+) */
+
 		strreplace(cmdbuf, _HOST_TOK, utsbuf.nodename);
-		strreplace(cmdbuf, _DIR_TOK, ti->ti_dirname);
+		strreplace(cmdbuf, _PATH_TOK, ti->ti_dirname);
 		strreplace(cmdbuf, _FILE_TOK, filename);
 		strreplace(cmdbuf, _SECT_TOK, ti->ti_section);
+
+		/* deprecated postcmd tokens (pre-1.3.0) */
+
+		strreplace(cmdbuf, _OLD_HOST_TOK, utsbuf.nodename);
+		strreplace(cmdbuf, _OLD_DIR_TOK, ti->ti_dirname);
+		strreplace(cmdbuf, _OLD_FILE_TOK, filename);
+		strreplace(cmdbuf, _OLD_SECT_TOK, ti->ti_section);
+
 		fprintf(stderr, "%s: %s\n", ti->ti_section, cmdbuf);
 
 #if 0
