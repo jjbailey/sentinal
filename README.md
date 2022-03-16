@@ -225,7 +225,7 @@ The INI file tests/test4.ini is used here as an example.
 
 ## Build, Install
 
-sentinal requires the pcre-devel package for building the software.
+sentinal requires the pcre2-devel package for building the software.
 
     # cd sentinal
     # make
