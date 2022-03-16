@@ -12,16 +12,27 @@
 #include <stdio.h>
 #include "sentinal.h"
 
-pcre   *pcrecheck(char *pcrestr, pcre *pcrecmp)
+pcre2_code *pcrecheck(char *pcrestr, pcre2_code *re)
 {
-	const char *errptr;
-	int     erroffset;
-	int     options = PCRE_ANCHORED;			/* might be undesirable */
+	PCRE2_SIZE erroffset;
+	PCRE2_UCHAR buf[256];
+	int     errnumber;
+	uint32_t options = PCRE2_ANCHORED;
 
 	if(IS_NULL(pcrestr))
-		return ((pcre *) NULL);
+		return ((pcre2_code *) NULL);
 
-	return (pcrecmp = pcre_compile(pcrestr, options, &errptr, &erroffset, NULL));
+	re = pcre2_compile((PCRE2_SPTR) pcrestr, PCRE2_ZERO_TERMINATED,
+					   options, &errnumber, &erroffset, NULL);
+
+	if(re == NULL) {
+		pcre2_get_error_message(errnumber, buf, sizeof(buf));
+
+		fprintf(stderr, "PCRE2 compilation failed at offset %d: %hhn\n",
+				(int)erroffset, buf);
+	}
+
+	return (re);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

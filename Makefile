@@ -54,7 +54,11 @@ CC=			gcc
 WARNINGS=	-Wno-unused-result -Wunused-variable -Wunused-but-set-variable
 CFLAGS=		-g -O2 -pthread $(WARNINGS)
 
-LIBS=		-lpthread -lpcre -lm
+# pcre is EOL
+#PCRELIB=	-lpcre
+PCRELIB=	-lpcre2-8
+
+LIBS=		-lpthread $(PCRELIB) -lm
 
 $(SENOBJS):	sentinal.h basename.h ini.h
 

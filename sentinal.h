@@ -12,8 +12,9 @@
 # include <sys/types.h>
 #endif
 
-#ifndef _PCRE_H
-# include <pcre.h>
+#ifndef PCRE2_H_IDEMPOTENT_GUARD
+# define	PCRE2_CODE_UNIT_WIDTH	8
+# include <pcre2.h>
 #endif
 
 #define	TRUE		(short)1
@@ -81,7 +82,7 @@ struct thread_info {
 	char   *ti_pipename;						/* FIFO name */
 	char   *ti_template;						/* logfile template */
 	char   *ti_pcrestr;							/* pcre for logfile match */
-	pcre   *ti_pcrecmp;							/* compiled pcre */
+	pcre2_code *ti_pcrecmp;						/* compiled pcre */
 	char   *ti_filename;						/* output file name */
 	pid_t   ti_pid;								/* thread pid */
 	uid_t   ti_uid;								/* thread uid */
@@ -109,8 +110,8 @@ int     postcmd(struct thread_info *, char *);
 int     runcmd(int, char **, char **);
 int     threadcheck(struct thread_info *, char *);
 off_t   logsize(char *);
-pcre   *pcrecheck(char *, pcre *);
-short   mylogfile(char *, pcre *);
+pcre2_code *pcrecheck(char *, pcre2_code *);
+short   mylogfile(char *, pcre2_code *);
 size_t  strlcat(char *, const char *, size_t);
 size_t  strlcpy(char *, const char *, size_t);
 uid_t   verifyuid(char *);
