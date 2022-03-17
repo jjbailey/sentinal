@@ -6,13 +6,13 @@ Monitoring and management capabilities:
 
 - available disk space by percentage
 - available inode usage by percentage or count
-- logfiles by size, age, or retention settings
+- files by size, age, or retention settings
 - inodes by age or retention settings
 - log ingestion, processing, and rotation
 
 ## Configuration
 
-sentinal uses INI files for its runtime configuration.  Each section in the INI file pertains to one resource: a directory, possibly a logfile template, and the conditions for managing the resource.
+sentinal uses INI files for its runtime configuration.  Each section in the INI file pertains to one resource: a directory, possibly a file template, and the conditions for managing the resource.
 
 ### INI File Description
 
@@ -23,7 +23,7 @@ An INI file must contain a section called `global` for the pidfile definition, a
 
     [section]
     command:  command to run
-    dirname:  thread and postcmd working directory, logfile location
+    dirname:  thread and postcmd working directory, file location
     subdirs:  option to search subdirectories for matching files
     pipename: named pipe/fifo fifo location
     template: output file name, date(1) sequences %F %Y %m %d %H %M %S %s
@@ -215,9 +215,9 @@ The INI file tests/test4.ini is used here as an example.
 
     Nov 24 13:01:47 loghost systemd[1]: Started sentinal service for example.ini.
     Nov 24 13:01:47 loghost sentinal[1927853]: test4: command: /usr/bin/zstd -1 -T4
-    Nov 24 13:01:47 loghost sentinal[1927853]: test4: monitor log size: 1024MiB
-    Nov 24 13:01:47 loghost sentinal[1927853]: test4: monitor log min retention: 3
-    Nov 24 13:01:47 loghost sentinal[1927853]: test4: monitor log max retention: 25
+    Nov 24 13:01:47 loghost sentinal[1927853]: test4: monitor file size: 1024MiB
+    Nov 24 13:01:47 loghost sentinal[1927853]: test4: monitor file min retention: 3
+    Nov 24 13:01:47 loghost sentinal[1927853]: test4: monitor file max retention: 25
     Nov 24 13:01:47 loghost sentinal[1927853]: test4: monitor disk: / for 85.00% free
     Nov 24 13:01:47 loghost sentinal[1927853]: test4: /opt/sentinal/tests: 88.69% blocks free
 

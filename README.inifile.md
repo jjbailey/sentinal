@@ -11,7 +11,7 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
     command:  command line to run
               absolute path, optional, working directory is `dirname`
 
-    dirname:  thread and `postcmd` working directory, logfile location
+    dirname:  thread and `postcmd` working directory, file location
               absolute path, required
 
     subdirs:  option to search subdirectories, 1/true, 0/false
@@ -41,7 +41,7 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
     inofree:  percent inodes free for unprivileged users; 0 = no monitor (off)
               default off
 
-    expire:   logfile retention, units = m, H, D, W, M, Y; 0 = no expiration (off)
+    expire:   file retention, units = m, H, D, W, M, Y; 0 = no expiration (off)
               default unit = D
               default off
 
@@ -95,7 +95,7 @@ Thread names are assigned `<sectionname>_<taskname>`.  Task names and purposes:
 
     wrk:  worker thread
     dfs:  filesystem free space monitor thread
-    exp:  logfile expire monitor thread
+    exp:  file expire monitor thread
     slm:  simple log monitor thread
 
 Example: file expire thread name for the section called `console`: `console_exp`

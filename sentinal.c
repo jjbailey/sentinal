@@ -357,7 +357,7 @@ int main(int argc, char *argv[])
 			wrk_started = TRUE;
 		}
 
-		if(threadcheck(ti, _EXP_THR)) {			/* logfile expiration, retention */
+		if(threadcheck(ti, _EXP_THR)) {			/* file expiration, retention */
 			usleep((useconds_t) 2000);
 			pthread_create(&expmons[i], NULL, &expthread, (void *)ti);
 			exp_started = TRUE;

@@ -46,10 +46,10 @@ void   *slmthread(void *arg)
 	/* for slm, ti->ti_template is the logname */
 
 	fullpath(ti->ti_dirname, ti->ti_template, filename);
-	fprintf(stderr, "%s: monitor log: %s\n", ti->ti_section, filename);
+	fprintf(stderr, "%s: monitor file: %s\n", ti->ti_section, filename);
 
 	if(ti->ti_loglimit)
-		fprintf(stderr, "%s: monitor log size: %ldMiB\n", ti->ti_section,
+		fprintf(stderr, "%s: monitor file size: %ldMiB\n", ti->ti_section,
 				MiB(ti->ti_loglimit));
 
 	ti->ti_sig = 0;								/* reset */

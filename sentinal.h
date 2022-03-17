@@ -67,7 +67,7 @@
 /* thread names */
 
 #define	_DFS_THR	"dfs"						/* filesystem free space */
-#define	_EXP_THR	"exp"						/* logfile expiration, retention */
+#define	_EXP_THR	"exp"						/* file expiration, retention */
 #define	_SLM_THR	"slm"						/* simple log monitor */
 #define	_WRK_THR	"wrk"						/* worker (log ingestion) thread */
 
@@ -80,8 +80,8 @@ struct thread_info {
 	char   *ti_dirname;							/* FIFO directory name */
 	char   *ti_subdirs;							/* subdirectory recursion flag */
 	char   *ti_pipename;						/* FIFO name */
-	char   *ti_template;						/* logfile template */
-	char   *ti_pcrestr;							/* pcre for logfile match */
+	char   *ti_template;						/* file template */
+	char   *ti_pcrestr;							/* pcre for file match */
 	pcre2_code *ti_pcrecmp;						/* compiled pcre */
 	char   *ti_filename;						/* output file name */
 	pid_t   ti_pid;								/* thread pid */
@@ -92,9 +92,9 @@ struct thread_info {
 	off_t   ti_loglimit;						/* logfile rotate size */
 	long double ti_diskfree;					/* desired percent blocks free */
 	long double ti_inofree;						/* desired percent inodes free */
-	int     ti_expire;							/* logfile expiration */
-	int     ti_retmin;							/* logfile retention minimum */
-	int     ti_retmax;							/* logfile retention maximum */
+	int     ti_expire;							/* file expiration */
+	int     ti_retmin;							/* file retention minimum */
+	int     ti_retmax;							/* file retention maximum */
 	char   *ti_postcmd;							/* command to run after log closes */
 };
 
