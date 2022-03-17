@@ -22,7 +22,7 @@ SENOBJS=	sentinal.o		\
 			logsize.o		\
 			mylogfile.o		\
 			oldestfile.o	\
-			pcrecheck.o		\
+			pcrecompile.o	\
 			postcmd.o		\
 			rlimit.o		\
 			runcmd.o		\

@@ -253,7 +253,7 @@ int main(int argc, char *argv[])
 
 		ti->ti_template = strdup(base(my_ini(inidata, sections[i], "template")));
 		ti->ti_pcrestr = my_ini(inidata, sections[i], "pcrestr");
-		ti->ti_pcrecmp = pcrecheck(ti->ti_pcrestr, ti->ti_pcrecmp);
+		ti->ti_pcrecmp = pcrecompile(ti->ti_pcrestr, ti->ti_pcrecmp);
 		ti->ti_filename = malloc(PATH_MAX);
 		memset(ti->ti_filename, '\0', PATH_MAX);
 		ti->ti_pid = (pid_t) 0;					/* only workers use this */

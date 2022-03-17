@@ -110,7 +110,7 @@ int     postcmd(struct thread_info *, char *);
 int     runcmd(int, char **, char **);
 int     threadcheck(struct thread_info *, char *);
 off_t   logsize(char *);
-pcre2_code *pcrecheck(char *, pcre2_code *);
+pcre2_code *pcrecompile(char *, pcre2_code *);
 short   mylogfile(char *, pcre2_code *);
 size_t  strlcat(char *, const char *, size_t);
 size_t  strlcpy(char *, const char *, size_t);

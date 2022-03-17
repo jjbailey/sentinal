@@ -1,5 +1,5 @@
 /*
- * pcrecheck.c
+ * pcrecompile.c
  * Check and compile a regex for later use.
  *
  * Copyright (c) 2021, 2022 jjb
@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include "sentinal.h"
 
-pcre2_code *pcrecheck(char *pcrestr, pcre2_code *re)
+pcre2_code *pcrecompile(char *pcrestr, pcre2_code *re)
 {
 	PCRE2_SIZE erroffset;
 	PCRE2_UCHAR buf[256];
