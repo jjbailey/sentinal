@@ -47,7 +47,7 @@ Section: base
 Priority: optional
 Depends: libpcre3
 Description: Software for logfile and inode management
- Copyright (c) 2021 jjb
+ Copyright (c) 2021, 2022 jjb
 EOF
 
 dpkg-deb --build $BUILDIR
