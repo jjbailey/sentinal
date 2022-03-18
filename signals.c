@@ -22,7 +22,7 @@ extern struct thread_info tinfo[MAXSECT];
 static void sigparent(int);
 static void sigreject(int);
 
-void parent_signals(void)
+void parentsignals(void)
 {
 	/* parent signal setup */
 

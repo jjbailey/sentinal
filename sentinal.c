@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	parent_signals();							/* important: signal handling */
+	parentsignals();							/* important: signal handling */
 	rlimit(MAXFILES);							/* limit the number of open files */
 
 	/* setup threads and run */
