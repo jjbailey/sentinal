@@ -14,8 +14,8 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
     dirname:  thread and `postcmd` working directory, file location
               absolute path, required
 
-    subdirs:  option to search subdirectories, 1/true, 0/false
-              default 0/false
+    subdirs:  option to search subdirectories; true, false
+              default false
 
     pipename: named pipe/fifo fifo location
               absolute or relative path, required when `command` is defined
@@ -26,13 +26,13 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
     pcrestr:  perl-compatible regex naming files to manage
               valid perl-compatible regex, required for dfs and exp threads
 
-    uid:      worker and `postcmd` username or uid, username root ok, uid 0 not ok
+    uid:      worker and `postcmd` username or uid; username root ok, uid 0 not ok
               default nobody
 
-    gid:      worker and `postcmd` groupname or gid, groupname root ok, gid 0 not ok
+    gid:      worker and `postcmd` groupname or gid; groupname root ok, gid 0 not ok
               default nogroup
 
-    loglimit: rotate size, M = MiB, G = GiB; 0 = no rotate (off)
+    loglimit: rotate size, units M = MiB, G = GiB; 0 = no rotate (off)
               default unlimited
 
     diskfree: percent blocks free for unprivileged users; 0 = no monitor (off)
@@ -50,6 +50,9 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
 
     retmax:   maximum number of logs to retain, regardless of expiration; 0 = no max (off)
               default off
+
+    terse:    file removal notification; true = quiet, false = record log removal
+              default 0/false
 
     postcmd:  command to run after the log closes or rotates, %n = filename
               string passed to bash -c, optional, working directory is `dirname`

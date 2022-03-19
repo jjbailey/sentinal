@@ -78,6 +78,7 @@ void print_section(ini_t * inidata, char *section)
 	fprintf(stdout, "expire   = %s\n", my_ini(inidata, section, "expire"));
 	fprintf(stdout, "retmin   = %s\n", my_ini(inidata, section, "retmin"));
 	fprintf(stdout, "retmax   = %s\n", my_ini(inidata, section, "retmax"));
+	fprintf(stdout, "terse    = %s\n", my_ini(inidata, section, "terse"));
 	fprintf(stdout, "postcmd  = %s\n", my_ini(inidata, section, "postcmd"));
 }
 

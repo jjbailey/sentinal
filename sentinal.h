@@ -95,6 +95,7 @@ struct thread_info {
 	int     ti_expire;							/* file expiration */
 	int     ti_retmin;							/* file retention minimum */
 	int     ti_retmax;							/* file retention maximum */
+	char   *ti_terse;							/* notify file removal */
 	char   *ti_postcmd;							/* command to run after log closes */
 };
 

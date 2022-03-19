@@ -24,7 +24,7 @@ An INI file must contain a section called `global` for the pidfile definition, a
     [section]
     command:  command to run
     dirname:  thread and postcmd working directory, file location
-    subdirs:  option to search subdirectories for matching files
+    subdirs:  option to search subdirectories for matching files (false)
     pipename: named pipe/fifo fifo location
     template: output file name, date(1) sequences %F %Y %m %d %H %M %S %s
     pcrestr:  perl-compatible regex naming files to manage
@@ -36,6 +36,7 @@ An INI file must contain a section called `global` for the pidfile definition, a
     expire:   log retention, units = m, H, D, W, M, Y; 0 = no expiration (off)
     retmin:   minimum number of logs to retain; 0 = none (off)
     retmax:   maximum number of logs to retain; 0 = no max (off)
+    terse:    option to record or suppress file removal notices (false)
     postcmd:  command to run after log closes or rotates, %n = filename
 
 `section` is the section name.  It must be unique in the INI file.

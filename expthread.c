@@ -89,7 +89,9 @@ void   *expthread(void *arg)
 			continue;
 		}
 
-		fprintf(stderr, "%s: %s %s\n", ti->ti_section, reason, base(oldfile));
+		if(*ti->ti_terse == 'f')
+			fprintf(stderr, "%s: %s %s\n", ti->ti_section, reason, base(oldfile));
+
 		remove(oldfile);
 		interval = 0;							/* 1 sec is too slow for inodes */
 	}

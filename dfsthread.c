@@ -179,7 +179,9 @@ void   *dfsthread(void *arg)
 			continue;
 		}
 
-		fprintf(stderr, "%s: remove %s\n", ti->ti_section, base(oldfile));
+		if(*ti->ti_terse == 'f')
+			fprintf(stderr, "%s: remove %s\n", ti->ti_section, base(oldfile));
+
 		remove(oldfile);
 		rptstatus = TRUE;						/* enable status alert */
 	}

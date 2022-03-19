@@ -227,6 +227,15 @@ int main(int argc, char *argv[])
 		else
 			ti->ti_subdirs = strdup("false");
 
+		/* notify file removal */
+
+		ti->ti_terse = my_ini(inidata, sections[i], "terse");
+
+		if(strcmp(ti->ti_terse, "1") == 0 || strcasecmp(ti->ti_terse, "true") == 0)
+			ti->ti_terse = strdup("true");
+		else
+			ti->ti_terse = strdup("false");
+
 		/*
 		 * get/generate/vett real path of pipe
 		 * pipe might not exist, or it might not be in dirname
@@ -453,6 +462,7 @@ static void dump_thread_info(struct thread_info *ti)
 	fprintf(stdout, "expire:   %s\n", convexpire(ti->ti_expire, ebuf));
 	fprintf(stdout, "retmin:   %d\n", ti->ti_retmin);
 	fprintf(stdout, "retmax:   %d\n", ti->ti_retmax);
+	fprintf(stdout, "terse:    %s\n", ti->ti_terse);
 
 	logname(ti->ti_template, ti->ti_filename);
 
