@@ -45,7 +45,7 @@ Maintainer: JJB <itguy92075@gmail.com>
 Vcs-Git: https://github.com/jjbailey/sentinal.git
 Section: base
 Priority: optional
-Depends: libpcre3
+Depends: libpcre2-8-0
 Description: Software for logfile and inode management
  Copyright (c) 2021, 2022 jjb
 EOF
