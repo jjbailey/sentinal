@@ -1,6 +1,10 @@
 # sentinal: Software for Logfile and Inode Management
 
-System and application processes can create many files, large files, or many inodes, possibly causing disk partitions to run out of space.  sentinal is a systemd service for monitoring filesystems containing applications' directories and managing the directories to comply with the specifications in an INI configuration file.
+System and application processes can create many files and large files,
+possibly causing disk partitions to run out of space.  sentinal is a systemd
+service for managing files and filesystems to comply with the directives in
+an INI configuration file.  Depending on the goals, sentinal can also act as
+an adjunct or an alternative to logrotate.
 
 Monitoring and management capabilities:
 
@@ -12,11 +16,14 @@ Monitoring and management capabilities:
 
 ## Configuration
 
-sentinal uses INI files for its runtime configuration.  Each section in the INI file pertains to one resource: a directory, possibly a file template, and the conditions for managing the resource.
+sentinal uses INI files for its runtime configuration.  Each section in the
+INI file pertains to one resource: a directory, possibly a file template,
+and the conditions for managing the resource.
 
 ### INI File Description
 
-An INI file must contain a section called `global` for the pidfile definition, and up to 16 resources sections with unique names up to 11 characters in length.
+An INI file must contain a section called `global` for the pidfile definition,
+and up to 16 resources sections with unique names up to 11 characters in length.
 
     [global]
     pidfile:  sentinal process id and lock file, for manual logrotate
