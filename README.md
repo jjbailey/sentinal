@@ -207,19 +207,19 @@ The INI file tests/test4.ini is used here as an example.
     * sentinal.service - sentinal service for example.ini
          Loaded: loaded (/etc/systemd/system/sentinal.service; disabled; vendor preset: enabled)
          Active: active (running) since Wed 2021-11-24 13:01:47 PST; 4s ago
-       Main PID: 1927853 (sentinal)
+       Main PID: 13580 (sentinal)
           Tasks: 4 (limit: 76887)
          Memory: 516.0K
          CGroup: /system.slice/sentinal.service
-                 `-1927853 /opt/sentinal/bin/sentinal -f /opt/sentinal/etc/example.ini
+                 `-13580 /opt/sentinal/bin/sentinal -f /opt/sentinal/etc/example.ini
 
     Nov 24 13:01:47 loghost systemd[1]: Started sentinal service for example.ini.
-    Nov 24 13:01:47 loghost sentinal[1927853]: test4: command: /usr/bin/zstd -1 -T4
-    Nov 24 13:01:47 loghost sentinal[1927853]: test4: monitor file size: 1024MiB
-    Nov 24 13:01:47 loghost sentinal[1927853]: test4: monitor file min retention: 3
-    Nov 24 13:01:47 loghost sentinal[1927853]: test4: monitor file max retention: 25
-    Nov 24 13:01:47 loghost sentinal[1927853]: test4: monitor disk: / for 85.00% free
-    Nov 24 13:01:47 loghost sentinal[1927853]: test4: /opt/sentinal/tests: 88.69% blocks free
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: command: /usr/bin/zstd -1 -T4
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for size 1024MiB
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for retmin 3
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for retmax 25
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor disk: / for 85.00% free
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: /opt/sentinal/tests: 87.36% blocks free
 
     (In this example, /opt is in the / filesystem)
 

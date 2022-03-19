@@ -42,16 +42,16 @@ void   *expthread(void *arg)
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _EXP_THR, task));
 
 	if(ti->ti_expire)
-		fprintf(stderr, "%s: monitor file expiration: %s\n", ti->ti_section,
-				convexpire(ti->ti_expire, ebuf));
+		fprintf(stderr, "%s: monitor file: %s for expiration %s\n",
+				ti->ti_section, ti->ti_pcrestr, convexpire(ti->ti_expire, ebuf));
 
 	if(ti->ti_retmin)
-		fprintf(stderr, "%s: monitor file min retention: %d\n", ti->ti_section,
-				ti->ti_retmin);
+		fprintf(stderr, "%s: monitor file: %s for retmin %d\n",
+				ti->ti_section, ti->ti_pcrestr, ti->ti_retmin);
 
 	if(ti->ti_retmax)
-		fprintf(stderr, "%s: monitor file max retention: %d\n", ti->ti_section,
-				ti->ti_retmax);
+		fprintf(stderr, "%s: monitor file: %s for retmax %d\n",
+				ti->ti_section, ti->ti_pcrestr, ti->ti_retmax);
 
 	/* if ti->ti_expire is zero, we're only concerned with retmin and/or retmax */
 
