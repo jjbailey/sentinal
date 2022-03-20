@@ -58,7 +58,7 @@ Group:          System Management
 
 %description
 Software for logfile and inode management
-Copyright (c) 2021 jjb
+Copyright (c) 2021, 2022 jjb
 
 %prep
 %setup -q

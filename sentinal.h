@@ -12,8 +12,9 @@
 # include <sys/types.h>
 #endif
 
-#ifndef _PCRE_H
-# include <pcre.h>
+#ifndef PCRE2_H_IDEMPOTENT_GUARD
+# define	PCRE2_CODE_UNIT_WIDTH	8
+# include <pcre2.h>
 #endif
 
 #define	TRUE		(short)1
@@ -49,13 +50,24 @@
 
 #define IS_NULL(s) !((s) && *(s))
 
-#define	_HOST_TOK	"%h"						/* hostname token */
-#define	_DIR_TOK	"%p"						/* dirname (path) token */
-#define	_FILE_TOK	"%n"						/* filename token */
-#define	_SECT_TOK	"%t"						/* INI section token */
+/* postcmd tokens (1.3.0+) */
+
+#define	_HOST_TOK	"%host"						/* hostname token */
+#define	_PATH_TOK	"%path"						/* dirname (path) token */
+#define	_FILE_TOK	"%file"						/* filename token */
+#define	_SECT_TOK	"%sect"						/* INI section token */
+
+/* deprecated postcmd tokens (pre-1.3.0) */
+
+#define	_OLD_HOST_TOK	"%h"					/* hostname token */
+#define	_OLD_DIR_TOK	"%p"					/* dirname (path) token */
+#define	_OLD_FILE_TOK	"%n"					/* filename token */
+#define	_OLD_SECT_TOK	"%t"					/* INI section token */
+
+/* thread names */
 
 #define	_DFS_THR	"dfs"						/* filesystem free space */
-#define	_EXP_THR	"exp"						/* logfile expiration, retention */
+#define	_EXP_THR	"exp"						/* file expiration, retention */
 #define	_SLM_THR	"slm"						/* simple log monitor */
 #define	_WRK_THR	"wrk"						/* worker (log ingestion) thread */
 
@@ -68,9 +80,9 @@ struct thread_info {
 	char   *ti_dirname;							/* FIFO directory name */
 	char   *ti_subdirs;							/* subdirectory recursion flag */
 	char   *ti_pipename;						/* FIFO name */
-	char   *ti_template;						/* logfile template */
-	char   *ti_pcrestr;							/* pcre for logfile match */
-	pcre   *ti_pcrecmp;							/* compiled pcre */
+	char   *ti_template;						/* file template */
+	char   *ti_pcrestr;							/* pcre for file match */
+	pcre2_code *ti_pcrecmp;						/* compiled pcre */
 	char   *ti_filename;						/* output file name */
 	pid_t   ti_pid;								/* thread pid */
 	uid_t   ti_uid;								/* thread uid */
@@ -80,9 +92,10 @@ struct thread_info {
 	off_t   ti_loglimit;						/* logfile rotate size */
 	long double ti_diskfree;					/* desired percent blocks free */
 	long double ti_inofree;						/* desired percent inodes free */
-	int     ti_expire;							/* logfile expiration */
-	int     ti_retmin;							/* logfile retention minimum */
-	int     ti_retmax;							/* logfile retention maximum */
+	int     ti_expire;							/* file expiration */
+	int     ti_retmin;							/* file retention minimum */
+	int     ti_retmax;							/* file retention maximum */
+	char   *ti_terse;							/* notify file removal */
 	char   *ti_postcmd;							/* command to run after log closes */
 };
 
@@ -98,13 +111,13 @@ int     postcmd(struct thread_info *, char *);
 int     runcmd(int, char **, char **);
 int     threadcheck(struct thread_info *, char *);
 off_t   logsize(char *);
-pcre   *pcrecheck(char *, pcre *);
-short   mylogfile(char *, pcre *);
+short   mylogfile(char *, pcre2_code *);
 size_t  strlcat(char *, const char *, size_t);
 size_t  strlcpy(char *, const char *, size_t);
 uid_t   verifyuid(char *);
+void    pcrecompile(struct thread_info *);
 void    activethreads(struct thread_info *);
-void    parent_signals(void);
+void    parentsignals(void);
 void    rlimit(int);
 void    strreplace(char *, char *, char *);
 void   *dfsthread(void *);

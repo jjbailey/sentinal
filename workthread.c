@@ -61,8 +61,8 @@ void   *workthread(void *arg)
 	fprintf(stderr, "%s: command: %s\n", ti->ti_section, ti->ti_command);
 
 	if(ti->ti_loglimit)
-		fprintf(stderr, "%s: monitor log size: %ldMiB\n", ti->ti_section,
-				MiB(ti->ti_loglimit));
+		fprintf(stderr, "%s: monitor file: %s for size %ldMiB\n",
+				ti->ti_section, ti->ti_pcrestr, MiB(ti->ti_loglimit));
 
 	for(;;) {
 		/* set up pipes */

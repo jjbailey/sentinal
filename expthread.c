@@ -42,16 +42,16 @@ void   *expthread(void *arg)
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _EXP_THR, task));
 
 	if(ti->ti_expire)
-		fprintf(stderr, "%s: monitor log expiration: %s\n", ti->ti_section,
-				convexpire(ti->ti_expire, ebuf));
+		fprintf(stderr, "%s: monitor file: %s for expiration %s\n",
+				ti->ti_section, ti->ti_pcrestr, convexpire(ti->ti_expire, ebuf));
 
 	if(ti->ti_retmin)
-		fprintf(stderr, "%s: monitor log min retention: %d\n", ti->ti_section,
-				ti->ti_retmin);
+		fprintf(stderr, "%s: monitor file: %s for retmin %d\n",
+				ti->ti_section, ti->ti_pcrestr, ti->ti_retmin);
 
 	if(ti->ti_retmax)
-		fprintf(stderr, "%s: monitor log max retention: %d\n", ti->ti_section,
-				ti->ti_retmax);
+		fprintf(stderr, "%s: monitor file: %s for retmax %d\n",
+				ti->ti_section, ti->ti_pcrestr, ti->ti_retmax);
 
 	/* if ti->ti_expire is zero, we're only concerned with retmin and/or retmax */
 
@@ -89,7 +89,9 @@ void   *expthread(void *arg)
 			continue;
 		}
 
-		fprintf(stderr, "%s: %s %s\n", ti->ti_section, reason, base(oldfile));
+		if(*ti->ti_terse == 'f')
+			fprintf(stderr, "%s: %s %s\n", ti->ti_section, reason, base(oldfile));
+
 		remove(oldfile);
 		interval = 0;							/* 1 sec is too slow for inodes */
 	}

@@ -1,30 +1,37 @@
 # sentinal: Software for Logfile and Inode Management
 
-System and application processes can create many files, large files, or many inodes, possibly causing disk partitions to run out of space.  sentinal is a systemd service for monitoring filesystems containing applications' directories and managing the directories to comply with the specifications in an INI configuration file.
+System and application processes can create many files and large files,
+possibly causing disk partitions to run out of space.  sentinal is a systemd
+service for managing files and filesystems to comply with the directives in
+an INI configuration file.  Depending on the goals, sentinal can also act as
+an adjunct or an alternative to logrotate.
 
 Monitoring and management capabilities:
 
 - available disk space by percentage
 - available inode usage by percentage or count
-- logfiles by size, age, or retention settings
+- files by size, age, or retention settings
 - inodes by age or retention settings
 - log ingestion, processing, and rotation
 
 ## Configuration
 
-sentinal uses INI files for its runtime configuration.  Each section in the INI file pertains to one resource: a directory, possibly a logfile template, and the conditions for managing the resource.
+sentinal uses INI files for its runtime configuration.  Each section in the
+INI file pertains to one resource: a directory, possibly a file template,
+and the conditions for managing the resource.
 
 ### INI File Description
 
-An INI file must contain a section called `global` for the pidfile definition, and up to 16 resources sections with unique names up to 11 characters in length.
+An INI file must contain a section called `global` for the pidfile definition,
+and up to 16 resources sections with unique names up to 11 characters in length.
 
     [global]
     pidfile:  sentinal process id and lock file, for manual logrotate
 
     [section]
     command:  command to run
-    dirname:  thread and postcmd working directory, logfile location
-    subdirs:  option to search subdirectories for matching files
+    dirname:  thread and postcmd working directory, file location
+    subdirs:  option to search subdirectories for matching files (false)
     pipename: named pipe/fifo fifo location
     template: output file name, date(1) sequences %F %Y %m %d %H %M %S %s
     pcrestr:  perl-compatible regex naming files to manage
@@ -36,6 +43,7 @@ An INI file must contain a section called `global` for the pidfile definition, a
     expire:   log retention, units = m, H, D, W, M, Y; 0 = no expiration (off)
     retmin:   minimum number of logs to retain; 0 = none (off)
     retmax:   maximum number of logs to retain; 0 = no max (off)
+    terse:    option to record or suppress file removal notices (false)
     postcmd:  command to run after log closes or rotates, %n = filename
 
 `section` is the section name.  It must be unique in the INI file.
@@ -207,25 +215,25 @@ The INI file tests/test4.ini is used here as an example.
     * sentinal.service - sentinal service for example.ini
          Loaded: loaded (/etc/systemd/system/sentinal.service; disabled; vendor preset: enabled)
          Active: active (running) since Wed 2021-11-24 13:01:47 PST; 4s ago
-       Main PID: 1927853 (sentinal)
+       Main PID: 13580 (sentinal)
           Tasks: 4 (limit: 76887)
          Memory: 516.0K
          CGroup: /system.slice/sentinal.service
-                 `-1927853 /opt/sentinal/bin/sentinal -f /opt/sentinal/etc/example.ini
+                 `-13580 /opt/sentinal/bin/sentinal -f /opt/sentinal/etc/example.ini
 
     Nov 24 13:01:47 loghost systemd[1]: Started sentinal service for example.ini.
-    Nov 24 13:01:47 loghost sentinal[1927853]: test4: command: /usr/bin/zstd -1 -T4
-    Nov 24 13:01:47 loghost sentinal[1927853]: test4: monitor log size: 1024MiB
-    Nov 24 13:01:47 loghost sentinal[1927853]: test4: monitor log min retention: 3
-    Nov 24 13:01:47 loghost sentinal[1927853]: test4: monitor log max retention: 25
-    Nov 24 13:01:47 loghost sentinal[1927853]: test4: monitor disk: / for 85.00% free
-    Nov 24 13:01:47 loghost sentinal[1927853]: test4: /opt/sentinal/tests: 88.69% blocks free
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: command: /usr/bin/zstd -1 -T4
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for size 1024MiB
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for retmin 3
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for retmax 25
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor disk: / for 85.00% free
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: /opt/sentinal/tests: 87.36% blocks free
 
     (In this example, /opt is in the / filesystem)
 
 ## Build, Install
 
-sentinal requires the pcre-devel package for building the software.
+sentinal requires the pcre2-devel package for building the software.
 
     # cd sentinal
     # make

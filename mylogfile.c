@@ -13,16 +13,20 @@
 #include <string.h>
 #include "sentinal.h"
 
-#define	OVECSIZE	32
-
-short mylogfile(char *f, pcre * p)
+short mylogfile(char *f, pcre2_code *re)
 {
-	int     ovec[OVECSIZE];
+	int     rc;
+	pcre2_match_data *mdata;
+	uint32_t options = PCRE2_ANCHORED;
 
-	if(IS_NULL(f) || *f == '.')					/* null or begins with . */
+	if(IS_NULL(f) || *f == '.')
 		return (FALSE);
 
-	return (pcre_exec(p, NULL, f, strlen(f), 0, 0, ovec, OVECSIZE) >= 0);
+	mdata = pcre2_match_data_create_from_pattern(re, NULL);
+	rc = pcre2_match(re, (PCRE2_SPTR) f, strlen(f), (PCRE2_SIZE) 0, options, mdata, NULL);
+	pcre2_match_data_free(mdata);
+
+	return (rc >= 0);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

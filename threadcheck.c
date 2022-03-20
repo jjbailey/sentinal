@@ -22,7 +22,7 @@ int threadcheck(struct thread_info *ti, char *tname)
 	if(strcmp(tname, _DFS_THR) == 0)			/* filesystem free space */
 		pass = ti->ti_pcrecmp && (ti->ti_diskfree || ti->ti_inofree);
 
-	else if(strcmp(tname, _EXP_THR) == 0)		/* logfile expiration, retention */
+	else if(strcmp(tname, _EXP_THR) == 0)		/* file expiration, retention */
 		pass = ti->ti_pcrecmp && (ti->ti_expire || ti->ti_retmin || ti->ti_retmax);
 
 	else if(strcmp(tname, _SLM_THR) == 0)		/* simple log monitor */
@@ -37,7 +37,7 @@ int threadcheck(struct thread_info *ti, char *tname)
 
 void activethreads(struct thread_info *ti)
 {
-	fprintf(stderr, "threads:  dfs: %s  exp: %s  slm: %s  wrk: %s\n",
+	fprintf(stdout, "threads:  dfs: %s  exp: %s  slm: %s  wrk: %s\n",
 			THRCHECK(ti, _DFS_THR), THRCHECK(ti, _EXP_THR),
 			THRCHECK(ti, _SLM_THR), THRCHECK(ti, _WRK_THR));
 }

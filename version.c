@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include "basename.h"
 
-#define	VERSION_STRING	"1.2.7"
+#define	VERSION_STRING	"1.3.0"
 
 void version(char *prog, FILE *fp)
 {
