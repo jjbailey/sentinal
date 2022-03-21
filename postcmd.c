@@ -19,20 +19,16 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-#define	ENV		"/usr/bin/env"
-#define	BASH	"/bin/bash"
-#define	PATH	"/usr/bin:/usr/sbin"
-
 extern struct utsname utsbuf;
 
 int postcmd(struct thread_info *ti, char *filename)
 {
 	char    cmdbuf[BUFSIZ];
-	char    envhome[BUFSIZ];
-	char    envpath[BUFSIZ];
-	char    envpcre[BUFSIZ];
-	char    envshell[BUFSIZ];
-	char    envtmpl[BUFSIZ];
+	char    homebuf[BUFSIZ];
+	char    pathbuf[BUFSIZ];
+	char    pcrebuf[BUFSIZ];
+	char    shellbuf[BUFSIZ];
+	char    tmplbuf[BUFSIZ];
 	char   *home;
 	int     i;
 	int     status;
@@ -79,31 +75,29 @@ int postcmd(struct thread_info *ti, char *filename)
 
 		fprintf(stderr, "%s: %s\n", ti->ti_section, cmdbuf);
 
-#if 0
-		fprintf(stderr, "%s: postcmd pid: %d\n", ti->ti_section, getpid());
-#endif
-
 		/* close parent's and unused fds */
 
 		for(i = 3; i < MAXFILES; i++)
 			close(i);
 
+		/* execution environment */
+
 		home = (p = getpwuid(ti->ti_uid)) ? p->pw_dir : "/tmp";
-		snprintf(envhome, BUFSIZ, "HOME=%s", home);
-
-		snprintf(envpath, BUFSIZ, "PATH=%s", PATH);
-		snprintf(envshell, BUFSIZ, "SHELL=%s", BASH);
-
-		snprintf(envtmpl, BUFSIZ, "TEMPLATE=%s", ti->ti_template);
-		snprintf(envpcre, BUFSIZ, "PCRESTR=%s", ti->ti_pcrestr);
+		snprintf(homebuf, BUFSIZ, "HOME=%s", home);
+		snprintf(pathbuf, BUFSIZ, "PATH=%s", PATH);
+		snprintf(shellbuf, BUFSIZ, "SHELL=%s", BASH);
+		snprintf(tmplbuf, BUFSIZ, "TEMPLATE=%s", ti->ti_template);
+		snprintf(pcrebuf, BUFSIZ, "PCRESTR=%s", ti->ti_pcrestr);
 
 		umask(umask(0) | 022);					/* don't set less restrictive */
 		nice(1);
 
 		execl(ENV, "-S", "-",
-			  envhome, envpath, envshell,
-			  envtmpl, envpcre,
+			  homebuf, pathbuf, shellbuf,
+			  tmplbuf, pcrebuf,
 			  BASH, "--noprofile", "--norc", "-c", cmdbuf, (char *)NULL);
+
+		/* execle(BASH, "--noprofile", "--norc", "-c", cmdbuf, (char *)NULL, envp); */
 
 		exit(EXIT_FAILURE);
 
