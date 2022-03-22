@@ -362,28 +362,28 @@ int main(int argc, char *argv[])
 		ti = &tinfo[i];							/* shorthand */
 
 		if(threadcheck(ti, _WRK_THR)) {			/* worker (log ingestion) thread */
-			usleep((useconds_t) 2500);
+			usleep((useconds_t) 100000);
 			fprintf(stderr, "%s: start wrk thread: %s\n", ti->ti_section, ti->ti_dirname);
 			pthread_create(&workers[i], NULL, &workthread, (void *)ti);
 			wrk_started = TRUE;
 		}
 
 		if(threadcheck(ti, _EXP_THR)) {			/* file expiration, retention */
-			usleep((useconds_t) 2500);
+			usleep((useconds_t) 100000);
 			fprintf(stderr, "%s: start exp thread: %s\n", ti->ti_section, ti->ti_dirname);
 			pthread_create(&expmons[i], NULL, &expthread, (void *)ti);
 			exp_started = TRUE;
 		}
 
 		if(threadcheck(ti, _DFS_THR)) {			/* filesystem free space */
-			usleep((useconds_t) 2500);
+			usleep((useconds_t) 100000);
 			fprintf(stderr, "%s: start dfs thread: %s\n", ti->ti_section, ti->ti_dirname);
 			pthread_create(&dfsmons[i], NULL, &dfsthread, (void *)ti);
 			dfs_started = TRUE;
 		}
 
 		if(threadcheck(ti, _SLM_THR)) {			/* simple log monitor */
-			usleep((useconds_t) 2500);
+			usleep((useconds_t) 100000);
 			fprintf(stderr, "%s: start slm thread: %s\n", ti->ti_section, ti->ti_dirname);
 			pthread_create(&slmmons[i], NULL, &slmthread, (void *)ti);
 			slm_started = TRUE;
