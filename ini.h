@@ -18,9 +18,9 @@ struct ini_t {
 typedef struct ini_t ini_t;
 
 ini_t  *ini_load(char *filename);
-void    ini_free(ini_t * ini);
-char   *ini_get(ini_t * ini, char *section, char *key);
-int     ini_sget(ini_t * ini, char *section, char *key, char *scanfmt, void *dst);
+void    ini_free(ini_t *ini);
+char   *ini_get(ini_t *ini, char *section, char *key);
+int     ini_sget(ini_t *ini, char *section, char *key, char *scanfmt, void *dst);
 
 #endif
 

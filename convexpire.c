@@ -20,14 +20,19 @@ char   *convexpire(int expire, char *str)
 
 	if(expire >= ONE_YEAR && EVEN_UNIT(expire, ONE_YEAR))
 		snprintf(str, BUFSIZ, "%dY", (int)(expire / ONE_YEAR));
+
 	else if(expire >= ONE_MONTH && EVEN_UNIT(expire, ONE_MONTH))
 		snprintf(str, BUFSIZ, "%dM", (int)(expire / ONE_MONTH));
+
 	else if(expire >= ONE_WEEK && EVEN_UNIT(expire, ONE_WEEK))
 		snprintf(str, BUFSIZ, "%dW", (int)(expire / ONE_WEEK));
+
 	else if(expire >= ONE_DAY && EVEN_UNIT(expire, ONE_DAY))
 		snprintf(str, BUFSIZ, "%dD", (int)(expire / ONE_DAY));
+
 	else if(expire >= ONE_HOUR && EVEN_UNIT(expire, ONE_HOUR))
 		snprintf(str, BUFSIZ, "%dH", (int)(expire / ONE_HOUR));
+
 	else
 		snprintf(str, BUFSIZ, "%dm", (int)(expire / ONE_MINUTE));
 

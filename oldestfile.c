@@ -18,7 +18,7 @@
 #include "sentinal.h"
 
 int oldestfile(struct thread_info *ti, short top, char *dir, char *oldfile,
-			   time_t * oldtime)
+			   time_t *oldtime)
 {
 	DIR    *dirp;
 	char    filename[PATH_MAX];

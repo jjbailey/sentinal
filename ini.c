@@ -43,7 +43,7 @@ static int strcmpci(char *a, char *b)
 #define	strcmpci	strcasecmp					/* jjb */
 
 /* Returns the next string in the split data */
-static char *next(ini_t * ini, char *p)
+static char *next(ini_t *ini, char *p)
 {
 	p += strlen(p);
 	while(p < ini->end && *p == '\0') {
@@ -52,14 +52,14 @@ static char *next(ini_t * ini, char *p)
 	return p;
 }
 
-static void trim_back(ini_t * ini, char *p)
+static void trim_back(ini_t *ini, char *p)
 {
 	while(p >= ini->data && (*p == ' ' || *p == '\t' || *p == '\r')) {
 		*p-- = '\0';
 	}
 }
 
-static char *discard_line(ini_t * ini, char *p)
+static char *discard_line(ini_t *ini, char *p)
 {
 	while(p < ini->end && *p != '\n') {
 		*p++ = '\0';
@@ -67,7 +67,7 @@ static char *discard_line(ini_t * ini, char *p)
 	return p;
 }
 
-static char *unescape_quoted_value(ini_t * ini, char *p)
+static char *unescape_quoted_value(ini_t *ini, char *p)
 {
 	/* Use `q` as write-head and `p` as read-head, `p` is always ahead of `q`
 	 * as escape sequences are always larger than their resultant data */
@@ -108,7 +108,7 @@ static char *unescape_quoted_value(ini_t * ini, char *p)
 
 /* Splits data in place into strings containing section-headers, keys and
  * values using one or more '\0' as a delimiter. Unescapes quoted values */
-static void split_data(ini_t * ini)
+static void split_data(ini_t *ini)
 {
 	char   *value_start, *line_start;
 	char   *p = ini->data;
@@ -229,13 +229,13 @@ ini_t  *ini_load(char *filename)
 	return NULL;
 }
 
-void ini_free(ini_t * ini)
+void ini_free(ini_t *ini)
 {
 	free(ini->data);
 	free(ini);
 }
 
-char   *ini_get(ini_t * ini, char *section, char *key)
+char   *ini_get(ini_t *ini, char *section, char *key)
 {
 	char   *current_section = "";
 	char   *val = "";
@@ -267,7 +267,7 @@ char   *ini_get(ini_t * ini, char *section, char *key)
 	return NULL;
 }
 
-int ini_sget(ini_t * ini, char *section, char *key, char *scanfmt, void *dst)
+int ini_sget(ini_t *ini, char *section, char *key, char *scanfmt, void *dst)
 {
 	char   *val = ini_get(ini, section, key);
 	if(!val) {

@@ -71,6 +71,12 @@
 #define	_SLM_THR	"slm"						/* simple log monitor */
 #define	_WRK_THR	"wrk"						/* worker (log ingestion) thread */
 
+/* execution environment */
+
+#define	ENV		"/usr/bin/env"
+#define	BASH	"/bin/bash"
+#define	PATH	"/usr/bin:/usr/sbin"
+
 struct thread_info {
 	char   *ti_section;							/* section name */
 	char   *ti_command;							/* thread command */

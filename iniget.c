@@ -16,7 +16,7 @@
 
 char   *NullStr = "";							/* empty string for strdup, etc */
 
-char   *my_ini(ini_t * ini, char *section, char *key)
+char   *my_ini(ini_t *ini, char *section, char *key)
 {
 	char   *p;
 	char   *sp;
@@ -34,7 +34,7 @@ char   *my_ini(ini_t * ini, char *section, char *key)
 	return (p);
 }
 
-int get_sections(ini_t * inidata, int maxsect, char *sections[])
+int get_sections(ini_t *inidata, int maxsect, char *sections[])
 {
 	/* returns a list of INI sections */
 
@@ -58,7 +58,7 @@ int get_sections(ini_t * inidata, int maxsect, char *sections[])
 	return (i);
 }
 
-void print_section(ini_t * inidata, char *section)
+void print_section(ini_t *inidata, char *section)
 {
 	/* dumps an INI section */
 	/* debugging only */

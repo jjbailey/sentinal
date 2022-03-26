@@ -18,6 +18,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <pwd.h>
 #include <unistd.h>
 #include "sentinal.h"
 #include "basename.h"
@@ -35,18 +36,26 @@ static void fifosize(struct thread_info *, int);
 void   *workthread(void *arg)
 {
 	char    filename[PATH_MAX];
+	char    homebuf[BUFSIZ];
+	char    pathbuf[BUFSIZ];
+	char    pcrebuf[BUFSIZ];
 	char    pipebuf[PIPEBUFSIZ];
+	char    shellbuf[BUFSIZ];
 	char    task[TASK_COMM_LEN];
+	char    tmplbuf[BUFSIZ];
+	char   *home;
+	char   *envp[MAXARGS];
 	char   *zargv[MAXARGS];
+	extern int errno;
 	int     holdfd;								/* fd to hold FIFO open */
 	int     i;
 	int     logfd;
 	int     n;
 	int     pipefd[2];
 	int     status;
+	struct passwd *p;
 	struct stat stbuf;
 	struct thread_info *ti = arg;
-	extern int errno;
 
 	/*
 	 * this thread requires:
@@ -134,7 +143,25 @@ void   *workthread(void *arg)
 				for(i = 3; i < MAXFILES; i++)
 					close(i);
 
-				execv(ti->ti_path, zargv);
+				/* execution environment */
+
+				home = (p = getpwuid(ti->ti_uid)) ? p->pw_dir : "/tmp";
+				snprintf(homebuf, BUFSIZ, "HOME=%s", home);
+				snprintf(pathbuf, BUFSIZ, "PATH=%s", PATH);
+				snprintf(shellbuf, BUFSIZ, "SHELL=%s", BASH);
+				snprintf(tmplbuf, BUFSIZ, "TEMPLATE=%s", ti->ti_template);
+				snprintf(pcrebuf, BUFSIZ, "PCRESTR=%s", ti->ti_pcrestr);
+
+				envp[0] = homebuf;
+				envp[1] = pathbuf;
+				envp[2] = shellbuf;
+				envp[3] = tmplbuf;
+				envp[4] = pcrebuf;
+				envp[5] = (char *)NULL;
+
+				umask(umask(0) | 022);			/* don't set less restrictive */
+				nice(1);
+				execve(ti->ti_path, zargv, envp);
 				exit(EXIT_FAILURE);
 			}
 

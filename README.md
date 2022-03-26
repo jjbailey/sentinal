@@ -44,7 +44,7 @@ and up to 16 resources sections with unique names up to 11 characters in length.
     retmin:   minimum number of logs to retain; 0 = none (off)
     retmax:   maximum number of logs to retain; 0 = no max (off)
     terse:    option to record or suppress file removal notices (false)
-    postcmd:  command to run after log closes or rotates, %n = filename
+    postcmd:  command to run after log closes or rotates, %file = filename
 
 `section` is the section name.  It must be unique in the INI file.
 
@@ -115,8 +115,7 @@ or when the files are older than 7 days, or when there are more than 5M files:
 ### Simple Log Monitor
 
 sentinal can monitor and process logs when they reach a specified size.
-A sentinal section for SLM must have diskfree, inofree, and expire all set to zero (off),
-and template and postcmd must be set.
+A sentinal section for SLM must not set `command`, and `template` and `postcmd` must be set.
 
 In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 50MiB in size:
 
@@ -166,7 +165,8 @@ and rotates and compresses the log when it reaches 5GiB in size:
     loglimit = 5G
     postcmd  = /usr/bin/zstd --rm -T0 %n 2>/dev/null
 
-This example does basically the same as above, but with on-the-fly compression (no intermediate files), and rotates the compressed log when it reaches 1GiB in size:
+This example does basically the same as above, but with on-the-fly compression (no intermediate files),
+and rotates the compressed log when it reaches 1GiB in size:
 
     [example]
     command  = /usr/bin/zstd -T0
@@ -205,7 +205,9 @@ sentinal runs as a systemd service.  The following is an example of a unit file:
     [Install]
     WantedBy=multi-user.target
 
-Note: if an application never needs root privileges to run and process logs, consider using the application's user and group IDs in the unit file.  User=root is helpful (and likely necessary) when a single sentinal instance monitors several different applications.
+Note: if an application never needs root privileges to run and process logs,
+consider using the application's user and group IDs in the unit file.
+User=root is helpful (and likely necessary) when a single sentinal instance monitors several different applications.
 
 ## sentinal Status
 
