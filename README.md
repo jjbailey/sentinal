@@ -59,24 +59,25 @@ Note the following conditions.  If:
 
 `loglimit` is greater than zero, sentinal rotates the log after it reaches the specified size.
 
-`diskfree` is greater than zero, sentinal creates a thread to discard the oldest logs to free disk space.
+`diskfree` is greater than zero, sentinal creates a thread to discard the oldest files to free disk space.
 
-`inofree` is greater than zero, sentinal creates a thread to discard the oldest logs (files) to free inodes.
+`inofree` is greater than zero, sentinal creates a thread to discard the oldest files to free inodes.
 
-`expire` is greater than zero, sentinal removes logs older than the specified time.
+`expire` is greater than zero, sentinal removes files older than the specified time.
 
-`retmin` is greater than zero, sentinal retains `n` number of logs, regardless of expiration or available disk space.
+`retmin` is greater than zero, sentinal retains `n` number of files, regardless of expiration or available disk space.
 
-`retmax` is greater than zero, sentinal retains a maximum number of `n` logs, regardless of expiration.
+`retmax` is greater than zero, sentinal retains a maximum number of `n` files, regardless of expiration.
 
 `postcmd` is specified, the value is passed as a command to `bash -c` after the log closes or rotates.  Optional.
 
 ### Disk Space Example
 
-To monitor console logs in /opt/sentinal/log for 20% free disk space, and to retain at least 3 logs and at most 50 logs:
+To monitor console logs in /opt/sentinal/log for 20% free disk space,
+and to retain at least 3 logs and at most 50 logs:
 
     [global]
-    pidfile  = /run/diskfree-only.ini
+    pidfile  = /run/diskfree.ini
 
     [console]
     dirname  = /opt/sentinal/log
@@ -85,7 +86,7 @@ To monitor console logs in /opt/sentinal/log for 20% free disk space, and to ret
     retmin   = 3
     retmax   = 50
 
-This INI configuration removes gzipped files in /var/log and subdirectories after two weeks:
+This INI configuration removes gzipped files in /var/log and its subdirectories after two weeks:
 
     [global]
     pidfile  = /run/varlog.pid
@@ -98,7 +99,7 @@ This INI configuration removes gzipped files in /var/log and subdirectories afte
 
 ### Inode Usage Example
 
-Remove appdata- files when inode free falls below 15%,
+Remove files starting with `appdata-` when inode free falls below 15%,
 or when the files are older than 7 days, or when there are more than 5M files:
 
     [global]
@@ -115,7 +116,7 @@ or when the files are older than 7 days, or when there are more than 5M files:
 ### Simple Log Monitor
 
 sentinal can monitor and process logs when they reach a specified size.
-A sentinal section for SLM must not set `command`, and `template` and `postcmd` must be set.
+A sentinal section for SLM must not set `command`; `template` and `postcmd` must be set.
 
 In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 50MiB in size:
 
