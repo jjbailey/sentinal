@@ -14,15 +14,20 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/inotify.h>
+#include <errno.h>
+#include <poll.h>
 #include <pthread.h>
 #include <signal.h>
 #include <unistd.h>
 #include "sentinal.h"
 
-#define	SCANRATE	2							/* a proc can write a lot in 2 secs */
+static int inotify_watch(char *);
+
+#define	SCANRATE		2						/* default monitor rate */
 
 #define	ROTATE(lim,n,sig)	((lim && n > lim) || sig == SIGHUP)
-#define	STAT(file,buf)	(stat(file, &buf) == -1 ? -1 : buf.st_size)
+#define	STAT(file,buf)		(stat(file, &buf) == -1 ? -1 : buf.st_size)
 
 void   *slmthread(void *arg)
 {
@@ -55,8 +60,6 @@ void   *slmthread(void *arg)
 	ti->ti_sig = 0;								/* reset */
 
 	for(;;) {
-		sleep(SCANRATE);						/* stat scan rate */
-
 		if(ROTATE(ti->ti_loglimit, STAT(filename, stbuf), ti->ti_sig)) {
 			/* loglimit or signaled to post-process */
 
@@ -67,10 +70,41 @@ void   *slmthread(void *arg)
 
 			ti->ti_sig = 0;						/* reset */
 		}
+
+		if(inotify_watch(filename) == FALSE)
+			sleep(SCANRATE);					/* in lieu of inotify */
 	}
 
 	/* notreached */
 	return ((void *)0);
+}
+
+static int inotify_watch(char *filename)
+{
+	char    buf[BUFSIZ];
+	int     fd;
+	int     pn;
+	int     wd;
+	struct pollfd fds[1];
+
+	if(access(filename, R_OK) == -1 || (fd = inotify_init1(IN_NONBLOCK)) == -1)
+		return (FALSE);
+
+	if((wd = inotify_add_watch(fd, filename, IN_OPEN | IN_CLOSE)) == -1) {
+		close(fd);
+		return (FALSE);
+	}
+
+	fds[0].fd = fd;
+	fds[0].events = POLLIN;
+
+	if((pn = poll(fds, 1, -1)) > 0)
+		if(fds[0].revents & POLLIN)
+			read(fd, buf, sizeof(buf));
+
+	inotify_rm_watch(fd, wd);
+	close(fd);
+	return (TRUE);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
