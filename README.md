@@ -115,8 +115,9 @@ or when the files are older than 7 days, or when there are more than 5M files:
 
 ### Simple Log Monitor
 
-sentinal can monitor and process logs when they reach a specified size.
-A sentinal section for SLM must not set `command`; `template` and `postcmd` must be set.
+sentinal, using inotify, can monitor and process logs when they reach a specified size.
+A sentinal section for SLM must not set `command`;
+`template`, `postcmd`, and `loglimit` must be set.
 
 In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 50MiB in size:
 
@@ -166,8 +167,8 @@ and rotates and compresses the log when it reaches 5GiB in size:
     loglimit = 5G
     postcmd  = /usr/bin/zstd --rm -T0 %n 2>/dev/null
 
-This example does basically the same as above, but with on-the-fly compression (no intermediate files),
-and rotates the compressed log when it reaches 1GiB in size:
+This example does basically the same as above, but with on-the-fly compression (no
+intermediate files), and rotates the compressed log when it reaches 1GiB in size:
 
     [example]
     command  = /usr/bin/zstd -T0
