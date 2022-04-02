@@ -12,8 +12,8 @@
  *  $ journalctl -f -n 20 -t sentinal
  *  $ journalctl -f _SYSTEMD_UNIT=example.service
  *  $ ps -lT -p $(pidof sentinal)
- *  $ top -H -S -p $(pidof sentinal)
- *  $ htop -d 5 -p $(pidof sentinal)
+ *  $ top -H -S -p $(echo $(pgrep sentinal) | sed 's/ /,/g')
+ *  $ htop -d S -p $(echo $(pgrep sentinal) | sed 's/ /,/g')
  *  # lslocks -p $(pidof sentinal)
  *
  * clean up the systemd logs:
