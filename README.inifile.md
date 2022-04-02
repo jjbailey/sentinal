@@ -150,5 +150,5 @@ sentinal accepts two flags for debugging.
     retmax:   25
     execcmd:  zstd -f -1 -T4 > test4-2021-12-06_10-59-06.log.zst
     postcmd:  dir=/opt/sentinal/tests/$(date +%d/%H/%M) ; mkdir -p $dir ; mv test4-2021-12-06_10-59-06.log.zst $dir
-    threads:  dfs: true  exp: true  slm: false  wrk: true
+    threads:  dfs: true   exp: true   slm: false   wrk: true
 
