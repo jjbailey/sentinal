@@ -18,7 +18,7 @@
 #include "sentinal.h"
 #include "basename.h"
 
-#define	SCANRATE	15
+#define	SCANRATE		ONE_MINUTE				/* default monitor rate */
 
 void   *expthread(void *arg)
 {
@@ -63,10 +63,8 @@ void   *expthread(void *arg)
 		/* full path to oldest file, its time, and the number of files found */
 		fc = oldestfile(ti, TRUE, ti->ti_dirname, oldfile, &oldtime);
 
-		if(!fc) {
-			/* no work */
-
-			if(interval != SCANRATE)
+		if(!fc) {								/* no work */
+			if(interval < SCANRATE)
 				interval = SCANRATE;			/* return to normal */
 
 			continue;
@@ -74,6 +72,7 @@ void   *expthread(void *arg)
 
 		if(time(&curtime) - oldtime < ONE_MINUTE) {
 			/* wait for another thread to remove a file older than this one */
+			interval = ONE_MINUTE >> 1;			/* intermediate sleep state */
 			continue;
 		}
 
