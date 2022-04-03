@@ -53,8 +53,6 @@ void   *expthread(void *arg)
 		fprintf(stderr, "%s: monitor file: %s for retmax %d\n",
 				ti->ti_section, ti->ti_pcrestr, ti->ti_retmax);
 
-	/* if ti->ti_expire is zero, we're only concerned with retmin and/or retmax */
-
 	for(;;) {
 		sleep(interval);						/* expiry monitor rate */
 
