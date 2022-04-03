@@ -289,9 +289,7 @@ Examples of on-demand log rotation:
 
 - sentinal reports free space for unprivileged users, which may be less than privileged users' values reported by disk utility programs.
 
-- sentinal configuration without direct log handling (`command` and `pipename` are unset) does not start the worker thread, leaving the other threads to watch the logs and disk space as they would normally.
+- The `loglimit` key represents bytes written to disk.  When `command` specifies a compression program, log rotation occurs after sentinal writes `loglimit` bytes post-compression.  If unset or zero, the task requires some form of manual log rotation.
 
-- The `loglimit` key represents bytes written to disk.  When `command` specifies a compression program, log rotation occurs after sentinal writes `loglimit` bytes post-compression.  If unset or zero, some form of manual log rotation is required.
-
-- sentinal removes empty subdirectories within `dirname`.  To negate this behavior, create a file in the subdirectory, where the file name does not match `pcrestr`, for example, `.persist`.
+- sentinal removes empty subdirectories within `dirname`.  To negate this behavior, create a file in the subdirectory with a file name that does not match `pcrestr`, for example, `.persist`.
 
