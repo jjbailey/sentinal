@@ -90,7 +90,7 @@ static int inotify_watch(char *filename)
 	if(access(filename, R_OK) == -1 || (fd = inotify_init1(IN_NONBLOCK)) == -1)
 		return (FALSE);
 
-	if((wd = inotify_add_watch(fd, filename, IN_OPEN | IN_CLOSE)) == -1) {
+	if((wd = inotify_add_watch(fd, filename, IN_MODIFY | IN_CREATE | IN_DELETE)) == -1) {
 		close(fd);
 		return (FALSE);
 	}
