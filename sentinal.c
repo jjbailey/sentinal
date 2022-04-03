@@ -49,9 +49,6 @@ struct thread_info tinfo[MAXSECT];
 /* external for token expansion */
 struct utsname utsbuf;
 
-/* external for stderr buffer */
-char    stderrbuf[BUFSIZ << 1];
-
 /* iniget.c functions */
 char   *my_ini(ini_t *, char *, char *);
 int     get_sections(ini_t *, int, char **);
@@ -76,16 +73,11 @@ int main(int argc, char *argv[])
 	pthread_t *slmmons;
 	pthread_t *workers;
 	short   debug = FALSE;
-	short   dfs_started = FALSE;
-	short   exp_started = FALSE;
-	short   slm_started = FALSE;
 	short   verbose = FALSE;
-	short   wrk_started = FALSE;
 	struct thread_info *ti;
 
 	umask(umask(0) | 022);						/* don't set less restrictive */
 	*inifile = '\0';
-	setvbuf(stderr, stderrbuf, _IOLBF, sizeof(stderrbuf));
 
 	while((opt = getopt(argc, argv, "dvf:V?")) != -1) {
 		switch (opt) {
@@ -134,16 +126,6 @@ int main(int argc, char *argv[])
 	}
 
 	uname(&utsbuf);								/* for debug/token expansion */
-
-#if 0
-	if(debug || verbose) {
-		fprintf(stdout, "sysname:  %s\n", utsbuf.sysname);
-		fprintf(stdout, "nodename: %s\n", utsbuf.nodename);
-		fprintf(stdout, "release:  %s\n", utsbuf.release);
-		fprintf(stdout, "version:  %s\n", utsbuf.version);
-		fprintf(stdout, "\n");
-	}
-#endif
 
 	if(debug) {
 		for(i = 0; i < nsect; i++)
@@ -365,43 +347,33 @@ int main(int argc, char *argv[])
 			usleep((useconds_t) 100000);
 			fprintf(stderr, "%s: start wrk thread: %s\n", ti->ti_section, ti->ti_dirname);
 			pthread_create(&workers[i], NULL, &workthread, (void *)ti);
-			wrk_started = TRUE;
 		}
 
 		if(threadcheck(ti, _EXP_THR)) {			/* file expiration, retention */
 			usleep((useconds_t) 100000);
 			fprintf(stderr, "%s: start exp thread: %s\n", ti->ti_section, ti->ti_dirname);
 			pthread_create(&expmons[i], NULL, &expthread, (void *)ti);
-			exp_started = TRUE;
 		}
 
 		if(threadcheck(ti, _DFS_THR)) {			/* filesystem free space */
 			usleep((useconds_t) 100000);
 			fprintf(stderr, "%s: start dfs thread: %s\n", ti->ti_section, ti->ti_dirname);
 			pthread_create(&dfsmons[i], NULL, &dfsthread, (void *)ti);
-			dfs_started = TRUE;
 		}
 
 		if(threadcheck(ti, _SLM_THR)) {			/* simple log monitor */
 			usleep((useconds_t) 100000);
 			fprintf(stderr, "%s: start slm thread: %s\n", ti->ti_section, ti->ti_dirname);
 			pthread_create(&slmmons[i], NULL, &slmthread, (void *)ti);
-			slm_started = TRUE;
 		}
 	}
 
 	for(i = 0; i < nsect; i++) {
-		if(wrk_started)
-			pthread_join(workers[i], NULL);
-
-		if(exp_started)
-			pthread_join(expmons[i], NULL);
-
-		if(dfs_started)
-			pthread_join(dfsmons[i], NULL);
-
-		if(slm_started)
-			pthread_join(slmmons[i], NULL);
+		/* ignore EINVAL */
+		(void)pthread_join(workers[i], NULL);
+		(void)pthread_join(expmons[i], NULL);
+		(void)pthread_join(dfsmons[i], NULL);
+		(void)pthread_join(slmmons[i], NULL);
 	}
 
 	exit(EXIT_SUCCESS);
