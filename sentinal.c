@@ -412,6 +412,7 @@ static int parsecmd(char *cmd, char *argv[])
 static void dump_thread_info(struct thread_info *ti)
 {
 	char    ebuf[BUFSIZ];
+	char    fbuf[BUFSIZ];
 	char   *zargv[MAXARGS];
 	int     i;
 	int     n;
@@ -442,7 +443,8 @@ static void dump_thread_info(struct thread_info *ti)
 	fprintf(stdout, "retmax:   %d\n", ti->ti_retmax);
 	fprintf(stdout, "terse:    %s\n", ti->ti_terse);
 
-	logname(ti->ti_template, ti->ti_filename);
+	logname(ti->ti_template, fbuf);
+	fullpath(ti->ti_dirname, fbuf, ti->ti_filename);
 
 	if(ti->ti_argc) {
 		n = runcmd(ti->ti_argc, ti->ti_argv, zargv);
