@@ -98,6 +98,8 @@ static int inotify_watch(char *filename)
 	fds[0].fd = fd;
 	fds[0].events = POLLIN;
 
+	/* poll defers our noticing SIGHUP */
+
 	if((pn = poll(fds, 1, -1)) > 0)
 		if(fds[0].revents & POLLIN)
 			read(fd, buf, sizeof(buf));
