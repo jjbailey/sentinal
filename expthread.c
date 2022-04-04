@@ -56,8 +56,6 @@ void   *expthread(void *arg)
 	for(;;) {
 		sleep(interval);						/* expiry monitor rate */
 
-		*oldfile = oldtime = 0;
-
 		/* full path to oldest file, its time, and the number of files found */
 		fc = oldestfile(ti, TRUE, ti->ti_dirname, oldfile, &oldtime);
 
@@ -68,16 +66,21 @@ void   *expthread(void *arg)
 			continue;
 		}
 
+		if(ti->ti_retmin && fc <= ti->ti_retmin) {
+			/* keep */
+			continue;
+		}
+
 		if(time(&curtime) - oldtime < ONE_MINUTE) {
 			/* wait for another thread to remove a file older than this one */
 			interval = ONE_MINUTE >> 1;			/* intermediate sleep state */
 			continue;
 		}
 
-		if(ti->ti_retmax && *oldfile && fc > ti->ti_retmax) {
+		if(ti->ti_retmax && fc > ti->ti_retmax) {
 			/* too many files */
 			reason = "remove";
-		} else if(ti->ti_expire && *oldfile && oldtime + ti->ti_expire < curtime) {
+		} else if(ti->ti_expire && oldtime + ti->ti_expire < curtime) {
 			/* retention time exceeded */
 			reason = "expire";
 		} else {

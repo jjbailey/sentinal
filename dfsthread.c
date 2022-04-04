@@ -170,7 +170,6 @@ void   *dfsthread(void *arg)
 		}
 
 		/* low space, remove oldest file */
-		*oldfile = oldtime = 0;
 
 		/* full path to oldest file and its time */
 		fc = oldestfile(ti, TRUE, ti->ti_dirname, oldfile, &oldtime);
