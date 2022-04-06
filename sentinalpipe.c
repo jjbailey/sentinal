@@ -15,7 +15,6 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <libgen.h>
-#include <limits.h>
 #include <signal.h>
 #include <unistd.h>
 #include "sentinal.h"

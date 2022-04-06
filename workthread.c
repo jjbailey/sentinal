@@ -26,8 +26,7 @@
 #define	PIPEBUFSIZ	(64 * ONE_KiB)				/* better size for IPC i/o */
 
 #define	ROTATE(lim,n,sig)	((lim && n > lim) || sig == SIGHUP)
-#define	STAT(file,buf)	(stat(file, &buf) == -1 ? -1 : buf.st_size)
-
+#define	STAT(file,buf)		(stat(file, &buf) == -1 ? -1 : buf.st_size)
 #define	SLOWEXIT(code)		{ sleep(5); exit(code); }
 
 static int fifoopen(struct thread_info *);

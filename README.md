@@ -115,8 +115,9 @@ or when the files are older than 7 days, or when there are more than 5M files:
 
 ### Simple Log Monitor
 
-sentinal can monitor and process logs when they reach a specified size.
-A sentinal section for SLM must not set `command`; `template` and `postcmd` must be set.
+sentinal, using inotify, can monitor and process logs when they reach a specified size.
+A sentinal section for SLM must not set `command`;
+`template`, `postcmd`, and `loglimit` must be set.
 
 In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 50MiB in size:
 
@@ -166,8 +167,8 @@ and rotates and compresses the log when it reaches 5GiB in size:
     loglimit = 5G
     postcmd  = /usr/bin/zstd --rm -T0 %n 2>/dev/null
 
-This example does basically the same as above, but with on-the-fly compression (no intermediate files),
-and rotates the compressed log when it reaches 1GiB in size:
+This example does basically the same as above, but with on-the-fly compression (no
+intermediate files), and rotates the compressed log when it reaches 1GiB in size:
 
     [example]
     command  = /usr/bin/zstd -T0
@@ -288,9 +289,7 @@ Examples of on-demand log rotation:
 
 - sentinal reports free space for unprivileged users, which may be less than privileged users' values reported by disk utility programs.
 
-- sentinal configuration without direct log handling (`command` and `pipename` are unset) does not start the worker thread, leaving the other threads to watch the logs and disk space as they would normally.
+- The `loglimit` key represents bytes written to disk.  When `command` specifies a compression program, log rotation occurs after sentinal writes `loglimit` bytes post-compression.  If unset or zero, the task requires some form of manual log rotation.
 
-- The `loglimit` key represents bytes written to disk.  When `command` specifies a compression program, log rotation occurs after sentinal writes `loglimit` bytes post-compression.  If unset or zero, some form of manual log rotation is required.
-
-- sentinal removes empty subdirectories within `dirname`.  To negate this behavior, create a file in the subdirectory, where the file name does not match `pcrestr`, for example, `.persist`.
+- sentinal removes empty subdirectories within `dirname`.  To negate this behavior, create a file in the subdirectory with a file name that does not match `pcrestr`, for example, `.persist`.
 

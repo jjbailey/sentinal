@@ -114,7 +114,7 @@ sentinal accepts two flags for debugging.
     [test4]
     command  = /usr/bin/zstd -1 -T4
     dirname  = /opt/sentinal/tests
-    subdirs  = 1
+    subdirs  = true
     pipename = test4.fifo
     template = test4-%Y-%m-%d_%H-%M-%S.log.zst
     pcrestr  = test4-
@@ -126,6 +126,7 @@ sentinal accepts two flags for debugging.
     expire   =
     retmin   = 3
     retmax   = 25
+    terse    =
     postcmd  = dir=%p/$(date +%d/%H/%M) ; mkdir -p $dir ; mv %n $dir
 
     $ /opt/sentinal/bin/sentinal -f /opt/sentinal/tests/test4.ini -v
@@ -136,7 +137,7 @@ sentinal accepts two flags for debugging.
     path:     /usr/bin/zstd
     argv:     -1 -T4
     dirname:  /opt/sentinal/tests
-    subdirs:  1
+    subdirs:  true
     pipename: /opt/sentinal/tests/test4.fifo
     template: test4-%Y-%m-%d_%H-%M-%S.log.zst
     pcrestr:  test4-
@@ -148,7 +149,8 @@ sentinal accepts two flags for debugging.
     expire:   0m
     retmin:   3
     retmax:   25
-    execcmd:  zstd -f -1 -T4 > test4-2021-12-06_10-59-06.log.zst
-    postcmd:  dir=/opt/sentinal/tests/$(date +%d/%H/%M) ; mkdir -p $dir ; mv test4-2021-12-06_10-59-06.log.zst $dir
-    threads:  dfs: true  exp: true  slm: false  wrk: true
+    terse:    false
+    execcmd:  zstd -f -1 -T4 > /opt/sentinal/tests/test4-2022-04-03_20-57-40.log.zst
+    postcmd:  dir=/opt/sentinal/tests/$(date +%d/%H/%M) ; mkdir -p $dir ; mv /opt/sentinal/tests/test4-2022-04-03_20-57-40.log.zst $dir
+    threads:  dfs: true   exp: true   slm: false   wrk: true
 

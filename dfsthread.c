@@ -22,7 +22,12 @@
 
 #define	FLOORF(v)		floorf(v * 100.0) / 100.0
 #define	PERCENT(x,y)	FLOORF(((long double)x / (long double)y) * 100.0)
-#define	SCANRATE	15
+#define	SCANRATE		10						/* minimum monitor rate */
+
+#define	MINIMUM(a,b)	(a < b ? a : b)
+#define	MAXIMUM(a,b)	(a > b ? a : b)
+
+static int itimer(int, int, int);
 
 void   *dfsthread(void *arg)
 {
@@ -30,7 +35,7 @@ void   *dfsthread(void *arg)
 	char    oldfile[PATH_MAX];
 	char    task[TASK_COMM_LEN];
 	int     fc;
-	int     interval = SCANRATE;
+	int     interval;
 	long double pc_bfree = 0.0;
 	long double pc_ffree = 0.0;
 	short   rptlowres = TRUE;
@@ -101,6 +106,10 @@ void   *dfsthread(void *arg)
 		return ((void *)0);
 	}
 
+	/* monitor filesystem based on available space */
+
+	interval = itimer((int)pc_bfree, (int)pc_ffree, SCANRATE);
+
 	for(;;) {
 		sleep(interval);						/* filesystem monitor rate */
 
@@ -135,10 +144,11 @@ void   *dfsthread(void *arg)
 
 				rptstatus = FALSE;				/* mute status alert */
 				rptlowres = TRUE;				/* reset lowres alert */
-			}
 
-			if(interval != SCANRATE)
-				interval = SCANRATE;			/* return to normal */
+				/* recompute the monitor rate */
+
+				interval = itimer((int)pc_bfree, (int)pc_ffree, SCANRATE);
+			}
 
 			continue;
 		} else {
@@ -160,22 +170,19 @@ void   *dfsthread(void *arg)
 		}
 
 		/* low space, remove oldest file */
-		*oldfile = oldtime = 0;
 
 		/* full path to oldest file and its time */
 		fc = oldestfile(ti, TRUE, ti->ti_dirname, oldfile, &oldtime);
 
 		if(!fc || (ti->ti_retmin && fc <= ti->ti_retmin)) {
 			/* no work */
-
-			if(interval != SCANRATE)
-				interval = SCANRATE;			/* return to normal */
-
+			/* reset the interval when reporting */
 			continue;
 		}
 
 		if(time(&curtime) - oldtime < ONE_MINUTE) {
 			/* wait for another thread to remove a file older than this one */
+			interval = ONE_MINUTE >> 1;			/* intermediate sleep state */
 			continue;
 		}
 
@@ -188,6 +195,22 @@ void   *dfsthread(void *arg)
 
 	/* notreached */
 	return ((void *)0);
+}
+
+static int itimer(int a, int b, int c)
+{
+	/*
+	 * return the lesser of a, b, but no less than c
+	 * neither a nor b can be 0
+	 */
+
+	if(a && !b)
+		b = a;
+
+	else if(!a && b)
+		a = b;
+
+	return (MAXIMUM(MINIMUM(a, b), c));
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

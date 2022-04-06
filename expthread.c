@@ -18,7 +18,7 @@
 #include "sentinal.h"
 #include "basename.h"
 
-#define	SCANRATE	15
+#define	SCANRATE		ONE_MINUTE				/* default monitor rate */
 
 void   *expthread(void *arg)
 {
@@ -53,34 +53,34 @@ void   *expthread(void *arg)
 		fprintf(stderr, "%s: monitor file: %s for retmax %d\n",
 				ti->ti_section, ti->ti_pcrestr, ti->ti_retmax);
 
-	/* if ti->ti_expire is zero, we're only concerned with retmin and/or retmax */
-
 	for(;;) {
 		sleep(interval);						/* expiry monitor rate */
-
-		*oldfile = oldtime = 0;
 
 		/* full path to oldest file, its time, and the number of files found */
 		fc = oldestfile(ti, TRUE, ti->ti_dirname, oldfile, &oldtime);
 
-		if(!fc) {
-			/* no work */
-
-			if(interval != SCANRATE)
+		if(!fc) {								/* no work */
+			if(interval < SCANRATE)
 				interval = SCANRATE;			/* return to normal */
 
 			continue;
 		}
 
-		if(time(&curtime) - oldtime < ONE_MINUTE) {
-			/* wait for another thread to remove a file older than this one */
+		if(ti->ti_retmin && fc <= ti->ti_retmin) {
+			/* keep */
 			continue;
 		}
 
-		if(ti->ti_retmax && *oldfile && fc > ti->ti_retmax) {
+		if(time(&curtime) - oldtime < ONE_MINUTE) {
+			/* wait for another thread to remove a file older than this one */
+			interval = ONE_MINUTE >> 1;			/* intermediate sleep state */
+			continue;
+		}
+
+		if(ti->ti_retmax && fc > ti->ti_retmax) {
 			/* too many files */
 			reason = "remove";
-		} else if(ti->ti_expire && *oldfile && oldtime + ti->ti_expire < curtime) {
+		} else if(ti->ti_expire && oldtime + ti->ti_expire < curtime) {
 			/* retention time exceeded */
 			reason = "expire";
 		} else {

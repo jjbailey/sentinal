@@ -22,7 +22,7 @@
 #define	MAXARGS		32
 #define	MAXSECT		16							/* arbitrary, can be more */
 
-#define	MAXFILES	1024						/* max open files */
+#define	MAXFILES	128							/* max open files */
 
 #ifndef PATH_MAX
 # define	PATH_MAX	256

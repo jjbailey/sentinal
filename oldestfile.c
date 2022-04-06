@@ -32,6 +32,9 @@ int oldestfile(struct thread_info *ti, short top, char *dir, char *oldfile,
 
 	rewinddir(dirp);
 
+	if(top)										/* reset */
+		*oldfile = *oldtime = 0;
+
 	while(dp = readdir(dirp)) {
 		if(strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0)
 			continue;

@@ -37,7 +37,7 @@ int threadcheck(struct thread_info *ti, char *tname)
 
 void activethreads(struct thread_info *ti)
 {
-	fprintf(stdout, "threads:  dfs: %s  exp: %s  slm: %s  wrk: %s\n",
+	fprintf(stdout, "threads:  dfs: %s   exp: %s   slm: %s   wrk: %s\n",
 			THRCHECK(ti, _DFS_THR), THRCHECK(ti, _EXP_THR),
 			THRCHECK(ti, _SLM_THR), THRCHECK(ti, _WRK_THR));
 }
