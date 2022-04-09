@@ -1,6 +1,6 @@
 /*
  * signals.c
- * Set signals for handing events.
+ * Set signals for handling events.
  *
  * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
