@@ -83,7 +83,6 @@ static int inotify_watch(char *filename)
 {
 	char    buf[BUFSIZ];
 	int     fd;
-	int     pn;
 	int     wd;
 	struct pollfd fds[1];
 
@@ -101,8 +100,9 @@ static int inotify_watch(char *filename)
 	fds[0].events = POLLIN;
 
 	/* poll defers our noticing SIGHUP */
+	/* set a 1-minute timer */
 
-	if((pn = poll(fds, 1, -1)) > 0)
+	if(poll(fds, 1, ONE_MINUTE * 1000) > 0)
 		if(fds[0].revents & POLLIN)
 			read(fd, buf, sizeof(buf));
 
