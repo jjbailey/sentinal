@@ -25,6 +25,7 @@
 static int inotify_watch(char *, char *);
 
 #define	SCANRATE		2						/* default monitor rate */
+#define	POLLTIMEOUT		(120 * 1000)			/* 2 minutes in milliseconds */
 
 #define	ROTATE(lim,n,sig)	((lim && n > lim) || sig == SIGHUP)
 #define	STAT(file,buf)		(stat(file, &buf) == -1 ? -1 : buf.st_size)
@@ -101,9 +102,8 @@ static int inotify_watch(char *section, char *filename)
 	fds[0].events = POLLIN;
 
 	/* poll defers our noticing SIGHUP */
-	/* set a 120-second timer */
 
-	if(poll(fds, 1, 120 * 1000) > 0)
+	if(poll(fds, 1, POLLTIMEOUT) > 0)
 		if(read(fd, buf, BUFSIZ) > 0) {
 			event = (struct inotify_event *)buf;
 
