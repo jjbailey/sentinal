@@ -22,9 +22,10 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-static int inotify_watch(char *);
+static int inotify_watch(char *, char *);
 
 #define	SCANRATE		2						/* default monitor rate */
+#define	POLLTIMEOUT		(120 * 1000)			/* 2 minutes in milliseconds */
 
 #define	ROTATE(lim,n,sig)	((lim && n > lim) || sig == SIGHUP)
 #define	STAT(file,buf)		(stat(file, &buf) == -1 ? -1 : buf.st_size)
@@ -71,7 +72,7 @@ void   *slmthread(void *arg)
 			ti->ti_sig = 0;						/* reset */
 		}
 
-		if(inotify_watch(filename) == FALSE)
+		if(inotify_watch(ti->ti_section, filename) == FALSE)
 			sleep(SCANRATE);					/* in lieu of inotify */
 	}
 
@@ -79,18 +80,18 @@ void   *slmthread(void *arg)
 	return ((void *)0);
 }
 
-static int inotify_watch(char *filename)
+static int inotify_watch(char *section, char *filename)
 {
 	char    buf[BUFSIZ];
 	int     fd;
-	int     pn;
 	int     wd;
+	struct inotify_event *event;
 	struct pollfd fds[1];
 
 	if(access(filename, R_OK) == -1 || (fd = inotify_init1(IN_NONBLOCK)) == -1)
 		return (FALSE);
 
-	wd = inotify_add_watch(fd, filename, IN_CREATE | IN_DELETE | IN_MODIFY | IN_MOVE);
+	wd = inotify_add_watch(fd, filename, IN_MODIFY | IN_MOVE_SELF);
 
 	if(wd == -1) {
 		close(fd);
@@ -102,9 +103,13 @@ static int inotify_watch(char *filename)
 
 	/* poll defers our noticing SIGHUP */
 
-	if((pn = poll(fds, 1, -1)) > 0)
-		if(fds[0].revents & POLLIN)
-			read(fd, buf, sizeof(buf));
+	if(poll(fds, 1, POLLTIMEOUT) > 0)
+		if(read(fd, buf, BUFSIZ) > 0) {
+			event = (struct inotify_event *)buf;
+
+			if(event->mask & IN_MOVE_SELF)
+				fprintf(stderr, "%s: %s moved\n", section, filename);
+		}
 
 	inotify_rm_watch(fd, wd);
 	close(fd);
