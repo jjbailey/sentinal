@@ -18,28 +18,35 @@
 #include "sentinal.h"
 #include "basename.h"
 
-#define	SCANRATE		ONE_MINUTE				/* default monitor rate */
+#define	SCANRATE		ONE_MINUTE					/* default monitor rate */
 
 void   *expthread(void *arg)
 {
 	char    ebuf[BUFSIZ];
-	char    oldfile[PATH_MAX];
 	char    task[TASK_COMM_LEN];
 	char   *reason;
 	int     fc;
 	int     interval = SCANRATE;
+	struct dir_info dinfo;
 	struct thread_info *ti = arg;
 	time_t  curtime;
-	time_t  oldtime;
 
 	/*
 	 * this thread requires:
 	 *  - ti_pcrecmp
-	 *  - ti_expire or ti_retmin or ti_retmax
+	 *  - at least one of:
+	 *    - ti_dirlimit
+	 *    - ti_expire
+	 *    - ti_retmin
+	 *    - ti_retmax
 	 */
 
 	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _EXP_THR, task));
+
+	if(ti->ti_dirlimit)
+		fprintf(stderr, "%s: monitor directory: %s for dirlimit %ldMiB\n",
+				ti->ti_section, ti->ti_dirname, MiB(ti->ti_dirlimit));
 
 	if(ti->ti_expire)
 		fprintf(stderr, "%s: monitor file: %s for expiration %s\n",
@@ -54,46 +61,47 @@ void   *expthread(void *arg)
 				ti->ti_section, ti->ti_pcrestr, ti->ti_retmax);
 
 	for(;;) {
-		sleep(interval);						/* expiry monitor rate */
+		sleep(interval);							/* expiry monitor rate */
 
 		/* full path to oldest file, its time, and the number of files found */
-		fc = oldestfile(ti, TRUE, ti->ti_dirname, oldfile, &oldtime);
+		fc = oldestfile(ti, TRUE, ti->ti_dirname, &dinfo);
 
-		if(!fc) {								/* no work */
+		if(!fc) {									/* no work */
 			if(interval < SCANRATE)
-				interval = SCANRATE;			/* return to normal */
+				interval = SCANRATE;				/* return to normal */
 
 			continue;
 		}
 
-		if(ti->ti_retmin && fc <= ti->ti_retmin) {
-			/* keep */
+		if(ti->ti_retmin && fc <= ti->ti_retmin)	/* keep */
 			continue;
-		}
 
-		if(time(&curtime) - oldtime < ONE_MINUTE) {
+		if(time(&curtime) - dinfo.di_time < ONE_MINUTE) {
 			/* wait for another thread to remove a file older than this one */
-			interval = ONE_MINUTE >> 1;			/* intermediate sleep state */
+			interval = ONE_MINUTE >> 1;				/* intermediate sleep state */
 			continue;
 		}
 
 		if(ti->ti_retmax && fc > ti->ti_retmax) {
 			/* too many files */
-			reason = "remove";
-		} else if(ti->ti_expire && oldtime + ti->ti_expire < curtime) {
+			reason = "retmax exceeded";
+		} else if(ti->ti_expire && dinfo.di_time + ti->ti_expire < curtime) {
 			/* retention time exceeded */
-			reason = "expire";
+			reason = "expired";
+		} else if(ti->ti_dirlimit && dinfo.di_bytes > ti->ti_dirlimit) {
+			/* dirlimit exceeded */
+			reason = "dirlimit exceeded";
 		} else {
 			/* desired state */
-			interval = SCANRATE;				/* return to normal */
+			interval = SCANRATE;					/* return to normal */
 			continue;
 		}
 
-		if(*ti->ti_terse == 'f')
-			fprintf(stderr, "%s: %s %s\n", ti->ti_section, reason, base(oldfile));
+		if(!ti->ti_terse)
+			fprintf(stderr, "%s: %s %s\n", ti->ti_section, reason, base(dinfo.di_file));
 
-		remove(oldfile);
-		interval = 0;							/* 1 sec is too slow for inodes */
+		remove(dinfo.di_file);
+		interval = 0;								/* 1 sec is too slow for inodes */
 	}
 
 	/* notreached */

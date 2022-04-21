@@ -24,8 +24,8 @@
 
 static int inotify_watch(char *, char *);
 
-#define	SCANRATE		2						/* default monitor rate */
-#define	POLLTIMEOUT		(120 * 1000)			/* 2 minutes in milliseconds */
+#define	SCANRATE		2							/* default monitor rate */
+#define	POLLTIMEOUT		(120 * 1000)				/* 2 minutes in milliseconds */
 
 #define	ROTATE(lim,n,sig)	((lim && n > lim) || sig == SIGHUP)
 #define	STAT(file,buf)		(stat(file, &buf) == -1 ? -1 : buf.st_size)
@@ -58,7 +58,7 @@ void   *slmthread(void *arg)
 		fprintf(stderr, "%s: monitor file size: %ldMiB\n", ti->ti_section,
 				MiB(ti->ti_loglimit));
 
-	ti->ti_sig = 0;								/* reset */
+	ti->ti_sig = 0;									/* reset */
 
 	for(;;) {
 		if(ROTATE(ti->ti_loglimit, STAT(filename, stbuf), ti->ti_sig)) {
@@ -66,14 +66,14 @@ void   *slmthread(void *arg)
 
 			if((status = postcmd(ti, filename)) != 0) {
 				fprintf(stderr, "%s: postcmd exit: %d\n", ti->ti_section, status);
-				sleep(5);						/* be nice */
+				sleep(5);							/* be nice */
 			}
 
-			ti->ti_sig = 0;						/* reset */
+			ti->ti_sig = 0;							/* reset */
 		}
 
 		if(inotify_watch(ti->ti_section, filename) == FALSE)
-			sleep(SCANRATE);					/* in lieu of inotify */
+			sleep(SCANRATE);						/* in lieu of inotify */
 	}
 
 	/* notreached */
@@ -91,9 +91,7 @@ static int inotify_watch(char *section, char *filename)
 	if(access(filename, R_OK) == -1 || (fd = inotify_init1(IN_NONBLOCK)) == -1)
 		return (FALSE);
 
-	wd = inotify_add_watch(fd, filename, IN_MODIFY | IN_MOVE_SELF);
-
-	if(wd == -1) {
+	if((wd = inotify_add_watch(fd, filename, IN_MODIFY | IN_MOVE_SELF)) == -1) {
 		close(fd);
 		return (FALSE);
 	}

@@ -23,7 +23,7 @@
 #include "sentinal.h"
 #include "basename.h"
 
-#define	PIPEBUFSIZ	(64 * ONE_KiB)				/* better size for IPC i/o */
+#define	PIPEBUFSIZ	(64 * ONE_KiB)					/* better size for IPC i/o */
 
 #define	ROTATE(lim,n,sig)	((lim && n > lim) || sig == SIGHUP)
 #define	STAT(file,buf)		(stat(file, &buf) == -1 ? -1 : buf.st_size)
@@ -46,7 +46,7 @@ void   *workthread(void *arg)
 	char   *envp[MAXARGS];
 	char   *zargv[MAXARGS];
 	extern int errno;
-	int     holdfd;								/* fd to hold FIFO open */
+	int     holdfd;									/* fd to hold FIFO open */
 	int     i;
 	int     logfd;
 	int     n;
@@ -127,8 +127,8 @@ void   *workthread(void *arg)
 				SLOWEXIT(EXIT_FAILURE);
 			}
 
-			close(pipefd[1]);					/* close unused write end */
-			dup2(pipefd[0], STDIN_FILENO);		/* new stdin */
+			close(pipefd[1]);						/* close unused write end */
+			dup2(pipefd[0], STDIN_FILENO);			/* new stdin */
 			close(STDOUT_FILENO);
 
 			if(open(filename, O_WRONLY | O_CREAT, 0644) == -1) {
@@ -158,7 +158,7 @@ void   *workthread(void *arg)
 				envp[4] = pcrebuf;
 				envp[5] = (char *)NULL;
 
-				umask(umask(0) | 022);			/* don't set less restrictive */
+				umask(umask(0) | 022);				/* don't set less restrictive */
 				nice(1);
 				execve(ti->ti_path, zargv, envp);
 				exit(EXIT_FAILURE);
@@ -170,8 +170,8 @@ void   *workthread(void *arg)
 			 * application -> FIFO -> sentinal -> IPC pipe -> command -> logfile
 			 */
 
-			close(pipefd[0]);					/* close unused read end */
-			ti->ti_wfd = pipefd[1];				/* save fd for close */
+			close(pipefd[0]);						/* close unused read end */
+			ti->ti_wfd = pipefd[1];					/* save fd for close */
 
 			/* parent needs to keep the pipe open for reading */
 
@@ -182,7 +182,7 @@ void   *workthread(void *arg)
 
 			/* begin */
 
-			ti->ti_sig = 0;						/* reset */
+			ti->ti_sig = 0;							/* reset */
 
 			for(;;) {
 				if((n = read(logfd, pipebuf, PIPEBUFSIZ)) <= 0)
@@ -199,36 +199,36 @@ void   *workthread(void *arg)
 					/* loglimit or signaled to logrotate */
 
 					fprintf(stderr, "%s: rotate %s\n", ti->ti_section, ti->ti_filename);
-					ti->ti_sig = 0;				/* reset */
+					ti->ti_sig = 0;					/* reset */
 					break;
 				}
 			}
 
 			/* done */
 
-			if(n == 0) {						/* writer is gone */
+			if(n == 0) {							/* writer is gone */
 				close(holdfd);
 				holdfd = 0;
 			}
 
 			close(ti->ti_wfd);
 			waitpid(ti->ti_pid, &status, 0);
-			ti->ti_wfd = EOF;					/* done with this file */
+			ti->ti_wfd = EOF;						/* done with this file */
 
 			/* if file is empty, write failed, e.g. */
 			/* No space left on device (cannot write compressed block) */
 
-			if(STAT(filename, stbuf) > 0) {		/* success */
+			if(STAT(filename, stbuf) > 0) {			/* success */
 				if((status = postcmd(ti, filename)) != 0) {
 					fprintf(stderr, "%s: postcmd exit: %d\n", ti->ti_section, status);
-					sleep(5);					/* be nice */
+					sleep(5);						/* be nice */
 				}
-			} else {							/* fail */
-				remove(filename);
-				sleep(5);						/* be nice */
+			} else {								/* fail */
+				remove(filename);					/* exists? */
+				sleep(5);							/* be nice */
 			}
 
-			close(logfd);						/* pipe remains held open by holdfd */
+			close(logfd);							/* pipe remains held open by holdfd */
 		}
 	}
 
@@ -241,7 +241,7 @@ static void fifosize(struct thread_info *ti, int size)
 	/* max pipesize is in /proc/sys/fs/pipe-max-size */
 	/* kernels 2.6.35 and newer */
 
-#ifdef	F_SETPIPE_SZ							/* undefined in < 2.6.35 kernels */
+#ifdef	F_SETPIPE_SZ								/* undefined in < 2.6.35 kernels */
 
 	int     cursize;
 	int     fd;
@@ -265,7 +265,7 @@ static void fifosize(struct thread_info *ti, int size)
 
 	close(fd);
 
-#endif											/* F_SETPIPE_SZ */
+#endif												/* F_SETPIPE_SZ */
 }
 
 static int fifoopen(struct thread_info *ti)
@@ -278,7 +278,7 @@ static int fifoopen(struct thread_info *ti)
 
 	/* create a FIFO. note: this permits symlinks to FIFOs */
 
-	if(lstat(ti->ti_pipename, &stbuf) == 0) {	/* found something */
+	if(lstat(ti->ti_pipename, &stbuf) == 0) {		/* found something */
 		if(!S_ISFIFO(stbuf.st_mode)) {
 			fprintf(stderr, "%s: not a FIFO: %s\n", ti->ti_section,
 					base(ti->ti_pipename));
@@ -288,7 +288,7 @@ static int fifoopen(struct thread_info *ti)
 	} else
 		pflag = TRUE;
 
-	if(pflag) {									/* need a FIFO */
+	if(pflag) {										/* need a FIFO */
 		/* fork to set ids */
 
 		if((pid = fork()) == 0) {

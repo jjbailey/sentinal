@@ -14,7 +14,7 @@
 #include <string.h>
 #include "ini.h"
 
-char   *NullStr = "";							/* empty string for strdup, etc */
+char   *NullStr = "";								/* empty string for strdup, etc */
 
 char   *my_ini(ini_t *ini, char *section, char *key)
 {
@@ -43,10 +43,10 @@ int get_sections(ini_t *inidata, int maxsect, char *sections[])
 
 	for(p = inidata->data; p < inidata->end; p++)
 		if(*p == '[') {
-			if(p > inidata->data && *(p - 1))	/* line does not start with [ */
+			if(p > inidata->data && *(p - 1))		/* line does not start with [ */
 				continue;
 
-			if(strcmp(p + 1, "global") == 0)	/* global is not a thread */
+			if(strcmp(p + 1, "global") == 0)		/* global is not a thread */
 				continue;
 
 			sections[i++] = strdup(p + 1);
@@ -66,6 +66,7 @@ void print_section(ini_t *inidata, char *section)
 	fprintf(stdout, "\n[%s]\n", section);
 	fprintf(stdout, "command  = %s\n", my_ini(inidata, section, "command"));
 	fprintf(stdout, "dirname  = %s\n", my_ini(inidata, section, "dirname"));
+	fprintf(stdout, "dirlimit = %s\n", my_ini(inidata, section, "dirlimit"));
 	fprintf(stdout, "subdirs  = %s\n", my_ini(inidata, section, "subdirs"));
 	fprintf(stdout, "pipename = %s\n", my_ini(inidata, section, "pipename"));
 	fprintf(stdout, "template = %s\n", my_ini(inidata, section, "template"));

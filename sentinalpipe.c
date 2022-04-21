@@ -22,11 +22,11 @@
 #include "ini.h"
 
 struct pipeinfo {
-	char   *pi_pipename;						/* FIFO name */
-	int     pi_fd;								/* fd from open(2) */
+	char   *pi_pipename;							/* FIFO name */
+	int     pi_fd;									/* fd from open(2) */
 };
 
-struct pipeinfo pipelist[MAXSECT];				/* list of pipes and open fds */
+struct pipeinfo pipelist[MAXSECT];					/* list of pipes and open fds */
 
 static void help(char *);
 static void pipeopen(int);
@@ -57,19 +57,19 @@ int main(int argc, char *argv[])
 	while((opt = getopt(argc, argv, "f:V?")) != -1) {
 		switch (opt) {
 
-		case 'f':								/* INI file name */
+		case 'f':									/* INI file name */
 			strlcpy(inifile, optarg, PATH_MAX);
 			break;
 
-		case 'V':								/* print version */
+		case 'V':									/* print version */
 			version(argv[0], stdout);
 			exit(EXIT_SUCCESS);
 
-		case '?':								/* print usage */
+		case '?':									/* print usage */
 			help(argv[0]);
 			exit(EXIT_SUCCESS);
 
-		default:								/* print error and usage */
+		default:									/* print error and usage */
 			help(argv[0]);
 			exit(EXIT_FAILURE);
 		}
@@ -136,9 +136,9 @@ static void pipeopen(int i)
 {
 	/* keep pipes open by opening a new fd before closing the old fd */
 
-	int     savefd = pipelist[i].pi_fd;			/* save open fd */
+	int     savefd = pipelist[i].pi_fd;				/* save open fd */
 
-	if(IS_NULL(pipelist[i].pi_pipename))		/* INI file error */
+	if(IS_NULL(pipelist[i].pi_pipename))			/* INI file error */
 		return;
 
 	if(access(pipelist[i].pi_pipename, R_OK) == -1) {
@@ -148,10 +148,10 @@ static void pipeopen(int i)
 			close(savefd);
 
 		pipelist[i].pi_fd = EOF;
-	} else {									/* open a second fd */
+	} else {										/* open a second fd */
 		pipelist[i].pi_fd = open(pipelist[i].pi_pipename, O_RDONLY | O_NONBLOCK);
 
-		if(savefd != EOF)						/* close saved fd */
+		if(savefd != EOF)							/* close saved fd */
 			close(savefd);
 	}
 }
@@ -185,10 +185,10 @@ static void sigcatch(int sig)
 	fprintf(stderr, "sigcatch caught signal %d\n", sig);
 #endif
 
-	if(sig == SIGHUP || sig == SIGTERM) {		/* systemd reload/restart */
+	if(sig == SIGHUP || sig == SIGTERM) {			/* systemd reload/restart */
 		signal(sig, SIG_IGN);
 		fprintf(stderr, "exiting in 10s...\n");
-		sleep(10);								/* give sentinal 10s to restart */
+		sleep(10);									/* give sentinal 10s to restart */
 		exit(EXIT_SUCCESS);
 	}
 }

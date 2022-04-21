@@ -17,8 +17,7 @@
 #include <string.h>
 #include "sentinal.h"
 
-int oldestfile(struct thread_info *ti, short top, char *dir, char *oldfile,
-			   time_t *oldtime)
+int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 {
 	DIR    *dirp;
 	char    filename[PATH_MAX];
@@ -32,8 +31,11 @@ int oldestfile(struct thread_info *ti, short top, char *dir, char *oldfile,
 
 	rewinddir(dirp);
 
-	if(top)										/* reset */
-		*oldfile = *oldtime = 0;
+	if(top) {										/* reset */
+		*di->di_file = '\0';
+		di->di_time = 0;
+		di->di_bytes = 0;
+	}
 
 	while(dp = readdir(dirp)) {
 		if(strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0)
@@ -45,9 +47,9 @@ int oldestfile(struct thread_info *ti, short top, char *dir, char *oldfile,
 		if(stat(filename, &stbuf) == -1)
 			continue;
 
-		if(S_ISDIR(stbuf.st_mode) && *ti->ti_subdirs == 't') {
+		if(S_ISDIR(stbuf.st_mode) && ti->ti_subdirs) {
 			/* search subdirectory */
-			fc += oldestfile(ti, FALSE, filename, oldfile, oldtime);
+			fc += oldestfile(ti, FALSE, filename, di);
 			continue;
 		}
 
@@ -57,10 +59,12 @@ int oldestfile(struct thread_info *ti, short top, char *dir, char *oldfile,
 		if(!mylogfile(dp->d_name, ti->ti_pcrecmp))
 			continue;
 
-		if(*oldtime == 0 || stbuf.st_mtim.tv_sec < *oldtime) {
+		di->di_bytes += stbuf.st_size;				/* total size of files found */
+
+		if(di->di_time == 0 || stbuf.st_mtim.tv_sec < di->di_time) {
 			/* save the oldest log */
-			*oldtime = stbuf.st_mtim.tv_sec;
-			strlcpy(oldfile, filename, PATH_MAX);
+			strlcpy(di->di_file, filename, PATH_MAX);
+			di->di_time = stbuf.st_mtim.tv_sec;
 		}
 
 		fc++;
@@ -68,7 +72,7 @@ int oldestfile(struct thread_info *ti, short top, char *dir, char *oldfile,
 
 	closedir(dirp);
 
-	if(entries == 0 && !top)					/* directory is empty */
+	if(entries == 0 && !top)						/* directory is empty */
 		remove(dir);
 
 	return (fc);

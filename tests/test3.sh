@@ -11,8 +11,6 @@ LOGDIR=/opt/sentinal/tests
 # /opt/sentinal/bin/sentinal -f /opt/sentinal/tests/test3.ini
 # /opt/sentinal/tests/test3.sh
 
-echo $LOGFILE
-
 for i in {1..10} ; do
     LOGFILE=test3.fifo
     echo "LOGFILE=$LOGFILE"

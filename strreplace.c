@@ -26,10 +26,10 @@ void strreplace(char *template, char *oldstr, char *newstr)
 	char   *p;
 	int     len;
 
-	if(IS_NULL(oldstr) || IS_NULL(newstr))		/* null */
+	if(IS_NULL(oldstr) || IS_NULL(newstr))			/* null */
 		return;
 
-	if(strstr(newstr, oldstr))					/* recursion */
+	if(strstr(newstr, oldstr))						/* recursion */
 		return;
 
 	len = strlen(oldstr);
