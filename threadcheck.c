@@ -19,17 +19,18 @@ int threadcheck(struct thread_info *ti, char *tname)
 {
 	short   pass = FALSE;
 
-	if(strcmp(tname, _DFS_THR) == 0)			/* filesystem free space */
+	if(strcmp(tname, _DFS_THR) == 0)				/* filesystem free space */
 		pass = ti->ti_pcrecmp && (ti->ti_diskfree || ti->ti_inofree);
 
-	else if(strcmp(tname, _EXP_THR) == 0)		/* file expiration, retention */
-		pass = ti->ti_pcrecmp && (ti->ti_expire || ti->ti_retmin || ti->ti_retmax);
+	else if(strcmp(tname, _EXP_THR) == 0)			/* file expiration, retention, dirlimit */
+		pass = ti->ti_pcrecmp &&
+			(ti->ti_dirlimit || ti->ti_expire || ti->ti_retmin || ti->ti_retmax);
 
-	else if(strcmp(tname, _SLM_THR) == 0)		/* simple log monitor */
+	else if(strcmp(tname, _SLM_THR) == 0)			/* simple log monitor */
 		pass = IS_NULL(ti->ti_command) &&
 			ti->ti_template && ti->ti_postcmd && ti->ti_loglimit;
 
-	else if(strcmp(tname, _WRK_THR) == 0)		/* worker (log ingestion) thread */
+	else if(strcmp(tname, _WRK_THR) == 0)			/* worker (log ingestion) thread */
 		pass = ti->ti_argc && ti->ti_pipename && ti->ti_template;
 
 	return (pass);

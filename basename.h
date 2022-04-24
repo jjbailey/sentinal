@@ -23,6 +23,6 @@ static inline char *base(char *s)
 	return ((p = strrchr(s, '/')) ? p + 1 : s);
 }
 
-#endif											/* _BASE_INLINE */
+#endif												/* _BASE_INLINE */
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

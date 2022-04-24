@@ -31,6 +31,7 @@ and up to 16 resources sections with unique names up to 11 characters in length.
     [section]
     command:  command to run
     dirname:  thread and postcmd working directory, file location
+    dirlimit: maximum total size of matching files in a directory
     subdirs:  option to search subdirectories for matching files (false)
     pipename: named pipe/fifo fifo location
     template: output file name, date(1) sequences %F %Y %m %d %H %M %S %s
@@ -48,7 +49,8 @@ and up to 16 resources sections with unique names up to 11 characters in length.
 
 `section` is the section name.  It must be unique in the INI file.
 
-`pipename` is the path to the FIFO, either absolute or relative to dirname, created by sentinal, owned by uid, in group gid:
+`pipename` is the path to the FIFO, either absolute or relative to dirname,
+created by sentinal, owned by uid, in group gid:
 
     # ls -l example.log
     prw------- 1 sentinal sentinal 0 Dec  2 10:12 example.log
@@ -112,6 +114,20 @@ or when the files are older than 7 days, or when there are more than 5M files:
     inofree  = 15
     expire   = 7D
     retmax   = 5M
+
+### Directory Usage Example
+
+Remove myapp logs matching `myapplog-\d{8}$` when they use more than 500MiB of disk
+space or the number of logs exceeds 21:
+
+    [global]
+    pidfile  = /run/myapplog.pid
+
+    [myapp]
+    dirname  = /var/log/myapp
+    dirlimit = 500M
+    pcrestr  = myapplog-\d{8}$
+    retmax   = 21
 
 ### Simple Log Monitor
 
@@ -207,9 +223,18 @@ sentinal runs as a systemd service.  The following is an example of a unit file:
     [Install]
     WantedBy=multi-user.target
 
-Note: if an application never needs root privileges to run and process logs,
-consider using the application's user and group IDs in the unit file.
-User=root is helpful (and likely necessary) when a single sentinal instance monitors several different applications.
+### User/Group ID notes:
+
+- User/Group ID applies only to `command` and `postcmd`; otherwise, sentinal runs
+as the calling user.
+
+- If an application never needs root privileges to run and process logs, consider
+setting and using the application's user and group IDs in the unit file.
+
+- Running sentinal as root is likely necessary when a single sentinal instance
+monitors several different applications.
+
+- When unspecified, the user and group IDs are set to `nobody` and `nogroup`.
 
 ## sentinal Status
 
@@ -255,7 +280,10 @@ to install an example as a starting point.
 
 ## Test INI Files
 
-sentinal provides two options for testing INI files.  `-d` prints INI file sections as parsed, where the output is similar to the input.  `-v` prints INI file sections with the keys evaluated as they would be at run time, including symlink resolution and relative to full pathname conversion.
+sentinal provides two options for testing INI files.  `-d` prints INI file
+sections as parsed, where the output is similar to the input.  `-v` prints
+INI file sections with the keys evaluated as they would be at run time,
+including symlink resolution and relative to full pathname conversion.
 
 ## Run
 

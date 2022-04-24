@@ -55,7 +55,7 @@ static void sigparent(int sig)
 	int     i;
 	int     status;
 
-	signal(sig, sigparent);						/* reset */
+	signal(sig, sigparent);							/* reset */
 
 #if 0
 	fprintf(stderr, "sigparent caught signal %d\n", sig);

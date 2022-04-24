@@ -62,6 +62,7 @@ int main(int argc, char *argv[])
 	char    inifile[PATH_MAX];
 	char    rbuf[PATH_MAX];
 	char    tbuf[PATH_MAX];
+	char   *inip;
 	char   *pidfile;
 	char   *sections[MAXSECT];
 	ini_t  *inidata;
@@ -76,33 +77,33 @@ int main(int argc, char *argv[])
 	short   verbose = FALSE;
 	struct thread_info *ti;
 
-	umask(umask(0) | 022);						/* don't set less restrictive */
+	umask(umask(0) | 022);							/* don't set less restrictive */
 	*inifile = '\0';
 
 	while((opt = getopt(argc, argv, "dvf:V?")) != -1) {
 		switch (opt) {
 
-		case 'd':								/* debug INI parse */
+		case 'd':									/* debug INI parse */
 			debug = TRUE;
 			break;
 
-		case 'v':								/* verbose debug */
+		case 'v':									/* verbose debug */
 			verbose = TRUE;
 			break;
 
-		case 'f':								/* INI file name */
+		case 'f':									/* INI file name */
 			strlcpy(inifile, optarg, PATH_MAX);
 			break;
 
-		case 'V':								/* print version */
+		case 'V':									/* print version */
 			version(argv[0], stdout);
 			exit(EXIT_SUCCESS);
 
-		case '?':								/* print usage */
+		case '?':									/* print usage */
 			help(argv[0]);
 			exit(EXIT_SUCCESS);
 
-		default:								/* print error and usage */
+		default:									/* print error and usage */
 			help(argv[0]);
 			exit(EXIT_FAILURE);
 		}
@@ -125,7 +126,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	uname(&utsbuf);								/* for debug/token expansion */
+	uname(&utsbuf);									/* for debug/token expansion */
 
 	if(debug) {
 		for(i = 0; i < nsect; i++)
@@ -147,7 +148,7 @@ int main(int argc, char *argv[])
 	/* INI thread settings */
 
 	for(i = 0; i < nsect; i++) {
-		ti = &tinfo[i];							/* shorthand */
+		ti = &tinfo[i];								/* shorthand */
 
 		ti->ti_section = sections[i];
 		ti->ti_command = strdup(my_ini(inidata, ti->ti_section, "command"));
@@ -202,21 +203,21 @@ int main(int argc, char *argv[])
 
 		/* directory recursion */
 
-		ti->ti_subdirs = my_ini(inidata, ti->ti_section, "subdirs");
+		inip = my_ini(inidata, ti->ti_section, "subdirs");
 
-		if(strcmp(ti->ti_subdirs, "1") == 0 || strcasecmp(ti->ti_subdirs, "true") == 0)
-			ti->ti_subdirs = strdup("true");
+		if(strcmp(inip, "1") == 0 || strcasecmp(inip, "true") == 0)
+			ti->ti_subdirs = TRUE;
 		else
-			ti->ti_subdirs = strdup("false");
+			ti->ti_subdirs = FALSE;
 
 		/* notify file removal */
 
-		ti->ti_terse = my_ini(inidata, ti->ti_section, "terse");
+		inip = my_ini(inidata, ti->ti_section, "terse");
 
-		if(strcmp(ti->ti_terse, "1") == 0 || strcasecmp(ti->ti_terse, "true") == 0)
-			ti->ti_terse = strdup("true");
+		if(strcmp(inip, "1") == 0 || strcasecmp(inip, "true") == 0)
+			ti->ti_terse = TRUE;
 		else
-			ti->ti_terse = strdup("false");
+			ti->ti_terse = FALSE;
 
 		/*
 		 * get/generate/vett real path of pipe
@@ -247,10 +248,13 @@ int main(int argc, char *argv[])
 		pcrecompile(ti);
 		ti->ti_filename = malloc(PATH_MAX);
 		memset(ti->ti_filename, '\0', PATH_MAX);
-		ti->ti_pid = (pid_t) 0;					/* only workers use this */
+
+		ti->ti_pid = (pid_t) 0;						/* only workers use this */
+		ti->ti_wfd = 0;								/* only workers use this */
+
 		ti->ti_uid = verifyuid(my_ini(inidata, ti->ti_section, "uid"));
 		ti->ti_gid = verifygid(my_ini(inidata, ti->ti_section, "gid"));
-		ti->ti_wfd = 0;							/* only workers use this */
+		ti->ti_dirlimit = logsize(my_ini(inidata, ti->ti_section, "dirlimit"));
 		ti->ti_loglimit = logsize(my_ini(inidata, ti->ti_section, "loglimit"));
 		ti->ti_diskfree = fabs(atof(my_ini(inidata, ti->ti_section, "diskfree")));
 		ti->ti_inofree = fabs(atof(my_ini(inidata, ti->ti_section, "inofree")));
@@ -271,7 +275,7 @@ int main(int argc, char *argv[])
 			exit(EXIT_FAILURE);
 		}
 
-		if(ti->ti_argc) {
+		if(threadcheck(ti, _WRK_THR)) {
 			if(IS_NULL(ti->ti_pipename)) {
 				fprintf(stderr, "%s: command requires a pipe\n", ti->ti_section);
 				exit(EXIT_FAILURE);
@@ -283,14 +287,15 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		if(ti->ti_diskfree || ti->ti_inofree ||
-		   ti->ti_expire || ti->ti_retmin || ti->ti_retmax) {
+		if(threadcheck(ti, _DFS_THR) || threadcheck(ti, _EXP_THR)) {
 			if(!ti->ti_pcrecmp) {
 				fprintf(stderr, "%s: missing or bad pcre\n", ti->ti_section);
 				exit(EXIT_FAILURE);
 			}
 
 			if(ti->ti_retmax && ti->ti_retmin > ti->ti_retmax) {
+				/* print a warning */
+
 				if(verbose)
 					fprintf(stdout, "%s: retmin is greater than retmax\n",
 							ti->ti_section);
@@ -299,7 +304,7 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		if(ti->ti_diskfree == 0 && ti->ti_inofree == 0 && ti->ti_expire == 0) {
+		if(threadcheck(ti, _SLM_THR)) {
 			if(IS_NULL(ti->ti_template)) {
 				fprintf(stderr, "%s: slm requires a template\n", ti->ti_section);
 				exit(EXIT_FAILURE);
@@ -325,8 +330,8 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	parentsignals();							/* important: signal handling */
-	rlimit(MAXFILES);							/* limit the number of open files */
+	parentsignals();								/* important: signal handling */
+	rlimit(MAXFILES);								/* limit the number of open files */
 
 	/* setup threads and run */
 
@@ -341,27 +346,27 @@ int main(int argc, char *argv[])
 	for(i = 0; i < nsect; i++) {
 		/* usleep for systemd journal */
 
-		ti = &tinfo[i];							/* shorthand */
+		ti = &tinfo[i];								/* shorthand */
 
-		if(threadcheck(ti, _WRK_THR)) {			/* worker (log ingestion) thread */
+		if(threadcheck(ti, _WRK_THR)) {				/* worker (log ingestion) thread */
 			usleep((useconds_t) 100000);
 			fprintf(stderr, "%s: start wrk thread: %s\n", ti->ti_section, ti->ti_dirname);
 			pthread_create(&workers[i], NULL, &workthread, (void *)ti);
 		}
 
-		if(threadcheck(ti, _EXP_THR)) {			/* file expiration, retention */
+		if(threadcheck(ti, _EXP_THR)) {				/* file expiration, retention */
 			usleep((useconds_t) 100000);
 			fprintf(stderr, "%s: start exp thread: %s\n", ti->ti_section, ti->ti_dirname);
 			pthread_create(&expmons[i], NULL, &expthread, (void *)ti);
 		}
 
-		if(threadcheck(ti, _DFS_THR)) {			/* filesystem free space */
+		if(threadcheck(ti, _DFS_THR)) {				/* filesystem free space */
 			usleep((useconds_t) 100000);
 			fprintf(stderr, "%s: start dfs thread: %s\n", ti->ti_section, ti->ti_dirname);
 			pthread_create(&dfsmons[i], NULL, &dfsthread, (void *)ti);
 		}
 
-		if(threadcheck(ti, _SLM_THR)) {			/* simple log monitor */
+		if(threadcheck(ti, _SLM_THR)) {				/* simple log monitor */
 			usleep((useconds_t) 100000);
 			fprintf(stderr, "%s: start slm thread: %s\n", ti->ti_section, ti->ti_dirname);
 			pthread_create(&slmmons[i], NULL, &slmthread, (void *)ti);
@@ -423,13 +428,14 @@ static void dump_thread_info(struct thread_info *ti)
 	fprintf(stdout, "argc:     %d\n", ti->ti_argc);
 	fprintf(stdout, "path:     %s\n", ti->ti_path);
 
-	fprintf(stdout, "argv:     ");
+	fprintf(stdout, "argv:    ");
 	for(i = 1; i < ti->ti_argc; i++)
-		fprintf(stdout, "%s ", ti->ti_argv[i]);
+		fprintf(stdout, " %s", ti->ti_argv[i]);
 	fprintf(stdout, "\n");
 
 	fprintf(stdout, "dirname:  %s\n", ti->ti_dirname);
-	fprintf(stdout, "subdirs:  %s\n", ti->ti_subdirs);
+	fprintf(stdout, "dirlimit: %ldMiB\n", MiB(ti->ti_dirlimit));
+	fprintf(stdout, "subdirs:  %d\n", ti->ti_subdirs);
 	fprintf(stdout, "pipename: %s\n", ti->ti_pipename);
 	fprintf(stdout, "template: %s\n", ti->ti_template);
 	fprintf(stdout, "pcrestr:  %s\n", ti->ti_pcrestr);
@@ -441,7 +447,7 @@ static void dump_thread_info(struct thread_info *ti)
 	fprintf(stdout, "expire:   %s\n", convexpire(ti->ti_expire, ebuf));
 	fprintf(stdout, "retmin:   %d\n", ti->ti_retmin);
 	fprintf(stdout, "retmax:   %d\n", ti->ti_retmax);
-	fprintf(stdout, "terse:    %s\n", ti->ti_terse);
+	fprintf(stdout, "terse:    %d\n", ti->ti_terse);
 
 	logname(ti->ti_template, fbuf);
 	fullpath(ti->ti_dirname, fbuf, ti->ti_filename);
@@ -456,19 +462,12 @@ static void dump_thread_info(struct thread_info *ti)
 	} else
 		fprintf(stdout, "execcmd:  \n");
 
-	/* postcmd tokens (1.3.0+) */
+	/* postcmd tokens */
 
 	strreplace(ti->ti_postcmd, _HOST_TOK, utsbuf.nodename);
 	strreplace(ti->ti_postcmd, _PATH_TOK, ti->ti_dirname);
 	strreplace(ti->ti_postcmd, _FILE_TOK, ti->ti_filename);
 	strreplace(ti->ti_postcmd, _SECT_TOK, ti->ti_section);
-
-	/* deprecated postcmd tokens (pre-1.3.0) */
-
-	strreplace(ti->ti_postcmd, _OLD_HOST_TOK, utsbuf.nodename);
-	strreplace(ti->ti_postcmd, _OLD_DIR_TOK, ti->ti_dirname);
-	strreplace(ti->ti_postcmd, _OLD_FILE_TOK, ti->ti_filename);
-	strreplace(ti->ti_postcmd, _OLD_SECT_TOK, ti->ti_section);
 
 	fprintf(stdout, "postcmd:  %s\n", ti->ti_postcmd);
 }
@@ -482,7 +481,7 @@ static short create_pid_file(char *pidfile)
 
 		fclose(fp);
 
-		if(locked == -1)						/* not my lock */
+		if(locked == -1)							/* not my lock */
 			return (FALSE);
 	}
 
@@ -503,14 +502,19 @@ static short create_pid_file(char *pidfile)
 static short emptyconfig(struct thread_info *ti)
 {
 	/*
-	 * is there anything to do
+	 * is the configuation empty or missing something
 	 * note: config might be rejected during parsing
+	 * check for:
+	 *   - wrk
+	 *   - slm
+	 *   - dfs
+	 *   - exp
 	 */
 
 	if(ti->ti_argc ||
 	   ti->ti_loglimit ||
 	   ti->ti_diskfree || ti->ti_inofree ||
-	   ti->ti_expire || ti->ti_retmin || ti->ti_retmax)
+	   ti->ti_dirlimit || ti->ti_expire || ti->ti_retmin || ti->ti_retmax)
 		return (FALSE);
 
 	return (TRUE);

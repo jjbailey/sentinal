@@ -26,7 +26,7 @@
 #include <ctype.h>
 #include "ini.h"
 
-#if 0											/* jjb */
+#if 0												/* jjb */
 /* Case insensitive string compare */
 static int strcmpci(char *a, char *b)
 {
@@ -40,7 +40,7 @@ static int strcmpci(char *a, char *b)
 }
 #endif
 
-#define	strcmpci	strcasecmp					/* jjb */
+#define	strcmpci	strcasecmp						/* jjb */
 
 /* Returns the next string in the split data */
 static char *next(ini_t *ini, char *p)

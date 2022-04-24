@@ -59,19 +59,12 @@ int postcmd(struct thread_info *ti, char *filename)
 
 		strlcpy(cmdbuf, ti->ti_postcmd, BUFSIZ);
 
-		/* postcmd tokens (1.3.0+) */
+		/* postcmd tokens */
 
 		strreplace(cmdbuf, _HOST_TOK, utsbuf.nodename);
 		strreplace(cmdbuf, _PATH_TOK, ti->ti_dirname);
 		strreplace(cmdbuf, _FILE_TOK, filename);
 		strreplace(cmdbuf, _SECT_TOK, ti->ti_section);
-
-		/* deprecated postcmd tokens (pre-1.3.0) */
-
-		strreplace(cmdbuf, _OLD_HOST_TOK, utsbuf.nodename);
-		strreplace(cmdbuf, _OLD_DIR_TOK, ti->ti_dirname);
-		strreplace(cmdbuf, _OLD_FILE_TOK, filename);
-		strreplace(cmdbuf, _OLD_SECT_TOK, ti->ti_section);
 
 		fprintf(stderr, "%s: %s\n", ti->ti_section, cmdbuf);
 
@@ -89,15 +82,13 @@ int postcmd(struct thread_info *ti, char *filename)
 		snprintf(tmplbuf, BUFSIZ, "TEMPLATE=%s", ti->ti_template);
 		snprintf(pcrebuf, BUFSIZ, "PCRESTR=%s", ti->ti_pcrestr);
 
-		umask(umask(0) | 022);					/* don't set less restrictive */
+		umask(umask(0) | 022);						/* don't set less restrictive */
 		nice(1);
 
 		execl(ENV, "-S", "-",
 			  homebuf, pathbuf, shellbuf,
 			  tmplbuf, pcrebuf,
 			  BASH, "--noprofile", "--norc", "-c", cmdbuf, (char *)NULL);
-
-		/* execle(BASH, "--noprofile", "--norc", "-c", cmdbuf, (char *)NULL, envp); */
 
 		exit(EXIT_FAILURE);
 

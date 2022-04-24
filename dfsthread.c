@@ -22,7 +22,7 @@
 
 #define	FLOORF(v)		floorf(v * 100.0) / 100.0
 #define	PERCENT(x,y)	FLOORF(((long double)x / (long double)y) * 100.0)
-#define	SCANRATE		10						/* minimum monitor rate */
+#define	SCANRATE		10							/* minimum monitor rate */
 
 #define	MINIMUM(a,b)	(a < b ? a : b)
 #define	MAXIMUM(a,b)	(a > b ? a : b)
@@ -32,7 +32,6 @@ static int itimer(int, int, int);
 void   *dfsthread(void *arg)
 {
 	char    mountdir[PATH_MAX];
-	char    oldfile[PATH_MAX];
 	char    task[TASK_COMM_LEN];
 	int     fc;
 	int     interval;
@@ -41,21 +40,23 @@ void   *dfsthread(void *arg)
 	short   rptlowres = TRUE;
 	short   rptstatus = FALSE;
 	short   skip = FALSE;
+	struct dir_info dinfo;
 	struct statvfs svbuf;
 	struct thread_info *ti = arg;
 	time_t  curtime;
-	time_t  oldtime;
 
 	/*
 	 * this thread requires:
 	 *  - ti_pcrecmp
-	 *  - ti_diskfree or ti_inofree
+	 *  - at least one of:
+	 *    - ti_diskfree
+	 *    - ti_inofree
 	 */
 
 	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _DFS_THR, task));
 
-	findmnt(ti->ti_dirname, mountdir);			/* actual mountpoint */
+	findmnt(ti->ti_dirname, mountdir);				/* actual mountpoint */
 	memset(&svbuf, '\0', sizeof(svbuf));
 
 	if(statvfs(mountdir, &svbuf) == -1) {
@@ -111,7 +112,7 @@ void   *dfsthread(void *arg)
 	interval = itimer((int)pc_bfree, (int)pc_ffree, SCANRATE);
 
 	for(;;) {
-		sleep(interval);						/* filesystem monitor rate */
+		sleep(interval);							/* filesystem monitor rate */
 
 		if(!skip) {
 			/* performance: halve the statvfs and math work */
@@ -142,8 +143,8 @@ void   *dfsthread(void *arg)
 					fprintf(stderr, "%s: %s: %.2Lf%% inodes free\n",
 							ti->ti_section, ti->ti_dirname, pc_ffree);
 
-				rptstatus = FALSE;				/* mute status alert */
-				rptlowres = TRUE;				/* reset lowres alert */
+				rptstatus = FALSE;					/* mute status alert */
+				rptlowres = TRUE;					/* reset lowres alert */
 
 				/* recompute the monitor rate */
 
@@ -163,16 +164,16 @@ void   *dfsthread(void *arg)
 					fprintf(stderr, "%s: low free inodes %s: %.2Lf%% < %.2Lf%%\n",
 							ti->ti_section, ti->ti_dirname, pc_ffree, ti->ti_inofree);
 
-				rptlowres = FALSE;				/* mute lowres alert */
+				rptlowres = FALSE;					/* mute lowres alert */
 			}
 
-			interval = 0;						/* 1 sec is too slow for inodes */
+			interval = 0;							/* 1 sec is too slow for inodes */
 		}
 
 		/* low space, remove oldest file */
 
 		/* full path to oldest file and its time */
-		fc = oldestfile(ti, TRUE, ti->ti_dirname, oldfile, &oldtime);
+		fc = oldestfile(ti, TRUE, ti->ti_dirname, &dinfo);
 
 		if(!fc || (ti->ti_retmin && fc <= ti->ti_retmin)) {
 			/* no work */
@@ -180,17 +181,17 @@ void   *dfsthread(void *arg)
 			continue;
 		}
 
-		if(time(&curtime) - oldtime < ONE_MINUTE) {
+		if(time(&curtime) - dinfo.di_time < ONE_MINUTE) {
 			/* wait for another thread to remove a file older than this one */
-			interval = ONE_MINUTE >> 1;			/* intermediate sleep state */
+			interval = ONE_MINUTE >> 1;				/* intermediate sleep state */
 			continue;
 		}
 
-		if(*ti->ti_terse == 'f')
-			fprintf(stderr, "%s: remove %s\n", ti->ti_section, base(oldfile));
+		if(!ti->ti_terse)
+			fprintf(stderr, "%s: remove %s\n", ti->ti_section, base(dinfo.di_file));
 
-		remove(oldfile);
-		rptstatus = TRUE;						/* enable status alert */
+		remove(dinfo.di_file);
+		rptstatus = TRUE;							/* enable status alert */
 	}
 
 	/* notreached */
