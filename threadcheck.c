@@ -22,7 +22,7 @@ int threadcheck(struct thread_info *ti, char *tname)
 	if(strcmp(tname, _DFS_THR) == 0)				/* filesystem free space */
 		pass = ti->ti_pcrecmp && (ti->ti_diskfree || ti->ti_inofree);
 
-	else if(strcmp(tname, _EXP_THR) == 0)			/* file expiration, retention */
+	else if(strcmp(tname, _EXP_THR) == 0)			/* file expiration, retention, dirlimit */
 		pass = ti->ti_pcrecmp &&
 			(ti->ti_dirlimit || ti->ti_expire || ti->ti_retmin || ti->ti_retmax);
 
