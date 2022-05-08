@@ -54,8 +54,6 @@ CC=			gcc
 WARNINGS=	-Wno-unused-result -Wunused-variable -Wunused-but-set-variable
 CFLAGS=		-g -O2 -pthread $(WARNINGS)
 
-# pcre is EOL
-#PCRELIB=	-lpcre
 PCRELIB=	-lpcre2-8
 
 LIBS=		-lpthread $(PCRELIB) -lm
