@@ -26,7 +26,7 @@ void   *expthread(void *arg)
 	char    task[TASK_COMM_LEN];
 	char   *reason;
 	int     fc;
-	int     interval = SCANRATE;
+	int     interval;
 	struct dir_info dinfo;
 	struct thread_info *ti = arg;
 	time_t  curtime;
@@ -60,6 +60,11 @@ void   *expthread(void *arg)
 		fprintf(stderr, "%s: monitor file: %s for retmax %d\n",
 				ti->ti_section, ti->ti_pcrestr, ti->ti_retmax);
 
+	/* monitor expiration times */
+	/* faster initial start */
+
+	interval = SCANRATE >> 1;
+
 	for(;;) {
 		sleep(interval);							/* expiry monitor rate */
 
@@ -76,9 +81,10 @@ void   *expthread(void *arg)
 		if(ti->ti_retmin && fc <= ti->ti_retmin)	/* keep */
 			continue;
 
-		if(time(&curtime) - dinfo.di_time < ONE_MINUTE) {
+		if(time(&curtime) - dinfo.di_time < SCANRATE) {
 			/* wait for another thread to remove a file older than this one */
-			interval = ONE_MINUTE >> 1;				/* intermediate sleep state */
+			/* intermediate sleep state */
+			interval = SCANRATE >> 1;
 			continue;
 		}
 

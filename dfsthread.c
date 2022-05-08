@@ -22,7 +22,7 @@
 
 #define	FLOORF(v)		floorf(v * 100.0) / 100.0
 #define	PERCENT(x,y)	FLOORF(((long double)x / (long double)y) * 100.0)
-#define	SCANRATE		10							/* minimum monitor rate */
+#define	SCANRATE		10							/* minimum (fastest) monitor rate */
 
 #define	MINIMUM(a,b)	(a < b ? a : b)
 #define	MAXIMUM(a,b)	(a > b ? a : b)
@@ -108,8 +108,9 @@ void   *dfsthread(void *arg)
 	}
 
 	/* monitor filesystem based on available space */
+	/* faster initial start */
 
-	interval = itimer((int)pc_bfree, (int)pc_ffree, SCANRATE);
+	interval = itimer((int)pc_bfree, (int)pc_ffree, SCANRATE) >> 1;
 
 	for(;;) {
 		sleep(interval);							/* filesystem monitor rate */
@@ -181,9 +182,10 @@ void   *dfsthread(void *arg)
 			continue;
 		}
 
-		if(time(&curtime) - dinfo.di_time < ONE_MINUTE) {
+		if(time(&curtime) - dinfo.di_time < SCANRATE) {
 			/* wait for another thread to remove a file older than this one */
-			interval = ONE_MINUTE >> 1;				/* intermediate sleep state */
+			/* intermediate sleep state */
+			interval = itimer((int)pc_bfree, (int)pc_ffree, SCANRATE) >> 1;
 			continue;
 		}
 
