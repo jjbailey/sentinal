@@ -15,13 +15,14 @@
 void pcrecompile(struct thread_info *ti)
 {
 	PCRE2_SIZE erroffset;
+	PCRE2_SIZE length = PCRE2_ZERO_TERMINATED;
 	int     errnumber;
 	uint32_t options = PCRE2_ANCHORED;
 
 	if(IS_NULL(ti->ti_pcrestr))
 		return;
 
-	ti->ti_pcrecmp = pcre2_compile((PCRE2_SPTR) ti->ti_pcrestr, PCRE2_ZERO_TERMINATED,
+	ti->ti_pcrecmp = pcre2_compile((PCRE2_SPTR) ti->ti_pcrestr, length,
 								   options, &errnumber, &erroffset, NULL);
 
 	if(ti->ti_pcrecmp == NULL)
