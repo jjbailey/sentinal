@@ -1,6 +1,10 @@
 /*
  * pcretest.c
- * Program to test Perl-compatible regular expressions against a list of strings.
+ * Program to test Perl-compatible regular expressions
+ * against a list of strings.
+ *
+ * If this executable is called "pcretest", be verbose,
+ * else terse (just print matches)
  *
  * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
@@ -8,7 +12,7 @@
  * This source code is licensed under the MIT license found
  * in the root directory of this source tree.
  *
- * examples of usage:
+ * Examples of usage:
  *
  * ends with a digit
  * $ pcretest '/var/log/sys.*\d$' /var/log/sys*
@@ -45,25 +49,33 @@ void    version(char *, FILE *);
 int main(int argc, char *argv[])
 {
 	struct thread_info ti;							/* so we can use pcrecompile.c */
+	char   *myname;
 	int     i;
+	short   match;
+
+	myname = base(argv[0]);
 
 	if(argc < 3) {
-		fprintf(stderr, "Usage: pcretest <pcre> <list_of_test_strings>\n");
+		fprintf(stderr, "Usage: %s <pcre> <list_of_test_strings>\n", myname);
 		exit(1);
 	}
 
-	ti.ti_section = base(argv[0]);
+	ti.ti_section = myname;
 	ti.ti_pcrestr = argv[1];
+	ti.ti_terse = strcmp(myname, "pcretest");		/* decides what to print */
+
 	pcrecompile(&ti);
 
 	if(ti.ti_pcrecmp == NULL)
 		exit(1);
 
 	for(i = 2; i < argc; i++) {
-		if(pcretest(argv[i], ti.ti_pcrecmp))
-			fprintf(stdout, "match:    %s\n", argv[i]);
-		else
-			fprintf(stdout, "no match: %s\n", argv[i]);
+		match = pcretest(argv[i], ti.ti_pcrecmp);
+
+		if(!ti.ti_terse)
+			fprintf(stdout, "%s %s\n", match ? "match:   " : "no match:", argv[i]);
+		else if(match)
+			fprintf(stdout, "%s\n", argv[i]);
 	}
 
 	exit(0);
