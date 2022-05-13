@@ -72,8 +72,12 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 
 	closedir(dirp);
 
-	if(entries == 0 && !top)						/* directory is empty */
+	if(entries == 0 && !top) {						/* directory is empty */
+		if(!ti->ti_terse)
+			fprintf(stderr, "%s: rmdir %s\n", ti->ti_section, dir);
+
 		remove(dir);
+	}
 
 	return (fc);
 }
