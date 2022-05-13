@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 
 	myname = base(argv[0]);
 
-	if(argc < 3) {
+	if(argc < 3 || IS_NULL(argv[1])) {
 		fprintf(stderr, "Usage: %s <pcre> <list_of_test_strings>\n", myname);
 		exit(1);
 	}

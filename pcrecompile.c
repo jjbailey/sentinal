@@ -19,8 +19,12 @@ void pcrecompile(struct thread_info *ti)
 	int     errnumber;
 	uint32_t options = PCRE2_ANCHORED;
 
-	if(IS_NULL(ti->ti_pcrestr))
+	/* effectively the same as PCRE2_NOTEMPTY */
+
+	if(IS_NULL(ti->ti_pcrestr)) {
+		ti->ti_pcrecmp = NULL;
 		return;
+	}
 
 	ti->ti_pcrecmp = pcre2_compile((PCRE2_SPTR) ti->ti_pcrestr, length,
 								   options, &errnumber, &erroffset, NULL);
