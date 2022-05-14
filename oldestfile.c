@@ -41,11 +41,12 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 		if(strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0)
 			continue;
 
-		entries++;
 		fullpath(dir, dp->d_name, filename);
 
 		if(stat(filename, &stbuf) == -1)
 			continue;
+
+		entries++;
 
 		if(S_ISDIR(stbuf.st_mode) && ti->ti_subdirs) {
 			/* search subdirectory */
@@ -72,7 +73,9 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 
 	closedir(dirp);
 
-	if(entries == 0 && !top) {						/* directory is empty */
+	if(entries == 0 && ti->ti_expire && !top) {
+		/* expire thread, directory is empty */
+
 		if(!ti->ti_terse)
 			fprintf(stderr, "%s: rmdir %s\n", ti->ti_section, dir);
 
