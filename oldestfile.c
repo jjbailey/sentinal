@@ -68,7 +68,8 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 
 		/* match */
 
-		di->di_bytes += stbuf.st_size;				/* total size of files found */
+		if(ti->ti_dirlimit)							/* request total size of files found */
+			di->di_bytes += stbuf.st_size;
 
 		if(di->di_time == 0 || stbuf.st_mtim.tv_sec < di->di_time) {
 			/* save the oldest log */
