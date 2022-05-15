@@ -17,8 +17,6 @@
 #include <string.h>
 #include "sentinal.h"
 
-#define	EMPTY_DIR		EOF							/* remove subdirectory */
-
 int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 {
 	DIR    *dirp;
