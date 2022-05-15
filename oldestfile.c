@@ -17,12 +17,15 @@
 #include <string.h>
 #include "sentinal.h"
 
+#define	EMPTY_DIR		EOF							/* remove subdirectory */
+
 int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 {
 	DIR    *dirp;
 	char    filename[PATH_MAX];
-	int     entries = 0;
-	int     fc = 0;
+	int     anycnt = 0;								/* existing files */
+	int     matchcnt = 0;							/* matching files */
+	int     subcnt;									/* matching files in subdir */
 	struct dirent *dp;
 	struct stat stbuf;
 
@@ -46,19 +49,26 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 		if(stat(filename, &stbuf) == -1)
 			continue;
 
-		entries++;
-
 		if(S_ISDIR(stbuf.st_mode) && ti->ti_subdirs) {
 			/* search subdirectory */
-			fc += oldestfile(ti, FALSE, filename, di);
+
+			if((subcnt = oldestfile(ti, FALSE, filename, di)) != EOF) {
+				matchcnt += subcnt;
+				anycnt++;
+			}
+
 			continue;
 		}
+
+		anycnt++;
 
 		if(!S_ISREG(stbuf.st_mode))
 			continue;
 
 		if(!mylogfile(dp->d_name, ti->ti_pcrecmp))
 			continue;
+
+		/* match */
 
 		di->di_bytes += stbuf.st_size;				/* total size of files found */
 
@@ -68,21 +78,22 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 			di->di_time = stbuf.st_mtim.tv_sec;
 		}
 
-		fc++;
+		matchcnt++;
 	}
 
 	closedir(dirp);
 
-	if(entries == 0 && ti->ti_expire && !top) {
+	if(anycnt == 0 && ti->ti_expire && !top) {
 		/* expire thread, directory is empty */
 
 		if(!ti->ti_terse)
 			fprintf(stderr, "%s: rmdir %s\n", ti->ti_section, dir);
 
 		remove(dir);
+		return (EOF);
 	}
 
-	return (fc);
+	return (matchcnt);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
