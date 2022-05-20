@@ -21,8 +21,9 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 {
 	DIR    *dirp;
 	char    filename[PATH_MAX];
-	int     entries = 0;
-	int     fc = 0;
+	int     anycnt = 0;								/* existing files */
+	int     matchcnt = 0;							/* matching files */
+	int     subcnt;									/* matching files in subdir */
 	struct dirent *dp;
 	struct stat stbuf;
 
@@ -41,7 +42,6 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 		if(strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0)
 			continue;
 
-		entries++;
 		fullpath(dir, dp->d_name, filename);
 
 		if(stat(filename, &stbuf) == -1)
@@ -49,9 +49,16 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 
 		if(S_ISDIR(stbuf.st_mode) && ti->ti_subdirs) {
 			/* search subdirectory */
-			fc += oldestfile(ti, FALSE, filename, di);
+
+			if((subcnt = oldestfile(ti, FALSE, filename, di)) != EOF) {
+				matchcnt += subcnt;
+				anycnt++;
+			}
+
 			continue;
 		}
+
+		anycnt++;
 
 		if(!S_ISREG(stbuf.st_mode))
 			continue;
@@ -59,7 +66,10 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 		if(!mylogfile(dp->d_name, ti->ti_pcrecmp))
 			continue;
 
-		di->di_bytes += stbuf.st_size;				/* total size of files found */
+		/* match */
+
+		if(ti->ti_dirlimit)							/* request total size of files found */
+			di->di_bytes += stbuf.st_size;
 
 		if(di->di_time == 0 || stbuf.st_mtim.tv_sec < di->di_time) {
 			/* save the oldest log */
@@ -67,15 +77,22 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 			di->di_time = stbuf.st_mtim.tv_sec;
 		}
 
-		fc++;
+		matchcnt++;
 	}
 
 	closedir(dirp);
 
-	if(entries == 0 && !top)						/* directory is empty */
-		remove(dir);
+	if(anycnt == 0 && ti->ti_expire && !top) {
+		/* expire thread, directory is empty */
 
-	return (fc);
+		if(!ti->ti_terse)
+			fprintf(stderr, "%s: rmdir %s\n", ti->ti_section, dir);
+
+		remove(dir);
+		return (EOF);
+	}
+
+	return (matchcnt);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

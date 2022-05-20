@@ -7,7 +7,8 @@
 # in the root directory of this source tree.
 
 all:		sentinal		\
-			sentinalpipe
+			sentinalpipe	\
+			pcretest
 
 SENOBJS=	sentinal.o		\
 			convexpire.o	\
@@ -44,6 +45,9 @@ SPMOBJS=	sentinalpipe.o	\
 			strlcpy.o		\
 			version.o
 
+PCTOBJS=	pcretest.o		\
+			pcrecompile.o
+
 SEN_HOME=	/opt/sentinal
 SEN_BIN=	$(SEN_HOME)/bin
 SEN_ETC=	$(SEN_HOME)/etc
@@ -54,8 +58,6 @@ CC=			gcc
 WARNINGS=	-Wno-unused-result -Wunused-variable -Wunused-but-set-variable
 CFLAGS=		-g -O2 -pthread $(WARNINGS)
 
-# pcre is EOL
-#PCRELIB=	-lpcre
 PCRELIB=	-lpcre2-8
 
 LIBS=		-lpthread $(PCRELIB) -lm
@@ -64,17 +66,23 @@ $(SENOBJS):	sentinal.h basename.h ini.h
 
 $(SPMOBJS):	sentinal.h basename.h ini.h
 
+$(PCTOBJS):	sentinal.h basename.h ini.h
+
 sentinal:	$(SENOBJS)
 			$(CC) $(LDFLAGS) -o $@ $(SENOBJS) $(LIBS)
 
 sentinalpipe:	$(SPMOBJS)
 				$(CC) $(LDFLAGS) -o $@ $(SPMOBJS) $(LIBS)
 
+pcretest:	$(PCTOBJS)
+			$(CC) $(LDFLAGS) -o $@ $(PCTOBJS) $(LIBS)
+
 install:	all
 			mkdir -p $(SEN_HOME) $(SEN_BIN) $(SEN_ETC) $(SEN_DOC)
 			chown root:root $(SEN_HOME) $(SEN_BIN) $(SEN_ETC) $(SEN_DOC)
 			install -o root -g root -m 755 sentinal -t $(SEN_BIN)
 			install -o root -g root -m 755 sentinalpipe -t $(SEN_BIN)
+			install -o root -g root -m 755 pcretest -t $(SEN_BIN)
 			install -b -o root -g root -m 644 tests/test4.ini -T $(SEN_ETC)/example.ini
 			cp -p README.* $(SEN_DOC)
 			chown -R root:root $(SEN_DOC)
@@ -102,7 +110,8 @@ rpm:
 			bash packaging/redhat/redhat.sh
 
 clean:
-			rm -f $(SENOBJS) $(SPMOBJS) sentinal sentinalpipe
+			rm -f $(SENOBJS) $(SPMOBJS) $(PCTOBJS)
+			rm -f sentinal sentinalpipe pcretest
 			rm -f sentinal.service sentinalpipe.service
 			rm -fr packaging/debian/sentinal_*
 			rm -fr packaging/redhat/sentinal-* packaging/redhat/rpmbuild

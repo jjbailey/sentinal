@@ -25,8 +25,8 @@ void   *expthread(void *arg)
 	char    ebuf[BUFSIZ];
 	char    task[TASK_COMM_LEN];
 	char   *reason;
-	int     fc;
-	int     interval = SCANRATE;
+	int     interval;
+	int     matchcnt;
 	struct dir_info dinfo;
 	struct thread_info *ti = arg;
 	time_t  curtime;
@@ -60,29 +60,35 @@ void   *expthread(void *arg)
 		fprintf(stderr, "%s: monitor file: %s for retmax %d\n",
 				ti->ti_section, ti->ti_pcrestr, ti->ti_retmax);
 
+	/* monitor expiration times */
+	/* faster initial start */
+
+	interval = SCANRATE >> 1;
+
 	for(;;) {
 		sleep(interval);							/* expiry monitor rate */
 
 		/* full path to oldest file, its time, and the number of files found */
-		fc = oldestfile(ti, TRUE, ti->ti_dirname, &dinfo);
+		matchcnt = oldestfile(ti, TRUE, ti->ti_dirname, &dinfo);
 
-		if(!fc) {									/* no work */
+		if(matchcnt < 1) {							/* no work */
 			if(interval < SCANRATE)
 				interval = SCANRATE;				/* return to normal */
 
 			continue;
 		}
 
-		if(ti->ti_retmin && fc <= ti->ti_retmin)	/* keep */
+		if(ti->ti_retmin && matchcnt <= ti->ti_retmin)	/* keep */
 			continue;
 
-		if(time(&curtime) - dinfo.di_time < ONE_MINUTE) {
+		if(time(&curtime) - dinfo.di_time < SCANRATE) {
 			/* wait for another thread to remove a file older than this one */
-			interval = ONE_MINUTE >> 1;				/* intermediate sleep state */
+			/* intermediate sleep state */
+			interval = SCANRATE >> 1;
 			continue;
 		}
 
-		if(ti->ti_retmax && fc > ti->ti_retmax) {
+		if(ti->ti_retmax && matchcnt > ti->ti_retmax) {
 			/* too many files */
 			reason = "retmax exceeded";
 		} else if(ti->ti_expire && dinfo.di_time + ti->ti_expire < curtime) {

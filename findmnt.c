@@ -1,6 +1,6 @@
 /*
  * findmnt.c
- * find the mount point for a directory
+ * Find the mount point for a directory.
  *
  * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
