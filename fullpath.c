@@ -14,7 +14,7 @@
 
 char   *fullpath(char *dir, char *file, char *path)
 {
-	if(!IS_NULL(dir) && !IS_NULL(file)) {
+	if(NOT_NULL(dir) && NOT_NULL(file)) {
 		if(*file == '/')
 			strlcpy(path, file, PATH_MAX);
 		else

@@ -72,7 +72,7 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 			di->di_bytes += stbuf.st_size;
 
 		if(di->di_time == 0 || stbuf.st_mtim.tv_sec < di->di_time) {
-			/* save the oldest log */
+			/* save the oldest file */
 			strlcpy(di->di_file, filename, PATH_MAX);
 			di->di_time = stbuf.st_mtim.tv_sec;
 		}

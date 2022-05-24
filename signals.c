@@ -79,7 +79,7 @@ static void sigparent(int sig)
 	/* only workers use ti_wfd */
 
 	for(i = 0; i < MAXSECT; i++)
-		if(!IS_NULL(tinfo[i].ti_section))
+		if(NOT_NULL(tinfo[i].ti_section))
 			tinfo[i].ti_sig = tinfo[i].ti_wfd != EOF ? sig : 0;
 }
 
