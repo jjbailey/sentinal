@@ -48,6 +48,7 @@
 
 #define	FIFOSIZ		(64L * ONE_MiB)					/* tunable, just a guess */
 
+#define NOT_NULL(s)	((s) && *(s))
 #define IS_NULL(s)	!((s) && *(s))
 
 /* postcmd tokens */
@@ -118,12 +119,12 @@ int     runcmd(int, char **, char **);
 int     threadcheck(struct thread_info *, char *);
 off_t   logsize(char *);
 short   mylogfile(char *, pcre2_code *);
+short   pcrecompile(struct thread_info *);
 size_t  strlcat(char *, const char *, size_t);
 size_t  strlcpy(char *, const char *, size_t);
 uid_t   verifyuid(char *);
 void    activethreads(struct thread_info *);
 void    parentsignals(void);
-void    pcrecompile(struct thread_info *);
 void    rlimit(int);
 void    strreplace(char *, char *, char *);
 void   *dfsthread(void *);

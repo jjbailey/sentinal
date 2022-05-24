@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include "sentinal.h"
 
-void pcrecompile(struct thread_info *ti)
+short pcrecompile(struct thread_info *ti)
 {
 	PCRE2_SIZE erroffset;
 	PCRE2_SIZE length = PCRE2_ZERO_TERMINATED;
@@ -28,6 +28,8 @@ void pcrecompile(struct thread_info *ti)
 	if(ti->ti_pcrecmp == NULL)
 		fprintf(stderr, "%s: pcre2 compilation failed: %s\n", ti->ti_section,
 				ti->ti_pcrestr);
+
+	return (ti->ti_pcrecmp != NULL);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

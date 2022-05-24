@@ -64,9 +64,7 @@ int main(int argc, char *argv[])
 	ti.ti_pcrestr = argv[1];
 	ti.ti_terse = strcmp(myname, "pcretest");		/* decides what to print */
 
-	pcrecompile(&ti);
-
-	if(ti.ti_pcrecmp == NULL)
+	if(pcrecompile(&ti) == FALSE)
 		exit(1);
 
 	for(i = 2; i < argc; i++) {
