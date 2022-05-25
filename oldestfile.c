@@ -66,6 +66,11 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 		if(!mylogfile(dp->d_name, ti->ti_pcrecmp))
 			continue;
 
+		if(ti->ti_loglimit && stbuf.st_size < ti->ti_loglimit) {
+			/* match, but below the specified expire size */
+			continue;
+		}
+
 		/* match */
 
 		if(ti->ti_dirlimit)							/* request total size of files found */
