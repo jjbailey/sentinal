@@ -35,8 +35,11 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
     gid:      worker and `postcmd` groupname or gid; groupname root ok, gid 0 not ok
               default nogroup
 
-    loglimit: rotate size, units M = MiB, G = GiB; 0 = no rotate (off)
+    loglimit: wrk and slm threads: rotate size, units M = MiB, G = GiB; 0 = no rotate (off)
               default unlimited
+
+    loglimit: dfs and exp threads: remove file if it exceeds specified size
+              default 0/any size
 
     diskfree: percent blocks free for unprivileged users; 0 = no monitor (off)
               default off
