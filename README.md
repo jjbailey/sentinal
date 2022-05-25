@@ -95,7 +95,7 @@ This INI configuration removes gzipped files in /var/log and its subdirectories 
 
     [zipped]
     dirname  = /var/log
-    subdirs  = 1
+    subdirs  = true
     pcrestr  = .*\.gz
     expire   = 2w
 
@@ -109,7 +109,7 @@ or when the files are older than 7 days, or when there are more than 5M files:
 
     [files]
     dirname  = /path/to/appfiles
-    subdirs  = 1
+    subdirs  = true
     pcrestr  = appdata-
     inofree  = 15
     expire   = 7D
@@ -128,6 +128,30 @@ space or the number of logs exceeds 21:
     dirlimit = 500M
     pcrestr  = myapplog-\d{8}$
     retmax   = 21
+
+### Expiration Example
+
+This INI uses two threads to remove compressed files in /sandbox.
+sandbox2M removes compressed files aged two months or older.
+sandbox1M removes compressed files aged one month or older if their sizes exceed 10GiB,
+logging the removals.
+
+    [global]
+    pidfile  = /run/sandbox.pid
+
+    [sandbox2M]
+    dirname  = /sandbox
+    subdirs  = true
+    pcrestr  = .*\.(bz2|gz|lz|zip|zst)
+    expire   = 2M
+
+    [sandbox1M]
+    dirname  = /sandbox
+    subdirs  = true
+    pcrestr  = .*\.(bz2|gz|lz|zip|zst)
+    loglimit = 10G
+    expire   = 1M
+    terse    = false
 
 ### Simple Log Monitor
 
