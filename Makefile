@@ -46,7 +46,8 @@ SPMOBJS=	sentinalpipe.o	\
 			version.o
 
 PCTOBJS=	pcretest.o		\
-			pcrecompile.o
+			pcrecompile.o	\
+			version.o
 
 SEN_HOME=	/opt/sentinal
 SEN_BIN=	$(SEN_HOME)/bin
