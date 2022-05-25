@@ -55,9 +55,14 @@ int main(int argc, char *argv[])
 
 	myname = base(argv[0]);
 
+	if(argc > 1 && strcmp(argv[1], "-V") == 0) {
+		version(argv[0], stdout);
+		exit(EXIT_SUCCESS);
+	}
+
 	if(argc < 3 || IS_NULL(argv[1])) {
 		fprintf(stderr, "Usage: %s <pcre> <list_of_test_strings>\n", myname);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	ti.ti_section = myname;
@@ -65,7 +70,7 @@ int main(int argc, char *argv[])
 	ti.ti_terse = strcmp(myname, "pcretest");		/* decides what to print */
 
 	if(pcrecompile(&ti) == FALSE)
-		exit(1);
+		exit(EXIT_FAILURE);
 
 	for(i = 2; i < argc; i++) {
 		match = pcretest(argv[i], ti.ti_pcrecmp);
@@ -76,7 +81,7 @@ int main(int argc, char *argv[])
 			fprintf(stdout, "%s\n", argv[i]);
 	}
 
-	exit(0);
+	exit(EXIT_SUCCESS);
 }
 
 short pcretest(char *s, pcre2_code *re)
