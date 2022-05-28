@@ -31,7 +31,7 @@
  * no match: pidfile.pid
  *
  * negative lookahead for compressed files
- * $ find testdir -type f | xargs pcretest '(?!.*\.(?:bz2|gz|lz|zip|zstd)$)'
+ * $ find testdir -type f | xargs pcretest '(?!.*\.(?:bz2|gz|lz|zip|zst)$)'
  * no match: testdir/ddrescue-1.25.tar.lz
  * match:    testdir/nxserver.log
  * no match: testdir/syslog.2.gz
@@ -55,19 +55,22 @@ int main(int argc, char *argv[])
 
 	myname = base(argv[0]);
 
+	if(argc > 1 && strcmp(argv[1], "-V") == 0) {
+		version(argv[0], stdout);
+		exit(EXIT_SUCCESS);
+	}
+
 	if(argc < 3 || IS_NULL(argv[1])) {
 		fprintf(stderr, "Usage: %s <pcre> <list_of_test_strings>\n", myname);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	ti.ti_section = myname;
 	ti.ti_pcrestr = argv[1];
 	ti.ti_terse = strcmp(myname, "pcretest");		/* decides what to print */
 
-	pcrecompile(&ti);
-
-	if(ti.ti_pcrecmp == NULL)
-		exit(1);
+	if(pcrecompile(&ti) == FALSE)
+		exit(EXIT_FAILURE);
 
 	for(i = 2; i < argc; i++) {
 		match = pcretest(argv[i], ti.ti_pcrecmp);
@@ -78,7 +81,7 @@ int main(int argc, char *argv[])
 			fprintf(stdout, "%s\n", argv[i]);
 	}
 
-	exit(0);
+	exit(EXIT_SUCCESS);
 }
 
 short pcretest(char *s, pcre2_code *re)

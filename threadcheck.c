@@ -28,10 +28,10 @@ int threadcheck(struct thread_info *ti, char *tname)
 
 	else if(strcmp(tname, _SLM_THR) == 0)			/* simple log monitor */
 		pass = IS_NULL(ti->ti_command) &&
-			ti->ti_template && ti->ti_postcmd && ti->ti_loglimit;
+			NOT_NULL(ti->ti_template) && NOT_NULL(ti->ti_postcmd) && ti->ti_loglimit;
 
 	else if(strcmp(tname, _WRK_THR) == 0)			/* worker (log ingestion) thread */
-		pass = ti->ti_argc && ti->ti_pipename && ti->ti_template;
+		pass = ti->ti_argc && NOT_NULL(ti->ti_pipename) && NOT_NULL(ti->ti_template);
 
 	return (pass);
 }

@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
 		ti->ti_command = strdup(my_ini(inidata, ti->ti_section, "command"));
 		ti->ti_argc = parsecmd(ti->ti_command, ti->ti_argv);
 
-		if(!IS_NULL(ti->ti_command) && ti->ti_argc) {
+		if(NOT_NULL(ti->ti_command) && ti->ti_argc) {
 			ti->ti_path = ti->ti_argv[0];
 
 			/* get real path of argv[0] */
@@ -226,7 +226,7 @@ int main(int argc, char *argv[])
 
 		ti->ti_pipename = my_ini(inidata, ti->ti_section, "pipename");
 
-		if(!IS_NULL(ti->ti_pipename)) {
+		if(NOT_NULL(ti->ti_pipename)) {
 			if(strstr(ti->ti_pipename, "..")) {
 				fprintf(stderr, "%s: bad pipename\n", ti->ti_section);
 				exit(EXIT_FAILURE);
