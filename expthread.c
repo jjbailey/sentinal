@@ -78,8 +78,12 @@ void   *expthread(void *arg)
 			continue;
 		}
 
-		if(ti->ti_retmin && matchcnt <= ti->ti_retmin)	/* keep */
+		if(ti->ti_retmin && matchcnt <= ti->ti_retmin) {
+			/* match, but below the retention count */
 			continue;
+		}
+
+		/* match */
 
 		if(time(&curtime) - dinfo.di_time < SCANRATE) {
 			/* wait for another thread to remove a file older than this one */

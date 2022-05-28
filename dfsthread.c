@@ -177,10 +177,12 @@ void   *dfsthread(void *arg)
 		matchcnt = oldestfile(ti, TRUE, ti->ti_dirname, &dinfo);
 
 		if(matchcnt < 1 || (ti->ti_retmin && matchcnt <= ti->ti_retmin)) {
-			/* no work */
+			/* no work, or match, but below the retention count */
 			/* reset the interval when reporting */
 			continue;
 		}
+
+		/* match */
 
 		if(time(&curtime) - dinfo.di_time < SCANRATE) {
 			/* wait for another thread to remove a file older than this one */
