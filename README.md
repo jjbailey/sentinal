@@ -193,6 +193,18 @@ sentinal can ingest and process logs, rotate them on demand or when they reach a
 and optionally post-process logs after rotation.  For logfile processing,
 replace the application's logfile with a FIFO, and set sentinal to read from it.
 
+```mermaid
+sequenceDiagram
+    participant Application
+    participant FIFO
+    participant Sentinal
+    participant Logfile
+    Application->>FIFO: Application writes to FIFO
+    FIFO->>Sentinal: Sentinal reads from FIFO
+    Sentinal->>Logfile: Sentinal creates logfile
+    Sentinal->>Sentinal: Sentinal auto-rotates logfile
+```
+
 For example, this configuration connects the dd program to example.log for log ingestion,
 and rotates and compresses the log when it reaches 5GiB in size:
 
