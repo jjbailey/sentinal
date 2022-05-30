@@ -31,7 +31,6 @@
 #include <limits.h>
 #include <math.h>
 #include <pthread.h>
-#include <string.h>
 #include <unistd.h>
 #include "sentinal.h"
 #include "basename.h"
