@@ -16,9 +16,9 @@
 #include <sys/statvfs.h>
 #include <math.h>
 #include <pthread.h>
+#include <string.h>
 #include <unistd.h>
 #include "sentinal.h"
-#include "basename.h"
 
 #define	FLOORF(v)		floorf(v * 100.0) / 100.0
 #define	PERCENT(x,y)	FLOORF(((long double)x / (long double)y) * 100.0)
@@ -192,7 +192,7 @@ void   *dfsthread(void *arg)
 		}
 
 		if(!ti->ti_terse)
-			fprintf(stderr, "%s: remove %s\n", ti->ti_section, base(dinfo.di_file));
+			fprintf(stderr, "%s: remove %s\n", ti->ti_section, dinfo.di_file);
 
 		remove(dinfo.di_file);
 		rptstatus = TRUE;							/* enable status alert */

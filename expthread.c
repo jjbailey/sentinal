@@ -16,7 +16,6 @@
 #include <pthread.h>
 #include <unistd.h>
 #include "sentinal.h"
-#include "basename.h"
 
 #define	SCANRATE		ONE_MINUTE					/* default monitor rate */
 
@@ -108,7 +107,7 @@ void   *expthread(void *arg)
 		}
 
 		if(!ti->ti_terse)
-			fprintf(stderr, "%s: %s %s\n", ti->ti_section, reason, base(dinfo.di_file));
+			fprintf(stderr, "%s: %s %s\n", ti->ti_section, reason, dinfo.di_file);
 
 		remove(dinfo.di_file);
 		interval = 0;								/* 1 sec is too slow for inodes */
