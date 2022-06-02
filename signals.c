@@ -30,6 +30,7 @@ void parentsignals(void)
 
 	struct sigaction saparent;						/* catch these */
 	struct sigaction sareject;						/* reject these */
+	struct sigaction sasigsegv;						/* don't catch or reject */
 	struct sigaction sasigstp;						/* for testing */
 
 	saparent.sa_handler = sigparent;
@@ -40,6 +41,7 @@ void parentsignals(void)
 	sigemptyset(&sareject.sa_mask);
 	sareject.sa_flags = SA_RESETHAND;
 
+	sigaction(SIGSEGV, NULL, &sasigsegv);
 	sigaction(SIGTSTP, NULL, &sasigstp);
 
 	for(i = 1; i < NSIG; i++)
@@ -49,6 +51,7 @@ void parentsignals(void)
 	sigaction(SIGINT, &saparent, NULL);
 	sigaction(SIGTERM, &saparent, NULL);
 	sigaction(SIGCHLD, &saparent, NULL);
+	sigaction(SIGSEGV, &sasigsegv, NULL);
 	sigaction(SIGTSTP, &sasigstp, NULL);
 }
 
