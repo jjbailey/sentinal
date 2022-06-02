@@ -373,11 +373,17 @@ int main(int argc, char *argv[])
 	}
 
 	for(i = 0; i < nsect; i++) {
-		/* ignore EINVAL */
-		(void)pthread_join(workers[i], NULL);
-		(void)pthread_join(expmons[i], NULL);
-		(void)pthread_join(dfsmons[i], NULL);
-		(void)pthread_join(slmmons[i], NULL);
+		if(threadcheck(ti, _WRK_THR))
+			(void)pthread_join(workers[i], NULL);
+
+		if(threadcheck(ti, _EXP_THR))
+			(void)pthread_join(expmons[i], NULL);
+
+		if(threadcheck(ti, _DFS_THR))
+			(void)pthread_join(dfsmons[i], NULL);
+
+		if(threadcheck(ti, _SLM_THR))
+			(void)pthread_join(slmmons[i], NULL);
 	}
 
 	exit(EXIT_SUCCESS);
