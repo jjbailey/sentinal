@@ -24,6 +24,7 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 	int     anycnt = 0;								/* existing files */
 	int     matchcnt = 0;							/* matching files */
 	int     subcnt;									/* matching files in subdir */
+	short   constraints = FALSE;					/* conditional search */
 	struct dirent *dp;
 	struct stat stbuf;
 
@@ -36,6 +37,15 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 		*di->di_file = '\0';
 		di->di_time = 0;
 		di->di_bytes = 0;
+	}
+
+	if(ti->ti_dirlimit || ti->ti_diskfree || ti->ti_inofree ||
+	   ti->ti_retmin || ti->ti_retmax) {
+		/*
+		 * if one of these is set, search for the oldest file,
+		 * else any regex-matched file qualifies
+		 */
+		constraints = TRUE;
 	}
 
 	while(dp = readdir(dirp)) {
@@ -55,7 +65,8 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 				anycnt++;
 			}
 
-			continue;
+			if(constraints == TRUE)					/* continue searching */
+				continue;
 		}
 
 		anycnt++;
@@ -83,6 +94,9 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 		}
 
 		matchcnt++;
+
+		if(constraints == FALSE)					/* done searching */
+			break;
 	}
 
 	closedir(dirp);
