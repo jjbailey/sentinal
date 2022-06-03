@@ -26,7 +26,7 @@ void   *expthread(void *arg)
 	char    task[TASK_COMM_LEN];
 	char   *reason;
 	int     interval;
-	int     matchcnt;
+	int     matches;
 	struct dir_info dinfo;
 	struct thread_info *ti = arg;
 	time_t  curtime;
@@ -69,16 +69,16 @@ void   *expthread(void *arg)
 		sleep(interval);							/* expiry monitor rate */
 
 		/* full path to oldest file, its time, and the number of files found */
-		matchcnt = oldestfile(ti, TRUE, ti->ti_dirname, &dinfo);
+		matches = oldestfile(ti, TRUE, ti->ti_dirname, &dinfo);
 
-		if(matchcnt < 1) {							/* no work */
+		if(matches < 1) {							/* no work */
 			if(interval < SCANRATE)
 				interval = SCANRATE;				/* return to normal */
 
 			continue;
 		}
 
-		if(ti->ti_retmin && matchcnt <= ti->ti_retmin) {
+		if(ti->ti_retmin && matches <= ti->ti_retmin) {
 			/* match, but below the retention count */
 			continue;
 		}
@@ -92,7 +92,7 @@ void   *expthread(void *arg)
 			continue;
 		}
 
-		if(ti->ti_retmax && matchcnt > ti->ti_retmax) {
+		if(ti->ti_retmax && matches > ti->ti_retmax) {
 			/* too many files */
 			reason = "retmax exceeded";
 		} else if(ti->ti_expire && dinfo.di_time + ti->ti_expire < curtime) {
