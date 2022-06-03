@@ -22,9 +22,9 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 {
 	DIR    *dirp;
 	char    filename[PATH_MAX];
-	int     anycnt = 0;								/* existing files */
-	int     matchcnt = 0;							/* matching files */
-	int     subcnt;									/* matching files in subdir */
+	int     matches;								/* matching files */
+	int     subfound;								/* matching files in subdir */
+	short   anyfound;								/* existing files flag */
 	short   wantoldest = FALSE;						/* conditional search */
 	struct dirent *dp;
 	struct stat stbuf;
@@ -39,6 +39,7 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 		*di->di_file = '\0';
 		di->di_time = 0;
 		di->di_bytes = 0;
+		anyfound = matches = FALSE;
 	}
 
 	if(ti->ti_dirlimit || ti->ti_diskfree || ti->ti_inofree ||
@@ -64,16 +65,18 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 		if(S_ISDIR(stbuf.st_mode) && ti->ti_subdirs) {
 			/* search subdirectory */
 
-			if((subcnt = oldestfile(ti, FALSE, filename, di)) != EOF) {
-				matchcnt += subcnt;
-				anycnt++;
-			}
+			subfound = oldestfile(ti, FALSE, filename, di);
+
+			if(subfound == EOF)						/* empty dir removed */
+				continue;
+
+			anyfound = TRUE;
 
 			if(wantoldest == TRUE)					/* continue searching */
 				continue;
 		}
 
-		anycnt++;
+		anyfound = TRUE;
 
 		if(!S_ISREG(stbuf.st_mode))
 			continue;
@@ -110,12 +113,12 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 			di->di_time = stbuf.st_mtim.tv_sec;
 		}
 
-		matchcnt++;
+		matches++;
 	}
 
 	closedir(dirp);
 
-	if(anycnt == 0 && ti->ti_expire && !top) {
+	if(anyfound == FALSE && ti->ti_expire && !top) {
 		/* expire thread, directory is empty */
 
 		if(!ti->ti_terse)
@@ -125,7 +128,7 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 		return (EOF);
 	}
 
-	return (matchcnt);
+	return (matches);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
