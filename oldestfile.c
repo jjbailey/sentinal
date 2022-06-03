@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <string.h>
+#include <time.h>
 #include "sentinal.h"
 
 int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
@@ -24,9 +25,10 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 	int     anycnt = 0;								/* existing files */
 	int     matchcnt = 0;							/* matching files */
 	int     subcnt;									/* matching files in subdir */
-	short   constraints = FALSE;					/* conditional search */
+	short   wantoldest = FALSE;						/* conditional search */
 	struct dirent *dp;
 	struct stat stbuf;
+	time_t  curtime;
 
 	if((dirp = opendir(dir)) == NULL)
 		return (0);
@@ -42,11 +44,13 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 	if(ti->ti_dirlimit || ti->ti_diskfree || ti->ti_inofree ||
 	   ti->ti_retmin || ti->ti_retmax) {
 		/*
-		 * if one of these is set, search for the oldest file,
+		 * if one of these conditions is set, search for the oldest file,
 		 * else any regex-matched file qualifies
 		 */
-		constraints = TRUE;
+		wantoldest = TRUE;
 	}
+
+	time(&curtime);
 
 	while(dp = readdir(dirp)) {
 		if(strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0)
@@ -65,7 +69,7 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 				anycnt++;
 			}
 
-			if(constraints == TRUE)					/* continue searching */
+			if(wantoldest == TRUE)					/* continue searching */
 				continue;
 		}
 
@@ -84,6 +88,19 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 
 		/* match */
 
+		if(wantoldest == FALSE) {
+			/* if expired, remove now and continue searching */
+
+			if(stbuf.st_mtim.tv_sec + ti->ti_expire < curtime) {
+				if(!ti->ti_terse)
+					fprintf(stderr, "%s: expired %s\n", ti->ti_section, filename);
+
+				remove(filename);
+			}
+
+			continue;
+		}
+
 		if(ti->ti_dirlimit)							/* request total size of files found */
 			di->di_bytes += stbuf.st_size;
 
@@ -94,9 +111,6 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 		}
 
 		matchcnt++;
-
-		if(constraints == FALSE)					/* done searching */
-			break;
 	}
 
 	closedir(dirp);
