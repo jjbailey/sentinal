@@ -203,6 +203,7 @@ sequenceDiagram
     FIFO->>Sentinal: Sentinal reads from FIFO
     Sentinal->>Logfile: Sentinal creates logfile
     Sentinal->>Sentinal: Sentinal auto-rotates logfile
+    Sentinal->Logfile: Optionally post-process logfile
 ```
 
 For example, this configuration connects the dd program to example.log for log ingestion,
@@ -217,13 +218,13 @@ and rotates and compresses the log when it reaches 5GiB in size:
     uid      = appowner
     gid      = appgroup
     loglimit = 5G
-    postcmd  = /usr/bin/zstd --rm -T0 %n 2>/dev/null
+    postcmd  = /usr/bin/zstd --rm %n 2>/dev/null
 
 This example does basically the same as above, but with on-the-fly compression (no
 intermediate files), and rotates the compressed log when it reaches 1GiB in size:
 
     [example]
-    command  = /usr/bin/zstd -T0
+    command  = /usr/bin/zstd
     dirname  = /var/log
     pipename = example.log
     template = example-%Y-%m-%d_%H-%M-%S.log.zst
