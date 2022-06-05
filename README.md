@@ -275,7 +275,7 @@ monitors several different applications.
 
 ## sentinal Status
 
-The INI file tests/test4.ini is used here as an example.
+The INI file /opt/sentinal/etc/example.ini is used here as an example.
 
     # systemctl status sentinal
     * sentinal.service - sentinal service for example.ini
