@@ -34,7 +34,7 @@ void   *dfsthread(void *arg)
 	char    mountdir[PATH_MAX];
 	char    task[TASK_COMM_LEN];
 	int     interval;
-	int     matchcnt;
+	int     matches;
 	long double pc_bfree = 0.0;
 	long double pc_ffree = 0.0;
 	short   rptlowres = TRUE;
@@ -173,10 +173,9 @@ void   *dfsthread(void *arg)
 
 		/* low space, remove oldest file */
 
-		/* full path to oldest file and its time */
-		matchcnt = oldestfile(ti, TRUE, ti->ti_dirname, &dinfo);
+		matches = findfile(ti, TRUE, ti->ti_dirname, &dinfo);
 
-		if(matchcnt < 1 || (ti->ti_retmin && matchcnt <= ti->ti_retmin)) {
+		if(matches < 1 || (ti->ti_retmin && matches <= ti->ti_retmin)) {
 			/* no work, or match, but below the retention count */
 			/* reset the interval when reporting */
 			continue;

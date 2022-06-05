@@ -14,6 +14,7 @@ SENOBJS=	sentinal.o		\
 			convexpire.o	\
 			dfsthread.o		\
 			expthread.o		\
+			findfile.o		\
 			findmnt.o		\
 			fullpath.o		\
 			ini.o			\
@@ -22,7 +23,6 @@ SENOBJS=	sentinal.o		\
 			logretention.o	\
 			logsize.o		\
 			mylogfile.o		\
-			oldestfile.o	\
 			pcrecompile.o	\
 			postcmd.o		\
 			rlimit.o		\

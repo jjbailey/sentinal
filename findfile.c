@@ -1,7 +1,13 @@
 /*
- * oldestfile.c
- * Check dir and possibly subdirs for the oldest file matching pcrestr (pcrecmp).
- * Returns the number of files in dir.
+ * findfile.c
+ * Check dir and possibly subdirs for files matching pcrestr (pcrecmp).
+ * Return the number of files matching pcrestr.
+ *
+ * In cases when we are interested in file size with no other conditions,
+ * stop searching after the first match.
+ *
+ * In cases including other conditions (dir sizes, fs usage, retention),
+ * search for the oldest file.
  *
  * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
@@ -18,7 +24,7 @@
 #include <time.h>
 #include "sentinal.h"
 
-int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
+int findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 {
 	DIR    *dirp;
 	char    filename[PATH_MAX];
@@ -65,7 +71,7 @@ int oldestfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 		if(S_ISDIR(stbuf.st_mode) && ti->ti_subdirs) {
 			/* search subdirectory */
 
-			subfound = oldestfile(ti, FALSE, filename, di);
+			subfound = findfile(ti, FALSE, filename, di);
 
 			if(subfound == EOF)						/* empty dir removed */
 				continue;

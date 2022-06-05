@@ -68,8 +68,9 @@ void   *expthread(void *arg)
 	for(;;) {
 		sleep(interval);							/* expiry monitor rate */
 
-		/* full path to oldest file, its time, and the number of files found */
-		matches = oldestfile(ti, TRUE, ti->ti_dirname, &dinfo);
+		/* search for expired files */
+
+		matches = findfile(ti, TRUE, ti->ti_dirname, &dinfo);
 
 		if(matches < 1) {							/* no work */
 			if(interval < SCANRATE)
