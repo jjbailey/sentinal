@@ -84,7 +84,7 @@ install:	all
 			install -o root -g root -m 755 sentinal -t $(SEN_BIN)
 			install -o root -g root -m 755 sentinalpipe -t $(SEN_BIN)
 			install -o root -g root -m 755 pcretest -t $(SEN_BIN)
-			install -b -o root -g root -m 644 tests/test4.ini -T $(SEN_ETC)/example.ini
+			install -o root -g root -m 644 tests/test4.ini -T $(SEN_ETC)/example.ini
 			cp -p README.* $(SEN_DOC)
 			chown -R root:root $(SEN_DOC)
 
