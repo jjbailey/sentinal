@@ -22,6 +22,7 @@
 #include <dirent.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 #include "sentinal.h"
 
 int findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
@@ -124,14 +125,10 @@ int findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 
 	closedir(dirp);
 
-	if(anyfound == FALSE && ti->ti_expire && !top) {
-		/*
-		 * Q: which thread(s) can/should remove empty directories?
-		 * A: for now, only the expire-only thread can.
-		 * TODO: consider adding rmdir to the ini file.
-		 */
+	if(anyfound == FALSE && !top) {					/* ok to remove */
+		if(access(dir, F_OK) == 0) {
+			/* not yet removed by another thread */
 
-		if(exponly == TRUE) {						/* ok to rmdir */
 			if(!ti->ti_terse)
 				fprintf(stderr, "%s: rmdir %s\n", ti->ti_section, dir);
 
