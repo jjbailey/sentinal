@@ -31,7 +31,7 @@ int findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 	int     matches;								/* matching files */
 	int     subfound;								/* matching files in subdir */
 	short   anyfound;								/* existing files flag */
-	short   wantoldest = FALSE;						/* conditional search */
+	short   exponly = TRUE;							/* conditional search */
 	struct dirent *dp;
 	struct stat stbuf;
 	time_t  curtime;
@@ -54,7 +54,7 @@ int findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 		 * if one of these conditions is set, search for the oldest file,
 		 * else any regex-matched file qualifies
 		 */
-		wantoldest = TRUE;
+		exponly = FALSE;
 	}
 
 	time(&curtime);
@@ -78,7 +78,7 @@ int findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 
 			anyfound = TRUE;
 
-			if(wantoldest == TRUE)					/* continue searching */
+			if(exponly == FALSE)					/* continue searching */
 				continue;
 		}
 
@@ -97,7 +97,7 @@ int findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 
 		/* match */
 
-		if(wantoldest == FALSE) {
+		if(exponly == TRUE) {
 			/* if expired, remove now and continue searching */
 
 			if(stbuf.st_mtim.tv_sec + ti->ti_expire < curtime) {
@@ -125,13 +125,19 @@ int findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 	closedir(dirp);
 
 	if(anyfound == FALSE && ti->ti_expire && !top) {
-		/* expire thread, directory is empty */
+		/*
+		 * Q: which thread(s) can/should remove empty directories?
+		 * A: for now, only the expire-only thread can.
+		 * TODO: consider adding rmdir to the ini file.
+		 */
 
-		if(!ti->ti_terse)
-			fprintf(stderr, "%s: rmdir %s\n", ti->ti_section, dir);
+		if(exponly == TRUE) {						/* ok to rmdir */
+			if(!ti->ti_terse)
+				fprintf(stderr, "%s: rmdir %s\n", ti->ti_section, dir);
 
-		remove(dir);
-		return (EOF);
+			remove(dir);
+			return (EOF);
+		}
 	}
 
 	return (matches);
