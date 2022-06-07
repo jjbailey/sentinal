@@ -14,9 +14,9 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <pthread.h>
+#include <time.h>
 #include <unistd.h>
 #include "sentinal.h"
-#include "basename.h"
 
 #define	SCANRATE		ONE_MINUTE					/* default monitor rate */
 
@@ -26,7 +26,7 @@ void   *expthread(void *arg)
 	char    task[TASK_COMM_LEN];
 	char   *reason;
 	int     interval;
-	int     matchcnt;
+	int     matches;
 	struct dir_info dinfo;
 	struct thread_info *ti = arg;
 	time_t  curtime;
@@ -68,18 +68,23 @@ void   *expthread(void *arg)
 	for(;;) {
 		sleep(interval);							/* expiry monitor rate */
 
-		/* full path to oldest file, its time, and the number of files found */
-		matchcnt = oldestfile(ti, TRUE, ti->ti_dirname, &dinfo);
+		/* search for expired files */
 
-		if(matchcnt < 1) {							/* no work */
+		matches = findfile(ti, TRUE, ti->ti_dirname, &dinfo);
+
+		if(matches < 1) {							/* no work */
 			if(interval < SCANRATE)
 				interval = SCANRATE;				/* return to normal */
 
 			continue;
 		}
 
-		if(ti->ti_retmin && matchcnt <= ti->ti_retmin)	/* keep */
+		if(ti->ti_retmin && matches <= ti->ti_retmin) {
+			/* match, but below the retention count */
 			continue;
+		}
+
+		/* match */
 
 		if(time(&curtime) - dinfo.di_time < SCANRATE) {
 			/* wait for another thread to remove a file older than this one */
@@ -88,7 +93,7 @@ void   *expthread(void *arg)
 			continue;
 		}
 
-		if(ti->ti_retmax && matchcnt > ti->ti_retmax) {
+		if(ti->ti_retmax && matches > ti->ti_retmax) {
 			/* too many files */
 			reason = "retmax exceeded";
 		} else if(ti->ti_expire && dinfo.di_time + ti->ti_expire < curtime) {
@@ -104,7 +109,7 @@ void   *expthread(void *arg)
 		}
 
 		if(!ti->ti_terse)
-			fprintf(stderr, "%s: %s %s\n", ti->ti_section, reason, base(dinfo.di_file));
+			fprintf(stderr, "%s: %s %s\n", ti->ti_section, reason, dinfo.di_file);
 
 		remove(dinfo.di_file);
 		interval = 0;								/* 1 sec is too slow for inodes */

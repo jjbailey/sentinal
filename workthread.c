@@ -76,7 +76,7 @@ void   *workthread(void *arg)
 		/* set up pipes */
 
 		if((logfd = fifoopen(ti)) == -1) {
-			/* open/crate FIFO failed */
+			/* open/create FIFO failed */
 			SLOWEXIT(EXIT_FAILURE);
 		}
 

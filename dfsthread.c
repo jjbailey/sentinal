@@ -16,9 +16,9 @@
 #include <sys/statvfs.h>
 #include <math.h>
 #include <pthread.h>
+#include <string.h>
 #include <unistd.h>
 #include "sentinal.h"
-#include "basename.h"
 
 #define	FLOORF(v)		floorf(v * 100.0) / 100.0
 #define	PERCENT(x,y)	FLOORF(((long double)x / (long double)y) * 100.0)
@@ -34,7 +34,7 @@ void   *dfsthread(void *arg)
 	char    mountdir[PATH_MAX];
 	char    task[TASK_COMM_LEN];
 	int     interval;
-	int     matchcnt;
+	int     matches;
 	long double pc_bfree = 0.0;
 	long double pc_ffree = 0.0;
 	short   rptlowres = TRUE;
@@ -173,14 +173,15 @@ void   *dfsthread(void *arg)
 
 		/* low space, remove oldest file */
 
-		/* full path to oldest file and its time */
-		matchcnt = oldestfile(ti, TRUE, ti->ti_dirname, &dinfo);
+		matches = findfile(ti, TRUE, ti->ti_dirname, &dinfo);
 
-		if(matchcnt < 1 || (ti->ti_retmin && matchcnt <= ti->ti_retmin)) {
-			/* no work */
+		if(matches < 1 || (ti->ti_retmin && matches <= ti->ti_retmin)) {
+			/* no work, or match, but below the retention count */
 			/* reset the interval when reporting */
 			continue;
 		}
+
+		/* match */
 
 		if(time(&curtime) - dinfo.di_time < SCANRATE) {
 			/* wait for another thread to remove a file older than this one */
@@ -190,7 +191,7 @@ void   *dfsthread(void *arg)
 		}
 
 		if(!ti->ti_terse)
-			fprintf(stderr, "%s: remove %s\n", ti->ti_section, base(dinfo.di_file));
+			fprintf(stderr, "%s: remove %s\n", ti->ti_section, dinfo.di_file);
 
 		remove(dinfo.di_file);
 		rptstatus = TRUE;							/* enable status alert */
