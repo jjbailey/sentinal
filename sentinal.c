@@ -372,7 +372,21 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	pthread_exit(NULL);
+	for(i = 0; i < nsect; i++) {
+		if(threadcheck(ti, _WRK_THR))
+			(void)pthread_join(workers[i], NULL);
+
+		if(threadcheck(ti, _EXP_THR))
+			(void)pthread_join(expmons[i], NULL);
+
+		if(threadcheck(ti, _DFS_THR))
+			(void)pthread_join(dfsmons[i], NULL);
+
+		if(threadcheck(ti, _SLM_THR))
+			(void)pthread_join(slmmons[i], NULL);
+	}
+
+	exit(EXIT_SUCCESS);
 }
 
 static int parsecmd(char *cmd, char *argv[])
