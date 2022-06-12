@@ -46,7 +46,6 @@ void   *slmthread(void *arg)
 	 *  - ti_loglimit
 	 */
 
-	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _SLM_THR, task));
 
 	/* for slm, ti->ti_template is the logname */

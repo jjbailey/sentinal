@@ -34,7 +34,7 @@ void   *dfsthread(void *arg)
 	char    mountdir[PATH_MAX];
 	char    task[TASK_COMM_LEN];
 	int     interval;
-	int     matches;
+	long    matches;
 	long double pc_bfree = 0.0;
 	long double pc_ffree = 0.0;
 	short   rptlowres = TRUE;
@@ -43,7 +43,6 @@ void   *dfsthread(void *arg)
 	struct dir_info dinfo;
 	struct statvfs svbuf;
 	struct thread_info *ti = arg;
-	time_t  curtime;
 
 	/*
 	 * this thread requires:
@@ -53,7 +52,6 @@ void   *dfsthread(void *arg)
 	 *    - ti_inofree
 	 */
 
-	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _DFS_THR, task));
 
 	findmnt(ti->ti_dirname, mountdir);				/* actual mountpoint */
@@ -183,17 +181,7 @@ void   *dfsthread(void *arg)
 
 		/* match */
 
-		if(time(&curtime) - dinfo.di_time < SCANRATE) {
-			/* wait for another thread to remove a file older than this one */
-			/* intermediate sleep state */
-			interval = itimer((int)pc_bfree, (int)pc_ffree, SCANRATE) >> 1;
-			continue;
-		}
-
-		if(!ti->ti_terse)
-			fprintf(stderr, "%s: remove %s\n", ti->ti_section, dinfo.di_file);
-
-		remove(dinfo.di_file);
+		rmfile(ti, dinfo.di_file, "remove");
 		rptstatus = TRUE;							/* enable status alert */
 	}
 

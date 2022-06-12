@@ -14,7 +14,6 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <pthread.h>
-#include <time.h>
 #include <unistd.h>
 #include "sentinal.h"
 
@@ -26,7 +25,7 @@ void   *expthread(void *arg)
 	char    task[TASK_COMM_LEN];
 	char   *reason;
 	int     interval;
-	int     matches;
+	long    matches;
 	struct dir_info dinfo;
 	struct thread_info *ti = arg;
 	time_t  curtime;
@@ -41,7 +40,6 @@ void   *expthread(void *arg)
 	 *    - ti_retmax
 	 */
 
-	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _EXP_THR, task));
 
 	if(ti->ti_dirlimit)
@@ -67,6 +65,7 @@ void   *expthread(void *arg)
 
 	for(;;) {
 		sleep(interval);							/* expiry monitor rate */
+		time(&curtime);
 
 		/* search for expired files */
 
@@ -86,32 +85,31 @@ void   *expthread(void *arg)
 
 		/* match */
 
-		if(time(&curtime) - dinfo.di_time < SCANRATE) {
-			/* wait for another thread to remove a file older than this one */
-			/* intermediate sleep state */
-			interval = SCANRATE >> 1;
-			continue;
+		if(ti->ti_retmax && matches > ti->ti_retmax)
+			reason = "retmax exceeded";
+
+		else if(ti->ti_dirlimit && dinfo.di_bytes > ti->ti_dirlimit)
+			reason = "dirlimit exceeded";
+
+		else if(ti->ti_loglimit && ti->ti_expire) {
+			/* when both given, both conditions must be true */
+
+			if(dinfo.di_size < ti->ti_loglimit || dinfo.di_time + ti->ti_expire > curtime)
+				continue;
 		}
 
-		if(ti->ti_retmax && matches > ti->ti_retmax) {
-			/* too many files */
-			reason = "retmax exceeded";
-		} else if(ti->ti_expire && dinfo.di_time + ti->ti_expire < curtime) {
-			/* retention time exceeded */
+		else if(ti->ti_loglimit && dinfo.di_size >= ti->ti_loglimit)
+			reason = "loglimit exceeded";
+
+		else if(ti->ti_expire && dinfo.di_time + ti->ti_expire < curtime)
 			reason = "expired";
-		} else if(ti->ti_dirlimit && dinfo.di_bytes > ti->ti_dirlimit) {
-			/* dirlimit exceeded */
-			reason = "dirlimit exceeded";
-		} else {
-			/* desired state */
+
+		else {
 			interval = SCANRATE;					/* return to normal */
 			continue;
 		}
 
-		if(!ti->ti_terse)
-			fprintf(stderr, "%s: %s %s\n", ti->ti_section, reason, dinfo.di_file);
-
-		remove(dinfo.di_file);
+		rmfile(ti, dinfo.di_file, reason);
 		interval = 0;								/* 1 sec is too slow for inodes */
 	}
 

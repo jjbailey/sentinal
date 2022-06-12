@@ -103,6 +103,7 @@ struct thread_info {
 struct dir_info {
 	char    di_file[PATH_MAX];						/* oldest file in directory */
 	time_t  di_time;								/* oldest file modification time */
+	off_t   di_size;								/* oldest file size */
 	long double di_bytes;							/* total size of files found */
 };
 
@@ -112,11 +113,11 @@ char   *fullpath(char *, char *, char *);
 char   *logname(char *, char *);
 char   *threadname(char *, char *, char *);
 gid_t   verifygid(char *);
-int     findfile(struct thread_info *, short, char *, struct dir_info *);
 int     logretention(char *);
 int     postcmd(struct thread_info *, char *);
 int     runcmd(int, char **, char **);
 int     threadcheck(struct thread_info *, char *);
+long    findfile(struct thread_info *, short, char *, struct dir_info *);
 off_t   logsize(char *);
 short   mylogfile(char *, pcre2_code *);
 short   pcrecompile(struct thread_info *);
@@ -126,6 +127,7 @@ uid_t   verifyuid(char *);
 void    activethreads(struct thread_info *);
 void    parentsignals(void);
 void    rlimit(int);
+void    rmfile(struct thread_info *, char *, char *);
 void    strreplace(char *, char *, char *);
 void   *dfsthread(void *);
 void   *expthread(void *);

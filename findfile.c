@@ -25,14 +25,14 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-int findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
+long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 {
 	DIR    *dirp;
 	char    filename[PATH_MAX];
-	int     matches;								/* matching files */
-	int     subfound;								/* matching files in subdir */
+	long    subfound;								/* matching files in subdir */
 	short   anyfound;								/* existing files flag */
 	short   exponly = TRUE;							/* conditional search */
+	static long matches;							/* matching files */
 	struct dirent *dp;
 	struct stat stbuf;
 	time_t  curtime;
@@ -44,8 +44,7 @@ int findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 
 	if(top) {										/* reset */
 		*di->di_file = '\0';
-		di->di_time = 0;
-		di->di_bytes = 0;
+		di->di_time = di->di_size = di->di_bytes = 0;
 		anyfound = matches = FALSE;
 	}
 
@@ -67,6 +66,9 @@ int findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 		fullpath(dir, dp->d_name, filename);
 
 		if(stat(filename, &stbuf) == -1)
+			continue;
+
+		if(S_ISLNK(stbuf.st_mode))
 			continue;
 
 		if(S_ISDIR(stbuf.st_mode) && ti->ti_subdirs) {
@@ -91,22 +93,13 @@ int findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 		if(!mylogfile(dp->d_name, ti->ti_pcrecmp))
 			continue;
 
-		if(ti->ti_loglimit && stbuf.st_size < ti->ti_loglimit) {
-			/* match, but below the specified expire size */
-			continue;
-		}
-
 		/* match */
 
 		if(exponly == TRUE) {
 			/* if expired, remove now and continue searching */
 
-			if(stbuf.st_mtim.tv_sec + ti->ti_expire < curtime) {
-				if(!ti->ti_terse)
-					fprintf(stderr, "%s: expired %s\n", ti->ti_section, filename);
-
-				remove(filename);
-			}
+			if(stbuf.st_mtim.tv_sec + ti->ti_expire < curtime)
+				rmfile(ti, filename, "expired");
 
 			continue;
 		}
@@ -114,10 +107,12 @@ int findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 		if(ti->ti_dirlimit)							/* request total size of files found */
 			di->di_bytes += stbuf.st_size;
 
+		/* save the oldest file */
+
 		if(di->di_time == 0 || stbuf.st_mtim.tv_sec < di->di_time) {
-			/* save the oldest file */
 			strlcpy(di->di_file, filename, PATH_MAX);
 			di->di_time = stbuf.st_mtim.tv_sec;
+			di->di_size = stbuf.st_size;
 		}
 
 		matches++;
@@ -126,15 +121,8 @@ int findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 	closedir(dirp);
 
 	if(anyfound == FALSE && !top) {					/* ok to remove */
-		if(access(dir, F_OK) == 0) {
-			/* not yet removed by another thread */
-
-			if(!ti->ti_terse)
-				fprintf(stderr, "%s: rmdir %s\n", ti->ti_section, dir);
-
-			remove(dir);
-			return (EOF);
-		}
+		rmfile(ti, dir, "rmdir");
+		return (EOF);
 	}
 
 	return (matches);

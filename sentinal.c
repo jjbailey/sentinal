@@ -291,16 +291,6 @@ int main(int argc, char *argv[])
 				fprintf(stderr, "%s: missing or bad pcre\n", ti->ti_section);
 				exit(EXIT_FAILURE);
 			}
-
-			if(ti->ti_retmax && ti->ti_retmin > ti->ti_retmax) {
-				/* print a warning */
-
-				if(verbose)
-					fprintf(stdout, "%s: retmin is greater than retmax\n",
-							ti->ti_section);
-
-				ti->ti_retmax = ti->ti_retmin;
-			}
 		}
 
 		if(threadcheck(ti, _SLM_THR)) {
@@ -346,6 +336,26 @@ int main(int argc, char *argv[])
 		/* usleep for systemd journal */
 
 		ti = &tinfo[i];								/* shorthand */
+
+		/* print warnings if any */
+
+		if(threadcheck(ti, _WRK_THR))
+			if(ti->ti_loglimit && ti->ti_expire) {
+				fprintf(stderr,
+						"%s: warning: wrk has loglimit/expire set -- create separate expire section\n",
+						ti->ti_section);
+			}
+
+		if(threadcheck(ti, _DFS_THR) || threadcheck(ti, _EXP_THR))
+			if(ti->ti_retmax && ti->ti_retmax < ti->ti_retmin) {
+				fprintf(stderr,
+						"%s: warning: retmax is less than retmin -- setting retmax = 0\n",
+						ti->ti_section);
+
+				ti->ti_retmax = 0;					/* don't lose anything */
+			}
+
+		/* start threads */
 
 		if(threadcheck(ti, _WRK_THR)) {				/* worker (log ingestion) thread */
 			usleep((useconds_t) 100000);

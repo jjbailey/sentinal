@@ -26,6 +26,7 @@ SENOBJS=	sentinal.o		\
 			pcrecompile.o	\
 			postcmd.o		\
 			rlimit.o		\
+			rmfile.o		\
 			runcmd.o		\
 			signals.o		\
 			slmthread.o		\
