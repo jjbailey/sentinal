@@ -58,7 +58,7 @@ SEN_TEST=	$(SEN_HOME)/tests
 
 CC=			gcc
 WARNINGS=	-Wno-unused-result -Wunused-variable -Wunused-but-set-variable
-CFLAGS=		-g -O2 -pthread $(WARNINGS)
+CFLAGS=		-g -fstack-protector -O2 -pthread $(WARNINGS)
 
 PCRELIB=	-lpcre2-8
 
