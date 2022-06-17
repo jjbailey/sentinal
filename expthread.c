@@ -92,13 +92,13 @@ void   *expthread(void *arg)
 			reason = "dirlimit exceeded";
 
 		else if(ti->ti_loglimit && ti->ti_expire) {
-			/* when both given, both conditions must be true */
+			/* when loglimit and expire are given, both conditions must be true */
 
-			if(dinfo.di_size < ti->ti_loglimit || dinfo.di_time + ti->ti_expire > curtime)
+			if(dinfo.di_size <= ti->ti_loglimit || dinfo.di_time + ti->ti_expire > curtime)
 				continue;
 		}
 
-		else if(ti->ti_loglimit && dinfo.di_size >= ti->ti_loglimit)
+		else if(ti->ti_loglimit && dinfo.di_size > ti->ti_loglimit)
 			reason = "loglimit exceeded";
 
 		else if(ti->ti_expire && dinfo.di_time + ti->ti_expire < curtime)
