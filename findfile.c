@@ -97,9 +97,11 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 
 		if(exponly == TRUE) {
 			/* if expired, remove now and continue searching */
+			/* when loglimit and expire are given, both conditions must be true */
 
 			if(stbuf.st_mtim.tv_sec + ti->ti_expire < curtime)
-				rmfile(ti, filename, "expired");
+				if(ti->ti_loglimit == 0 || stbuf.st_size > ti->ti_loglimit)
+					rmfile(ti, filename, "expired");
 
 			continue;
 		}
