@@ -65,11 +65,13 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 
 		fullpath(dir, dp->d_name, filename);
 
-		if(stat(filename, &stbuf) == -1)
+		if(lstat(filename, &stbuf) == -1)
 			continue;
 
-		if(S_ISLNK(stbuf.st_mode))
+		if(S_ISLNK(stbuf.st_mode)) {
+			anyfound = TRUE;
 			continue;
+		}
 
 		if(S_ISDIR(stbuf.st_mode) && ti->ti_subdirs) {
 			/* search subdirectory */
