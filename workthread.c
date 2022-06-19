@@ -63,7 +63,6 @@ void   *workthread(void *arg)
 	 *  - ti_template
 	 */
 
-	pthread_detach(pthread_self());
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _WRK_THR, task));
 
 	fprintf(stderr, "%s: command: %s\n", ti->ti_section, ti->ti_command);
