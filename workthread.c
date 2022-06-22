@@ -86,7 +86,7 @@ void   *workthread(void *arg)
 
 		logname(ti->ti_template, ti->ti_filename);
 		fullpath(ti->ti_dirname, ti->ti_filename, filename);
-		runcmd(ti->ti_argc, ti->ti_argv, zargv);
+		workcmd(ti->ti_argc, ti->ti_argv, zargv);
 
 		/* for systemctl status sentinal */
 

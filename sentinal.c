@@ -468,7 +468,7 @@ static void dump_thread_info(struct thread_info *ti)
 	fullpath(ti->ti_dirname, fbuf, ti->ti_filename);
 
 	if(ti->ti_argc) {
-		n = runcmd(ti->ti_argc, ti->ti_argv, zargv);
+		n = workcmd(ti->ti_argc, ti->ti_argv, zargv);
 
 		fprintf(stdout, "execcmd:  ");
 		for(i = 0; i < n; i++)

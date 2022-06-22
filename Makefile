@@ -27,7 +27,6 @@ SENOBJS=	sentinal.o		\
 			postcmd.o		\
 			rlimit.o		\
 			rmfile.o		\
-			runcmd.o		\
 			signals.o		\
 			slmthread.o		\
 			strlcat.o		\
@@ -37,6 +36,7 @@ SENOBJS=	sentinal.o		\
 			threadname.o	\
 			verifyids.o		\
 			version.o		\
+			workcmd.o		\
 			workthread.o
 
 SPMOBJS=	sentinalpipe.o	\

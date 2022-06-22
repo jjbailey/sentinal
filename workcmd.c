@@ -1,5 +1,5 @@
 /*
- * runcmd.c
+ * workcmd.c
  * Create a command in zargv[] for execv().
  *
  * Copyright (c) 2021, 2022 jjb
@@ -19,12 +19,13 @@ static char *compprogs[] = {
 	"pbzip2",
 	"pigz",
 	"pzstd",
+	"xz",
 	"zstd"
 };
 
 static int ncprogs = (sizeof(compprogs) / sizeof(compprogs[0]));
 
-int runcmd(int argc, char *argv[], char *zargv[])
+int workcmd(int argc, char *argv[], char *zargv[])
 {
 	int     i;
 	int     n = 0;
