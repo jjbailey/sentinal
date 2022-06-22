@@ -437,32 +437,10 @@ static void dump_thread_info(struct thread_info *ti)
 	int     i;
 	int     n;
 
-	fprintf(stdout, "\n");
-	fprintf(stdout, "section:  %s\n", ti->ti_section);
-	fprintf(stdout, "command:  %s\n", ti->ti_command);
-	fprintf(stdout, "argc:     %d\n", ti->ti_argc);
-	fprintf(stdout, "path:     %s\n", ti->ti_path);
+	*ebuf = *fbuf = '\0';
 
-	fprintf(stdout, "argv:    ");
-	for(i = 1; i < ti->ti_argc; i++)
-		fprintf(stdout, " %s", ti->ti_argv[i]);
-	fprintf(stdout, "\n");
-
-	fprintf(stdout, "dirname:  %s\n", ti->ti_dirname);
-	fprintf(stdout, "dirlimit: %ldMiB\n", MiB(ti->ti_dirlimit));
-	fprintf(stdout, "subdirs:  %d\n", ti->ti_subdirs);
-	fprintf(stdout, "pipename: %s\n", ti->ti_pipename);
-	fprintf(stdout, "template: %s\n", ti->ti_template);
-	fprintf(stdout, "pcrestr:  %s\n", ti->ti_pcrestr);
-	fprintf(stdout, "uid:      %d\n", ti->ti_uid);
-	fprintf(stdout, "gid:      %d\n", ti->ti_gid);
-	fprintf(stdout, "loglimit: %ldMiB\n", MiB(ti->ti_loglimit));
-	fprintf(stdout, "diskfree: %.2Lf\n", ti->ti_diskfree);
-	fprintf(stdout, "inofree:  %.2Lf\n", ti->ti_inofree);
-	fprintf(stdout, "expire:   %s\n", convexpire(ti->ti_expire, ebuf));
-	fprintf(stdout, "retmin:   %d\n", ti->ti_retmin);
-	fprintf(stdout, "retmax:   %d\n", ti->ti_retmax);
-	fprintf(stdout, "terse:    %d\n", ti->ti_terse);
+	fprintf(stdout, "\n[%s]\n", ti->ti_section);
+	fprintf(stdout, "command  = %s\n", ti->ti_command);
 
 	logname(ti->ti_template, fbuf);
 	fullpath(ti->ti_dirname, fbuf, ti->ti_filename);
@@ -470,21 +448,43 @@ static void dump_thread_info(struct thread_info *ti)
 	if(ti->ti_argc) {
 		n = workcmd(ti->ti_argc, ti->ti_argv, zargv);
 
-		fprintf(stdout, "execcmd:  ");
+		fprintf(stdout, "#          ");
+
 		for(i = 0; i < n; i++)
 			fprintf(stdout, "%s ", zargv[i]);
-		fprintf(stdout, "> %s\n", ti->ti_filename);	/* show redirect */
-	} else
-		fprintf(stdout, "execcmd:  \n");
+
+		if(NOT_NULL(ti->ti_filename))
+			fprintf(stdout, "> %s\n", ti->ti_filename);
+	}
+
+	fprintf(stdout, "dirname  = %s\n", ti->ti_dirname);
+	fprintf(stdout, "dirlimit = %ldMiB\n", MiB(ti->ti_dirlimit));
+	fprintf(stdout, "subdirs  = %d\n", ti->ti_subdirs);
+	fprintf(stdout, "pipename = %s\n", ti->ti_pipename);
+	fprintf(stdout, "template = %s\n", ti->ti_template);
+	fprintf(stdout, "#          %s\n", base(ti->ti_filename));
+	fprintf(stdout, "pcrestr  = %s\n", ti->ti_pcrestr);
+	fprintf(stdout, "uid      = %d\n", ti->ti_uid);
+	fprintf(stdout, "gid      = %d\n", ti->ti_gid);
+	fprintf(stdout, "loglimit = %ldMiB\n", MiB(ti->ti_loglimit));
+	fprintf(stdout, "diskfree = %.2Lf\n", ti->ti_diskfree);
+	fprintf(stdout, "inofree  = %.2Lf\n", ti->ti_inofree);
+	fprintf(stdout, "expire   = %s\n", convexpire(ti->ti_expire, ebuf));
+	fprintf(stdout, "retmin   = %d\n", ti->ti_retmin);
+	fprintf(stdout, "retmax   = %d\n", ti->ti_retmax);
+	fprintf(stdout, "terse    = %d\n", ti->ti_terse);
 
 	/* postcmd tokens */
+
+	fprintf(stdout, "postcmd  = %s\n", ti->ti_postcmd);
 
 	strreplace(ti->ti_postcmd, _HOST_TOK, utsbuf.nodename);
 	strreplace(ti->ti_postcmd, _PATH_TOK, ti->ti_dirname);
 	strreplace(ti->ti_postcmd, _FILE_TOK, ti->ti_filename);
 	strreplace(ti->ti_postcmd, _SECT_TOK, ti->ti_section);
 
-	fprintf(stdout, "postcmd:  %s\n", ti->ti_postcmd);
+	if(NOT_NULL(ti->ti_postcmd))
+		fprintf(stdout, "#          %s\n", ti->ti_postcmd);
 }
 
 static short create_pid_file(char *pidfile)
