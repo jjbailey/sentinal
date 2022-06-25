@@ -45,6 +45,9 @@ static void help(char *);
 /* external for signal handling */
 struct thread_info tinfo[MAXSECT];
 
+/* external dry run flag */
+short   dryrun;
+
 /* external for token expansion */
 struct utsname utsbuf;
 
@@ -76,8 +79,9 @@ int main(int argc, char *argv[])
 
 	umask(umask(0) | 022);							/* don't set less restrictive */
 	*inifile = '\0';
+	dryrun = FALSE;
 
-	while((opt = getopt(argc, argv, "dvf:V?")) != -1) {
+	while((opt = getopt(argc, argv, "dvf:DV?")) != -1) {
 		switch (opt) {
 
 		case 'd':									/* debug INI parse */
@@ -90,6 +94,10 @@ int main(int argc, char *argv[])
 
 		case 'f':									/* INI file name */
 			strlcpy(inifile, optarg, PATH_MAX);
+			break;
+
+		case 'D':									/* dry run mode */
+			dryrun = TRUE;
 			break;
 
 		case 'V':									/* print version */
@@ -328,7 +336,11 @@ int main(int argc, char *argv[])
 	slmmons = (pthread_t *) malloc(nsect * sizeof(*slmmons));
 
 	/* version banner */
-	fprintf(stderr, "%s: version %s\n", base(argv[0]), VERSION_STRING);
+
+	if(dryrun)
+		fprintf(stderr, "%s: version %s (DRY RUN)\n", base(argv[0]), VERSION_STRING);
+	else
+		fprintf(stderr, "%s: version %s\n", base(argv[0]), VERSION_STRING);
 
 	for(i = 0; i < nsect; i++) {
 		/* usleep for systemd journal */
@@ -539,11 +551,13 @@ static void help(char *prog)
 
 	fprintf(stderr, "\nUsage:\n");
 	fprintf(stderr, "%s -f <inifile>\n\n", p);
-	fprintf(stderr, "Print the INI file as parsed, exit\n");
+	fprintf(stderr, "Print the INI file as parsed, exit:\n");
 	fprintf(stderr, "%s -f <inifile> -d\n\n", p);
-	fprintf(stderr, "Print the INI file as interpreted, exit\n");
+	fprintf(stderr, "Print the INI file as interpreted, exit:\n");
 	fprintf(stderr, "%s -f <inifile> -v\n\n", p);
-	fprintf(stderr, "Print the program version, exit\n");
+	fprintf(stderr, "Dry run mode:\n");
+	fprintf(stderr, "%s -D <options>\n\n", p);
+	fprintf(stderr, "Print the program version, exit:\n");
 	fprintf(stderr, "%s -V\n\n", p);
 }
 
