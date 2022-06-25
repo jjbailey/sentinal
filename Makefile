@@ -35,7 +35,6 @@ SENOBJS=	sentinal.o		\
 			threadcheck.o	\
 			threadname.o	\
 			verifyids.o		\
-			version.o		\
 			workcmd.o		\
 			workthread.o
 
@@ -43,12 +42,10 @@ SPMOBJS=	sentinalpipe.o	\
 			fullpath.o		\
 			ini.o			\
 			iniget.o		\
-			strlcpy.o		\
-			version.o
+			strlcpy.o
 
 PCTOBJS=	pcretest.o		\
-			pcrecompile.o	\
-			version.o
+			pcrecompile.o
 
 SEN_HOME=	/opt/sentinal
 SEN_BIN=	$(SEN_HOME)/bin

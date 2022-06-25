@@ -44,7 +44,6 @@
 #include "basename.h"
 
 short   pcretest(char *, pcre2_code *);
-void    version(char *, FILE *);
 
 int main(int argc, char *argv[])
 {
@@ -56,7 +55,7 @@ int main(int argc, char *argv[])
 	myname = base(argv[0]);
 
 	if(argc > 1 && strcmp(argv[1], "-V") == 0) {
-		version(argv[0], stdout);
+		fprintf(stdout, "%s: version %s\n", myname, VERSION_STRING);
 		exit(EXIT_SUCCESS);
 	}
 

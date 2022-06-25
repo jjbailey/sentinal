@@ -53,8 +53,6 @@ char   *my_ini(ini_t *, char *, char *);
 int     get_sections(ini_t *, int, char **);
 void    print_section(ini_t *, char *);
 
-void    version(char *, FILE *);
-
 int main(int argc, char *argv[])
 {
 	DIR    *dirp;
@@ -95,7 +93,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'V':									/* print version */
-			version(argv[0], stdout);
+			fprintf(stdout, "%s: version %s\n", base(argv[0]), VERSION_STRING);
 			exit(EXIT_SUCCESS);
 
 		case '?':									/* print usage */
@@ -330,7 +328,7 @@ int main(int argc, char *argv[])
 	slmmons = (pthread_t *) malloc(nsect * sizeof(*slmmons));
 
 	/* version banner */
-	version(argv[0], stderr);
+	fprintf(stderr, "%s: version %s\n", base(argv[0]), VERSION_STRING);
 
 	for(i = 0; i < nsect; i++) {
 		/* usleep for systemd journal */

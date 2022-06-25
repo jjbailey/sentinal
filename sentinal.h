@@ -8,6 +8,8 @@
  * in the root directory of this source tree.
  */
 
+#define	VERSION_STRING	"1.4.5"
+
 #ifndef _SYS_TYPES_H
 # include <sys/types.h>
 #endif
