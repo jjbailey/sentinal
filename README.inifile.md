@@ -109,7 +109,7 @@ sentinal accepts two flags for debugging.
     $ /opt/sentinal/bin/sentinal -f /opt/sentinal/tests/test4.ini -d
 
     [test4]
-    command  = /usr/bin/zstd -1 -T4
+    command  = /usr/bin/zstd -T4
     dirname  = /opt/sentinal/tests
     dirlimit =
     subdirs  = true
@@ -130,8 +130,8 @@ sentinal accepts two flags for debugging.
     $ /opt/sentinal/bin/sentinal -f /opt/sentinal/tests/test4.ini -v
 
     [test4]
-    command  = /usr/bin/zstd -1 -T4
-    #          zstd -f -1 -T4 > /opt/sentinal/tests/test4-2022-06-22_12-18-34.log.zst
+    command  = /usr/bin/zstd -T4
+    #          zstd -f -T4 > /opt/sentinal/tests/test4-2022-06-22_12-18-34.log.zst
     dirname  = /opt/sentinal/tests
     dirlimit = 0MiB
     subdirs  = 1

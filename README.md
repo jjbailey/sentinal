@@ -288,7 +288,7 @@ The INI file /opt/sentinal/etc/example.ini is used here as an example.
                  `-13580 /opt/sentinal/bin/sentinal -f /opt/sentinal/etc/example.ini
 
     Nov 24 13:01:47 loghost systemd[1]: Started sentinal service for example.ini.
-    Nov 24 13:01:47 loghost sentinal[13580]: test4: command: /usr/bin/zstd -1 -T4
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: command: /usr/bin/zstd -T4
     Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for size 1024MiB
     Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for retmin 3
     Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for retmax 25
