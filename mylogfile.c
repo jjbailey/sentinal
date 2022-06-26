@@ -17,7 +17,13 @@ short mylogfile(char *f, pcre2_code *re)
 {
 	int     rc;
 	pcre2_match_data *mdata;
+
+	/* testing */
+#if 0
 	uint32_t options = PCRE2_ANCHORED;
+#else
+	uint32_t options = 0;
+#endif
 
 	if(IS_NULL(f) || *f == '.')
 		return (FALSE);

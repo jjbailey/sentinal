@@ -89,7 +89,13 @@ short pcretest(char *s, pcre2_code *re)
 
 	int     rc;
 	pcre2_match_data *mdata;
+
+	/* testing */
+#if 0
 	uint32_t options = PCRE2_ANCHORED;
+#else
+	uint32_t options = 0;
+#endif
 
 	mdata = pcre2_match_data_create_from_pattern(re, NULL);
 	rc = pcre2_match(re, (PCRE2_SPTR) s, strlen(s), (PCRE2_SIZE) 0, options, mdata, NULL);
