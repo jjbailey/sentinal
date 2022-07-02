@@ -109,7 +109,7 @@ sentinal accepts two flags for debugging.
     $ /opt/sentinal/bin/sentinal -f /opt/sentinal/tests/test4.ini -d
 
     [test4]
-    command  = /usr/bin/zstd -1 -T4
+    command  = /usr/bin/zstd -T4
     dirname  = /opt/sentinal/tests
     dirlimit =
     subdirs  = true
@@ -129,27 +129,25 @@ sentinal accepts two flags for debugging.
 
     $ /opt/sentinal/bin/sentinal -f /opt/sentinal/tests/test4.ini -v
 
-    section:  test4
-    command:  /usr/bin/zstd -1 -T4
-    argc:     3
-    path:     /usr/bin/zstd
-    argv:     -1 -T4
-    dirname:  /opt/sentinal/tests
-    dirlimit: 0MiB
-    subdirs:  1
-    pipename: /opt/sentinal/tests/test4.fifo
-    template: test4-%Y-%m-%d_%H-%M-%S.log.zst
-    pcrestr:  test4-
-    uid:      1324
-    gid:      1324
-    loglimit: 1024MiB
-    diskfree: 85.00
-    inofree:  0.00
-    expire:   0m
-    retmin:   3
-    retmax:   25
-    terse:    0
-    execcmd:  zstd -f -1 -T4 > /opt/sentinal/tests/test4-2022-04-17_09-33-11.log.zst
-    postcmd:
-    threads:  dfs: true   exp: true   slm: false   wrk: true
+    [test4]
+    command  = /usr/bin/zstd -T4
+    #          zstd -f -T4 > /opt/sentinal/tests/test4-2022-06-22_12-18-34.log.zst
+    dirname  = /opt/sentinal/tests
+    dirlimit = 0MiB
+    subdirs  = 1
+    pipename = /opt/sentinal/tests/test4.fifo
+    template = test4-%Y-%m-%d_%H-%M-%S.log.zst
+    #          test4-2022-06-22_12-18-34.log.zst
+    pcrestr  = test4-
+    uid      = 1324
+    gid      = 1324
+    loglimit = 1024MiB
+    diskfree = 85.00
+    inofree  = 0.00
+    expire   = 0m
+    retmin   = 3
+    retmax   = 25
+    terse    = 0
+    postcmd  = 
+    # threads  dfs: true   exp: true   slm: false   wrk: true
 

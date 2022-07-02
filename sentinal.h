@@ -8,6 +8,8 @@
  * in the root directory of this source tree.
  */
 
+#define	VERSION_STRING	"1.4.5"
+
 #ifndef _SYS_TYPES_H
 # include <sys/types.h>
 #endif
@@ -115,8 +117,8 @@ char   *threadname(char *, char *, char *);
 gid_t   verifygid(char *);
 int     logretention(char *);
 int     postcmd(struct thread_info *, char *);
-int     runcmd(int, char **, char **);
 int     threadcheck(struct thread_info *, char *);
+int     workcmd(int, char **, char **);
 long    findfile(struct thread_info *, short, char *, struct dir_info *);
 off_t   logsize(char *);
 short   mylogfile(char *, pcre2_code *);

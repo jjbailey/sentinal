@@ -15,13 +15,16 @@
 
 void rmfile(struct thread_info *ti, char *obj, char *remark)
 {
+	extern short dryrun;
+
 	if(access(obj, F_OK) == 0) {
 		/* not yet removed by another thread */
 
 		if(!ti->ti_terse)
 			fprintf(stderr, "%s: %s %s\n", ti->ti_section, remark, obj);
 
-		remove(obj);
+		if(!dryrun)
+			remove(obj);
 	}
 }
 

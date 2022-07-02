@@ -21,7 +21,7 @@
  * no match: /var/log/syslog.2.gz
  *
  * negative lookahead for pid files
- * $ pcretest '(?!.*\.(?:pid)$)' notapidfile pidfile.pid
+ * $ pcretest '^(?!.*\.(?:pid)$)' notapidfile pidfile.pid
  * match:    notapidfile
  * no match: pidfile.pid
  *
@@ -31,7 +31,7 @@
  * no match: pidfile.pid
  *
  * negative lookahead for compressed files
- * $ find testdir -type f | xargs pcretest '(?!.*\.(?:bz2|gz|lz|zip|zst)$)'
+ * $ pcretest '^(?!.*\.(?:bz2|gz|lz|zip|zst)$)' $(find testdir -type f)
  * no match: testdir/ddrescue-1.25.tar.lz
  * match:    testdir/nxserver.log
  * no match: testdir/syslog.2.gz
@@ -44,7 +44,6 @@
 #include "basename.h"
 
 short   pcretest(char *, pcre2_code *);
-void    version(char *, FILE *);
 
 int main(int argc, char *argv[])
 {
@@ -56,7 +55,7 @@ int main(int argc, char *argv[])
 	myname = base(argv[0]);
 
 	if(argc > 1 && strcmp(argv[1], "-V") == 0) {
-		version(argv[0], stdout);
+		fprintf(stdout, "%s: version %s\n", myname, VERSION_STRING);
 		exit(EXIT_SUCCESS);
 	}
 
@@ -90,7 +89,7 @@ short pcretest(char *s, pcre2_code *re)
 
 	int     rc;
 	pcre2_match_data *mdata;
-	uint32_t options = PCRE2_ANCHORED;
+	uint32_t options = 0;
 
 	mdata = pcre2_match_data_create_from_pattern(re, NULL);
 	rc = pcre2_match(re, (PCRE2_SPTR) s, strlen(s), (PCRE2_SIZE) 0, options, mdata, NULL);
