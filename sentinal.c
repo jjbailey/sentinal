@@ -38,7 +38,6 @@
 
 static int parsecmd(char *, char **);
 static short create_pid_file(char *);
-static short emptyconfig(struct thread_info *);
 static short setiniflag(ini_t *, char *, char *);
 static void dump_thread_info(struct thread_info *);
 static void help(char *);
@@ -287,18 +286,10 @@ int main(int argc, char *argv[])
 			if(ti->ti_loglimit && ti->ti_expire)
 				ti->ti_expiresiz = ti->ti_loglimit;
 
-		if(verbose)
+		if(verbose) {
 			dump_thread_info(ti);
-
-		/* INI option combo checks */
-
-		if(emptyconfig(ti)) {
-			fprintf(stderr, "%s: nothing to do\n", ti->ti_section);
-			exit(EXIT_FAILURE);
-		}
-
-		if(verbose)
 			activethreads(ti);
+		}
 	}
 
 	if(verbose)
@@ -521,27 +512,6 @@ static short create_pid_file(char *pidfile)
 	}
 
 	return (FALSE);
-}
-
-static short emptyconfig(struct thread_info *ti)
-{
-	/*
-	 * is the configuation empty or missing something
-	 * note: config might be rejected during parsing
-	 * check for:
-	 *   - wrk
-	 *   - slm
-	 *   - dfs
-	 *   - exp
-	 */
-
-	if(ti->ti_argc ||
-	   ti->ti_expiresiz ||
-	   ti->ti_diskfree || ti->ti_inofree ||
-	   ti->ti_dirlimit || ti->ti_expire || ti->ti_retmin || ti->ti_retmax)
-		return (FALSE);
-
-	return (TRUE);
 }
 
 static short setiniflag(ini_t *ini, char *section, char *key)
