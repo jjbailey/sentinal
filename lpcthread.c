@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-#define SCANRATE        (ONE_MINUTE * 3)			/* scan rate */
+#define SCANRATE        (ONE_MINUTE * 4)			/* may need revisiting */
 
 static void scandirectory(struct thread_info *, char *);
 
@@ -40,8 +40,8 @@ void   *lpcthread(void *arg)
 	fprintf(stderr, "%s: cache directory: %s\n", ti->ti_section, ti->ti_dirname);
 
 	for(;;) {
-		sleep(SCANRATE);
 		scandirectory(ti, ti->ti_dirname);
+		sleep(SCANRATE);
 	}
 
 	/* notreached */
