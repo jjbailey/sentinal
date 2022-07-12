@@ -8,10 +8,14 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"1.4.5"
+#define	VERSION_STRING	"1.5.0"
 
 #ifndef _SYS_TYPES_H
 # include <sys/types.h>
+#endif
+
+#ifndef _PTHREAD_H
+# include <pthread.h>
 #endif
 
 #ifndef PCRE2_H_IDEMPOTENT_GUARD
@@ -64,6 +68,7 @@
 
 #define	_DFS_THR	"dfs"							/* filesystem free space */
 #define	_EXP_THR	"exp"							/* file expiration, retention */
+#define	_LPC_THR	"lpc"							/* linux page cache */
 #define	_SLM_THR	"slm"							/* simple log monitor */
 #define	_WRK_THR	"wrk"							/* worker (log ingestion) thread */
 
@@ -74,6 +79,11 @@
 #define	PATH	"/usr/bin:/usr/sbin"
 
 struct thread_info {
+	pthread_t dfs_tid;								/* dfs thread id */
+	pthread_t exp_tid;								/* exp thread id */
+	pthread_t lpc_tid;								/* lpc thread id */
+	pthread_t slm_tid;								/* slm thread id */
+	pthread_t wrk_tid;								/* wrk thread id */
 	char   *ti_section;								/* section name */
 	char   *ti_command;								/* thread command */
 	int     ti_argc;								/* number of args in command */
@@ -92,13 +102,17 @@ struct thread_info {
 	gid_t   ti_gid;									/* thread gid */
 	int     ti_wfd;									/* worker stdin or EOF */
 	int     ti_sig;									/* signal number received */
-	off_t   ti_loglimit;							/* logfile rotate size */
+	off_t   ti_loglimit;							/* deprecated in v1.5.0 */
+	off_t   ti_rotatesiz;							/* logfile rotate size */
+	off_t   ti_expiresiz;							/* logfile expire size */
 	long double ti_diskfree;						/* desired percent blocks free */
 	long double ti_inofree;							/* desired percent inodes free */
 	int     ti_expire;								/* file expiration */
 	int     ti_retmin;								/* file retention minimum */
 	int     ti_retmax;								/* file retention maximum */
 	short   ti_terse;								/* notify file removal flag */
+	short   ti_rmdir;								/* remove empty dirs */
+	short   ti_symlinks;							/* follow symlinks */
 	char   *ti_postcmd;								/* command to run after log closes */
 };
 
@@ -121,6 +135,7 @@ int     threadcheck(struct thread_info *, char *);
 int     workcmd(int, char **, char **);
 long    findfile(struct thread_info *, short, char *, struct dir_info *);
 off_t   logsize(char *);
+short   rmfile(struct thread_info *, char *, char *);
 short   mylogfile(char *, pcre2_code *);
 short   pcrecompile(struct thread_info *);
 size_t  strlcat(char *, const char *, size_t);
@@ -129,10 +144,10 @@ uid_t   verifyuid(char *);
 void    activethreads(struct thread_info *);
 void    parentsignals(void);
 void    rlimit(int);
-void    rmfile(struct thread_info *, char *, char *);
 void    strreplace(char *, char *, char *);
 void   *dfsthread(void *);
 void   *expthread(void *);
+void   *lpcthread(void *);
 void   *slmthread(void *);
 void   *workthread(void *);
 

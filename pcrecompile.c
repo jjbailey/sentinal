@@ -19,15 +19,20 @@ short pcrecompile(struct thread_info *ti)
 	int     errnumber;
 	uint32_t options = 0;
 
-	if(IS_NULL(ti->ti_pcrestr))						/* effectively PCRE2_NOTEMPTY */
+	if(IS_NULL(ti->ti_pcrestr)) {
+		/*
+		 * null is ok
+		 * ensures mylogfile() always returns false
+		 */
 		ti->ti_pcrecmp = NULL;
-	else
+	} else {
 		ti->ti_pcrecmp = pcre2_compile((PCRE2_SPTR) ti->ti_pcrestr, length,
 									   options, &errnumber, &erroffset, NULL);
 
-	if(ti->ti_pcrecmp == NULL)
-		fprintf(stderr, "%s: pcre2 compilation failed: %s\n", ti->ti_section,
-				ti->ti_pcrestr);
+		if(ti->ti_pcrecmp == NULL)
+			fprintf(stderr, "%s: pcre2 compilation failed: %s\n", ti->ti_section,
+					ti->ti_pcrestr);
+	}
 
 	return (ti->ti_pcrecmp != NULL);
 }

@@ -23,12 +23,14 @@ int threadcheck(struct thread_info *ti, char *tname)
 		pass = ti->ti_pcrecmp && (ti->ti_diskfree || ti->ti_inofree);
 
 	else if(strcmp(tname, _EXP_THR) == 0)			/* file expiration, retention, dirlimit */
-		pass = ti->ti_pcrecmp &&
-			(ti->ti_dirlimit || ti->ti_expire || ti->ti_retmin || ti->ti_retmax);
+		pass = ti->ti_pcrecmp && (ti->ti_dirlimit || ti->ti_expire || ti->ti_retmax);
+
+	else if(strcmp(tname, _LPC_THR) == 0)			/* linux page cache */
+		pass = IS_NULL(ti->ti_pcrestr) && ti->ti_pcrecmp == NULL;
 
 	else if(strcmp(tname, _SLM_THR) == 0)			/* simple log monitor */
 		pass = IS_NULL(ti->ti_command) &&
-			NOT_NULL(ti->ti_template) && NOT_NULL(ti->ti_postcmd) && ti->ti_loglimit;
+			NOT_NULL(ti->ti_template) && NOT_NULL(ti->ti_postcmd) && ti->ti_rotatesiz;
 
 	else if(strcmp(tname, _WRK_THR) == 0)			/* worker (log ingestion) thread */
 		pass = ti->ti_argc && NOT_NULL(ti->ti_pipename) && NOT_NULL(ti->ti_template);
@@ -38,9 +40,13 @@ int threadcheck(struct thread_info *ti, char *tname)
 
 void activethreads(struct thread_info *ti)
 {
-	fprintf(stdout, "# threads  dfs: %s   exp: %s   slm: %s   wrk: %s\n",
-			THRCHECK(ti, _DFS_THR), THRCHECK(ti, _EXP_THR),
-			THRCHECK(ti, _SLM_THR), THRCHECK(ti, _WRK_THR));
+	fprintf(stdout, "# threads");
+	fprintf(stdout, "   %s: %s", _DFS_THR, THRCHECK(ti, _DFS_THR));
+	fprintf(stdout, "   %s: %s", _EXP_THR, THRCHECK(ti, _EXP_THR));
+	fprintf(stdout, "   %s: %s", _LPC_THR, THRCHECK(ti, _LPC_THR));
+	fprintf(stdout, "   %s: %s", _SLM_THR, THRCHECK(ti, _SLM_THR));
+	fprintf(stdout, "   %s: %s", _WRK_THR, THRCHECK(ti, _WRK_THR));
+	fprintf(stdout, "\n");
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

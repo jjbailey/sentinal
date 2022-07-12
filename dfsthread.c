@@ -27,6 +27,8 @@
 #define	MINIMUM(a,b)	(a < b ? a : b)
 #define	MAXIMUM(a,b)	(a > b ? a : b)
 
+#define	LOW_RES(target,avail)	(target && avail < target)
+
 static int itimer(int, int, int);
 
 void   *dfsthread(void *arg)
@@ -37,7 +39,6 @@ void   *dfsthread(void *arg)
 	long    matches;
 	long double pc_bfree = 0.0;
 	long double pc_ffree = 0.0;
-	short   rptlowres = TRUE;
 	short   rptstatus = FALSE;
 	short   skip = FALSE;
 	struct dir_info dinfo;
@@ -143,7 +144,6 @@ void   *dfsthread(void *arg)
 							ti->ti_section, ti->ti_dirname, pc_ffree);
 
 				rptstatus = FALSE;					/* mute status alert */
-				rptlowres = TRUE;					/* reset lowres alert */
 
 				/* recompute the monitor rate */
 
@@ -151,23 +151,17 @@ void   *dfsthread(void *arg)
 			}
 
 			continue;
-		} else {
-			/* low resources */
-
-			if(rptlowres) {
-				if(ti->ti_diskfree && pc_bfree < ti->ti_diskfree)
-					fprintf(stderr, "%s: low free blocks %s: %.2Lf%% < %.2Lf%%\n",
-							ti->ti_section, ti->ti_dirname, pc_bfree, ti->ti_diskfree);
-
-				if(ti->ti_inofree && pc_ffree < ti->ti_inofree)
-					fprintf(stderr, "%s: low free inodes %s: %.2Lf%% < %.2Lf%%\n",
-							ti->ti_section, ti->ti_dirname, pc_ffree, ti->ti_inofree);
-
-				rptlowres = FALSE;					/* mute lowres alert */
-			}
-
-			interval = 0;							/* 1 sec is too slow for inodes */
 		}
+
+		/* low resources */
+
+		if(LOW_RES(ti->ti_diskfree, pc_bfree))
+			fprintf(stderr, "%s: low free blocks %s: %.2Lf%% < %.2Lf%%\n",
+					ti->ti_section, ti->ti_dirname, pc_bfree, ti->ti_diskfree);
+
+		if(LOW_RES(ti->ti_inofree, pc_ffree))
+			fprintf(stderr, "%s: low free inodes %s: %.2Lf%% < %.2Lf%%\n",
+					ti->ti_section, ti->ti_dirname, pc_ffree, ti->ti_inofree);
 
 		/* low space, remove oldest file */
 
@@ -183,6 +177,7 @@ void   *dfsthread(void *arg)
 
 		rmfile(ti, dinfo.di_file, "remove");
 		rptstatus = TRUE;							/* enable status alert */
+		interval = 0;								/* 1 sec is too slow for inodes */
 	}
 
 	/* notreached */
