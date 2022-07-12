@@ -94,23 +94,23 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 
 		/* match */
 
-		if(exponly == TRUE)
-			if(ti->ti_expire) {
-				/* if expiresiz is set, use it, else n/a */
+		if(ti->ti_expire && !ti->ti_retmin) {
+			/*
+			 * ok to expire now
+			 * if expiresiz is set, use it, else true
+			 */
 
-				if(ti->ti_expiresiz)
-					expflag = stbuf.st_size > ti->ti_expiresiz;
-				else
-					expflag = TRUE;
+			expflag = !ti->ti_expiresiz ||
+				(ti->ti_expiresiz && stbuf.st_size > ti->ti_expiresiz);
 
-				if(expflag && stbuf.st_mtim.tv_sec + ti->ti_expire < curtime) {
-					if(rmfile(ti, filename, "expire"))
-						if(direntries)
-							direntries--;
-				}
+			if(expflag && stbuf.st_mtim.tv_sec + ti->ti_expire < curtime) {
+				if(rmfile(ti, filename, "expire"))
+					if(direntries)
+						direntries--;
 
-				continue;
+				continue;							/* continue searching */
 			}
+		}
 
 		if(ti->ti_dirlimit)							/* request total size of files found */
 			di->di_bytes += stbuf.st_size;
