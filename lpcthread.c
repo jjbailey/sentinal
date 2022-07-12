@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-#define SCANRATE        (ONE_MINUTE * 4)			/* may need revisiting */
+#define SCANRATE        (ONE_MINUTE * 5)			/* may need revisiting */
 
 static void scandirectory(struct thread_info *, char *);
 
@@ -37,7 +37,6 @@ void   *lpcthread(void *arg)
 		return ((void *)0);
 
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _LPC_THR, task));
-	fprintf(stderr, "%s: cache directory: %s\n", ti->ti_section, ti->ti_dirname);
 
 	for(;;) {
 		scandirectory(ti, ti->ti_dirname);
