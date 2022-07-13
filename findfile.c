@@ -40,8 +40,6 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 	if((dirp = opendir(dir)) == NULL)
 		return (0);
 
-	rewinddir(dirp);
-
 	if(top) {										/* reset */
 		*di->di_file = '\0';
 		di->di_time = di->di_size = di->di_bytes = 0;

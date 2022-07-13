@@ -30,7 +30,7 @@ void   *lpcthread(void *arg)
 	/*
 	 * this thread requires:
 	 *  - ti_pcrestr = null
-	 *  - ti_pcrecm = null
+	 *  - ti_pcrecmp = null
 	 */
 
 	if(NOT_NULL(ti->ti_pcrestr) || ti->ti_pcrecmp)
@@ -56,8 +56,6 @@ static void scandirectory(struct thread_info *ti, char *dir)
 
 	if((dirp = opendir(dir)) == NULL)
 		return;
-
-	rewinddir(dirp);
 
 	while(dp = readdir(dirp)) {
 		if(strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0)
