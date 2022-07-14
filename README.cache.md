@@ -17,7 +17,7 @@ pagecache thread to continuously scan /path/to/storage:
     subdirs   = true
 
 This section is about the least amount of work a thread can do. Adding it to an INI
-file for deep directory scans is a net gain. Depending on the amount of system RAM
+file for deep directory scans may be a net gain. Depending on the amount of system RAM
 and demand, a page cache thread might not provide any meaningful improvement.
 
 ### References

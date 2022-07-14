@@ -24,6 +24,7 @@ short pcrecompile(struct thread_info *ti)
 		 * null is ok
 		 * ensures mylogfile() always returns false
 		 */
+
 		ti->ti_pcrecmp = NULL;
 	} else {
 		ti->ti_pcrecmp = pcre2_compile((PCRE2_SPTR) ti->ti_pcrestr, length,

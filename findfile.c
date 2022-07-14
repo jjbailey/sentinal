@@ -52,6 +52,7 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 		 * if one of these conditions is set, search for the oldest file,
 		 * else any regex-matched file qualifies
 		 */
+
 		exponly = FALSE;
 	}
 
