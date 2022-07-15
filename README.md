@@ -85,7 +85,7 @@ To monitor console logs in /opt/sentinal/log for 20% free disk space,
 and to retain at least 3 logs and at most 50 logs:
 
     [global]
-    pidfile   = /run/diskfree.ini
+    pidfile   = /run/diskfree.pid
 
     [console]
     dirname   = /opt/sentinal/log
