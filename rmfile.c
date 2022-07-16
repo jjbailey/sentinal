@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-void rmfile(struct thread_info *ti, char *obj, char *remark)
+short rmfile(struct thread_info *ti, char *obj, char *remark)
 {
 	extern short dryrun;
 
@@ -24,8 +24,10 @@ void rmfile(struct thread_info *ti, char *obj, char *remark)
 			fprintf(stderr, "%s: %s %s\n", ti->ti_section, remark, obj);
 
 		if(!dryrun)
-			remove(obj);
+			return (remove(obj) == 0);
 	}
+
+	return (FALSE);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

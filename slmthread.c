@@ -43,7 +43,7 @@ void   *slmthread(void *arg)
 	 *  - ti_command unset
 	 *  - ti_template
 	 *  - ti_postcmd
-	 *  - ti_loglimit
+	 *  - ti_rotatesiz
 	 */
 
 	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _SLM_THR, task));
@@ -52,16 +52,14 @@ void   *slmthread(void *arg)
 
 	fullpath(ti->ti_dirname, ti->ti_template, filename);
 	fprintf(stderr, "%s: monitor file: %s\n", ti->ti_section, filename);
-
-	if(ti->ti_loglimit)
-		fprintf(stderr, "%s: monitor file size: %ldMiB\n", ti->ti_section,
-				MiB(ti->ti_loglimit));
+	fprintf(stderr, "%s: monitor file size: %ldMiB\n", ti->ti_section,
+			MiB(ti->ti_rotatesiz));
 
 	ti->ti_sig = 0;									/* reset */
 
 	for(;;) {
-		if(ROTATE(ti->ti_loglimit, STAT(filename, stbuf), ti->ti_sig)) {
-			/* loglimit or signaled to post-process */
+		if(ROTATE(ti->ti_rotatesiz, STAT(filename, stbuf), ti->ti_sig)) {
+			/* ti->ti_rotatesiz or signaled to post-process */
 
 			if((status = postcmd(ti, filename)) != 0) {
 				fprintf(stderr, "%s: postcmd exit: %d\n", ti->ti_section, status);

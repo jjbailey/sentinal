@@ -14,6 +14,10 @@
 #include <string.h>
 #include "ini.h"
 
+#ifndef	NOT_NULL
+# define NOT_NULL(s) ((s) && *(s))
+#endif
+
 char   *NullStr = "";								/* empty string for strdup, etc */
 
 char   *my_ini(ini_t *ini, char *section, char *key)
@@ -63,24 +67,36 @@ void print_section(ini_t *inidata, char *section)
 	/* dumps an INI section */
 	/* debugging only */
 
+	char   *p;										/* loglimit deprecated in v1.5.0 */
+
 	fprintf(stdout, "\n[%s]\n", section);
-	fprintf(stdout, "command  = %s\n", my_ini(inidata, section, "command"));
-	fprintf(stdout, "dirname  = %s\n", my_ini(inidata, section, "dirname"));
-	fprintf(stdout, "dirlimit = %s\n", my_ini(inidata, section, "dirlimit"));
-	fprintf(stdout, "subdirs  = %s\n", my_ini(inidata, section, "subdirs"));
-	fprintf(stdout, "pipename = %s\n", my_ini(inidata, section, "pipename"));
-	fprintf(stdout, "template = %s\n", my_ini(inidata, section, "template"));
-	fprintf(stdout, "pcrestr  = %s\n", my_ini(inidata, section, "pcrestr"));
-	fprintf(stdout, "uid      = %s\n", my_ini(inidata, section, "uid"));
-	fprintf(stdout, "gid      = %s\n", my_ini(inidata, section, "gid"));
-	fprintf(stdout, "loglimit = %s\n", my_ini(inidata, section, "loglimit"));
-	fprintf(stdout, "diskfree = %s\n", my_ini(inidata, section, "diskfree"));
-	fprintf(stdout, "inofree  = %s\n", my_ini(inidata, section, "inofree"));
-	fprintf(stdout, "expire   = %s\n", my_ini(inidata, section, "expire"));
-	fprintf(stdout, "retmin   = %s\n", my_ini(inidata, section, "retmin"));
-	fprintf(stdout, "retmax   = %s\n", my_ini(inidata, section, "retmax"));
-	fprintf(stdout, "terse    = %s\n", my_ini(inidata, section, "terse"));
-	fprintf(stdout, "postcmd  = %s\n", my_ini(inidata, section, "postcmd"));
+	fprintf(stdout, "command   = %s\n", my_ini(inidata, section, "command"));
+	fprintf(stdout, "dirname   = %s\n", my_ini(inidata, section, "dirname"));
+	fprintf(stdout, "dirlimit  = %s\n", my_ini(inidata, section, "dirlimit"));
+	fprintf(stdout, "subdirs   = %s\n", my_ini(inidata, section, "subdirs"));
+	fprintf(stdout, "pipename  = %s\n", my_ini(inidata, section, "pipename"));
+	fprintf(stdout, "template  = %s\n", my_ini(inidata, section, "template"));
+	fprintf(stdout, "pcrestr   = %s\n", my_ini(inidata, section, "pcrestr"));
+	fprintf(stdout, "uid       = %s\n", my_ini(inidata, section, "uid"));
+	fprintf(stdout, "gid       = %s\n", my_ini(inidata, section, "gid"));
+
+	/* loglimit deprecated in v1.5.0 */
+
+	if(p = my_ini(inidata, section, "loglimit"))
+		if(NOT_NULL(p))
+			fprintf(stdout, "#loglimit = %s\n", p);
+
+	fprintf(stdout, "rotatesiz = %s\n", my_ini(inidata, section, "rotatesiz"));
+	fprintf(stdout, "expiresiz = %s\n", my_ini(inidata, section, "expiresiz"));
+	fprintf(stdout, "diskfree  = %s\n", my_ini(inidata, section, "diskfree"));
+	fprintf(stdout, "inofree   = %s\n", my_ini(inidata, section, "inofree"));
+	fprintf(stdout, "expire    = %s\n", my_ini(inidata, section, "expire"));
+	fprintf(stdout, "retmin    = %s\n", my_ini(inidata, section, "retmin"));
+	fprintf(stdout, "retmax    = %s\n", my_ini(inidata, section, "retmax"));
+	fprintf(stdout, "terse     = %s\n", my_ini(inidata, section, "terse"));
+	fprintf(stdout, "rmdir     = %s\n", my_ini(inidata, section, "rmdir"));
+	fprintf(stdout, "symlinks  = %s\n", my_ini(inidata, section, "symlinks"));
+	fprintf(stdout, "postcmd   = %s\n", my_ini(inidata, section, "postcmd"));
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

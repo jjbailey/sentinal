@@ -67,9 +67,9 @@ void   *workthread(void *arg)
 
 	fprintf(stderr, "%s: command: %s\n", ti->ti_section, ti->ti_command);
 
-	if(ti->ti_loglimit)
+	if(ti->ti_rotatesiz)
 		fprintf(stderr, "%s: monitor file: %s for size %ldMiB\n",
-				ti->ti_section, ti->ti_pcrestr, MiB(ti->ti_loglimit));
+				ti->ti_section, ti->ti_pcrestr, MiB(ti->ti_rotatesiz));
 
 	for(;;) {
 		/* set up pipes */
@@ -194,8 +194,8 @@ void   *workthread(void *arg)
 					break;
 				}
 
-				if(ROTATE(ti->ti_loglimit, STAT(filename, stbuf), ti->ti_sig)) {
-					/* loglimit or signaled to logrotate */
+				if(ROTATE(ti->ti_rotatesiz, STAT(filename, stbuf), ti->ti_sig)) {
+					/* ti_rotatesiz or signaled to logrotate */
 
 					fprintf(stderr, "%s: rotate %s\n", ti->ti_section, ti->ti_filename);
 					ti->ti_sig = 0;					/* reset */

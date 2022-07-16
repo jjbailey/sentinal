@@ -17,7 +17,7 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-#define	SCANRATE		ONE_MINUTE					/* default monitor rate */
+#define	SCANRATE		(ONE_MINUTE * 5)			/* default monitor rate */
 
 void   *expthread(void *arg)
 {
@@ -36,7 +36,6 @@ void   *expthread(void *arg)
 	 *  - at least one of:
 	 *    - ti_dirlimit
 	 *    - ti_expire
-	 *    - ti_retmin
 	 *    - ti_retmax
 	 */
 
@@ -61,7 +60,7 @@ void   *expthread(void *arg)
 	/* monitor expiration times */
 	/* faster initial start */
 
-	interval = SCANRATE >> 1;
+	interval = SCANRATE >> 2;
 
 	for(;;) {
 		sleep(interval);							/* expiry monitor rate */
@@ -86,23 +85,25 @@ void   *expthread(void *arg)
 		/* match */
 
 		if(ti->ti_retmax && matches > ti->ti_retmax)
-			reason = "retmax exceeded";
+			reason = "retmax";
 
 		else if(ti->ti_dirlimit && dinfo.di_bytes > ti->ti_dirlimit)
-			reason = "dirlimit exceeded";
+			reason = "dirlimit";
 
-		else if(ti->ti_loglimit && ti->ti_expire) {
-			/* when loglimit and expire are given, both conditions must be true */
+		else if(ti->ti_expiresiz && ti->ti_expire) {
+			/* expiresiz depends on expire */
+			/* keep file if not expired or below the size limit */
 
-			if(dinfo.di_size <= ti->ti_loglimit || dinfo.di_time + ti->ti_expire > curtime)
+			if(dinfo.di_time + ti->ti_expire > curtime ||
+			   dinfo.di_size <= ti->ti_expiresiz)
 				continue;
 		}
 
-		else if(ti->ti_loglimit && dinfo.di_size > ti->ti_loglimit)
-			reason = "loglimit exceeded";
+		else if(ti->ti_expiresiz && dinfo.di_size > ti->ti_expiresiz)
+			reason = "expiresiz";
 
 		else if(ti->ti_expire && dinfo.di_time + ti->ti_expire < curtime)
-			reason = "expired";
+			reason = "expire";
 
 		else {
 			interval = SCANRATE;					/* return to normal */
