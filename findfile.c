@@ -56,8 +56,6 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 		exponly = FALSE;
 	}
 
-	time(&curtime);
-
 	while(dp = readdir(dirp)) {
 		if(strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0)
 			continue;
@@ -98,6 +96,8 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 			 * ok to expire now
 			 * if expiresiz is set, use it, else true
 			 */
+
+			time(&curtime);
 
 			expflag = !ti->ti_expiresiz ||
 				(ti->ti_expiresiz && stbuf.st_size > ti->ti_expiresiz);
