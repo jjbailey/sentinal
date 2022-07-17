@@ -40,7 +40,6 @@ void   *dfsthread(void *arg)
 	long double pc_bfree = 0.0;
 	long double pc_ffree = 0.0;
 	short   rptstatus = FALSE;
-	short   skip = FALSE;
 	struct dir_info dinfo;
 	struct statvfs svbuf;
 	struct thread_info *ti = arg;
@@ -114,22 +113,16 @@ void   *dfsthread(void *arg)
 	for(;;) {
 		sleep(interval);							/* filesystem monitor rate */
 
-		if(!skip) {
-			/* performance: halve the statvfs and math work */
-
-			if(statvfs(mountdir, &svbuf) == -1) {
-				fprintf(stderr, "%s: statvfs failed: %s\n", ti->ti_section, mountdir);
-				break;
-			}
-
-			if(ti->ti_diskfree)
-				pc_bfree = PERCENT(svbuf.f_bavail, svbuf.f_blocks);
-
-			if(ti->ti_inofree)
-				pc_ffree = PERCENT(svbuf.f_favail, svbuf.f_files);
+		if(statvfs(mountdir, &svbuf) == -1) {
+			fprintf(stderr, "%s: statvfs failed: %s\n", ti->ti_section, mountdir);
+			break;
 		}
 
-		skip = !skip;
+		if(ti->ti_diskfree)
+			pc_bfree = PERCENT(svbuf.f_bavail, svbuf.f_blocks);
+
+		if(ti->ti_inofree)
+			pc_ffree = PERCENT(svbuf.f_favail, svbuf.f_files);
 
 		if(pc_bfree >= ti->ti_diskfree && pc_ffree >= ti->ti_inofree) {
 			/* desired state */
