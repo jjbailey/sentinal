@@ -37,8 +37,8 @@ void   *dfsthread(void *arg)
 	char    task[TASK_COMM_LEN];
 	int     interval;
 	long    matches;
-	long double pc_bfree = 0.0;
-	long double pc_ffree = 0.0;
+	long double pc_bfree;
+	long double pc_ffree;
 	short   lowres = FALSE;
 	short   rptstatus = TRUE;
 	struct dir_info dinfo;
@@ -71,9 +71,6 @@ void   *dfsthread(void *arg)
 			/* test for zero blocks reported */
 			fprintf(stderr, "%s: no block support: %s\n", ti->ti_section, mountdir);
 			ti->ti_diskfree = 0;
-		} else {
-			/* initial report for unprivileged users */
-			pc_bfree = PERCENT(svbuf.f_bavail, svbuf.f_blocks);
 		}
 	}
 
@@ -85,9 +82,6 @@ void   *dfsthread(void *arg)
 			/* test for zero inodes reported (e.g. AWS EFS) */
 			fprintf(stderr, "%s: no inode support: %s\n", ti->ti_section, mountdir);
 			ti->ti_inofree = 0;
-		} else {
-			/* initial report for unprivileged users */
-			pc_ffree = PERCENT(svbuf.f_favail, svbuf.f_files);
 		}
 	}
 
@@ -99,7 +93,7 @@ void   *dfsthread(void *arg)
 	/* monitor filesystem based on available space */
 	/* faster initial start */
 
-	interval = itimer((int)pc_bfree, (int)pc_ffree, SCANRATE) >> 1;
+	interval = SCANRATE >> 1;
 
 	for(;;) {
 		sleep(interval);							/* filesystem monitor rate */
