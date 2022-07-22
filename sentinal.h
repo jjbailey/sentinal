@@ -76,7 +76,7 @@
 
 #define	ENV		"/usr/bin/env"
 #define	BASH	"/bin/bash"
-#define	PATH	"/usr/bin:/usr/sbin"
+#define	PATH	"/usr/bin:/usr/sbin:/bin"
 
 struct thread_info {
 	pthread_t dfs_tid;								/* dfs thread id */
