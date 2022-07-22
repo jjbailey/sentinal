@@ -37,7 +37,7 @@ int postcmd(struct thread_info *ti, char *filename)
 
 	if(IS_NULL(ti->ti_postcmd)) {
 		/* should not be here */
-		return (0);
+		return (-1);
 	}
 
 	switch (pid = fork()) {
