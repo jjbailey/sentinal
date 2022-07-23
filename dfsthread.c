@@ -35,6 +35,7 @@ void   *dfsthread(void *arg)
 {
 	char    mountdir[PATH_MAX];
 	char    task[TASK_COMM_LEN];
+	extern short dryrun;
 	int     interval;
 	long    matches;
 	long double pc_bfree;
@@ -91,9 +92,8 @@ void   *dfsthread(void *arg)
 	}
 
 	/* monitor filesystem based on available space */
-	/* faster initial start */
 
-	interval = SCANRATE >> 1;
+	interval = dryrun ? 1 : SCANRATE >> 2;			/* faster initial start */
 
 	for(;;) {
 		sleep(interval);							/* filesystem monitor rate */
