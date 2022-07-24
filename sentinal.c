@@ -453,7 +453,10 @@ static void dump_thread_info(struct thread_info *ti)
 	fprintf(stdout, "subdirs   = %d\n", ti->ti_subdirs);
 	fprintf(stdout, "pipename  = %s\n", ti->ti_pipename);
 	fprintf(stdout, "template  = %s\n", ti->ti_template);
-	fprintf(stdout, "#           %s\n", base(ti->ti_filename));
+
+	if(NOT_NULL(ti->ti_filename))
+		fprintf(stdout, "#           %s\n", base(ti->ti_filename));
+
 	fprintf(stdout, "pcrestr   = %s\n", ti->ti_pcrestr);
 	fprintf(stdout, "uid       = %d\n", ti->ti_uid);
 	fprintf(stdout, "gid       = %d\n", ti->ti_gid);

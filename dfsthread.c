@@ -35,12 +35,13 @@ void   *dfsthread(void *arg)
 {
 	char    mountdir[PATH_MAX];
 	char    task[TASK_COMM_LEN];
+	extern short dryrun;
 	int     interval;
 	long    matches;
-	long double pc_bfree = 0.0;
-	long double pc_ffree = 0.0;
-	short   rptstatus = FALSE;
-	short   skip = FALSE;
+	long double pc_bfree;
+	long double pc_ffree;
+	short   lowres = FALSE;
+	short   rptstatus = TRUE;
 	struct dir_info dinfo;
 	struct statvfs svbuf;
 	struct thread_info *ti = arg;
@@ -69,16 +70,8 @@ void   *dfsthread(void *arg)
 
 		if(svbuf.f_blocks == 0) {
 			/* test for zero blocks reported */
-
 			fprintf(stderr, "%s: no block support: %s\n", ti->ti_section, mountdir);
 			ti->ti_diskfree = 0;
-		} else {
-			/* initial report for unprivileged users */
-
-			pc_bfree = PERCENT(svbuf.f_bavail, svbuf.f_blocks);
-
-			fprintf(stderr, "%s: %s: %.2Lf%% blocks free\n",
-					ti->ti_section, ti->ti_dirname, pc_bfree);
 		}
 	}
 
@@ -88,16 +81,8 @@ void   *dfsthread(void *arg)
 
 		if(svbuf.f_files == 0) {
 			/* test for zero inodes reported (e.g. AWS EFS) */
-
 			fprintf(stderr, "%s: no inode support: %s\n", ti->ti_section, mountdir);
 			ti->ti_inofree = 0;
-		} else {
-			/* initial report for unprivileged users */
-
-			pc_ffree = PERCENT(svbuf.f_favail, svbuf.f_files);
-
-			fprintf(stderr, "%s: %s: %.2Lf%% inodes free\n",
-					ti->ti_section, ti->ti_dirname, pc_ffree);
 		}
 	}
 
@@ -107,32 +92,30 @@ void   *dfsthread(void *arg)
 	}
 
 	/* monitor filesystem based on available space */
-	/* faster initial start */
 
-	interval = itimer((int)pc_bfree, (int)pc_ffree, SCANRATE) >> 1;
+	interval = dryrun ? 1 : SCANRATE >> 2;			/* faster initial start */
 
 	for(;;) {
 		sleep(interval);							/* filesystem monitor rate */
 
-		if(!skip) {
-			/* performance: halve the statvfs and math work */
-
-			if(statvfs(mountdir, &svbuf) == -1) {
-				fprintf(stderr, "%s: statvfs failed: %s\n", ti->ti_section, mountdir);
-				break;
-			}
-
-			if(ti->ti_diskfree)
-				pc_bfree = PERCENT(svbuf.f_bavail, svbuf.f_blocks);
-
-			if(ti->ti_inofree)
-				pc_ffree = PERCENT(svbuf.f_favail, svbuf.f_files);
+		if(statvfs(mountdir, &svbuf) == -1) {
+			fprintf(stderr, "%s: statvfs failed: %s\n", ti->ti_section, mountdir);
+			break;
 		}
 
-		skip = !skip;
+		if(ti->ti_diskfree)
+			pc_bfree = PERCENT(svbuf.f_bavail, svbuf.f_blocks);
 
-		if(pc_bfree >= ti->ti_diskfree && pc_ffree >= ti->ti_inofree) {
+		if(ti->ti_inofree)
+			pc_ffree = PERCENT(svbuf.f_favail, svbuf.f_files);
+
+		if(!LOW_RES(ti->ti_diskfree, pc_bfree) && !LOW_RES(ti->ti_inofree, pc_ffree)) {
 			/* desired state */
+
+			if(lowres) {							/* toggle status and reporting */
+				lowres = FALSE;
+				rptstatus = TRUE;
+			}
 
 			if(rptstatus) {
 				if(ti->ti_diskfree)
@@ -146,7 +129,6 @@ void   *dfsthread(void *arg)
 				rptstatus = FALSE;					/* mute status alert */
 
 				/* recompute the monitor rate */
-
 				interval = itimer((int)pc_bfree, (int)pc_ffree, SCANRATE);
 			}
 
@@ -155,29 +137,36 @@ void   *dfsthread(void *arg)
 
 		/* low resources */
 
-		if(LOW_RES(ti->ti_diskfree, pc_bfree))
-			fprintf(stderr, "%s: low free blocks %s: %.2Lf%% < %.2Lf%%\n",
-					ti->ti_section, ti->ti_dirname, pc_bfree, ti->ti_diskfree);
+		if(!lowres) {								/* toggle status and reporting */
+			lowres = TRUE;
+			rptstatus = TRUE;
+		}
 
-		if(LOW_RES(ti->ti_inofree, pc_ffree))
-			fprintf(stderr, "%s: low free inodes %s: %.2Lf%% < %.2Lf%%\n",
-					ti->ti_section, ti->ti_dirname, pc_ffree, ti->ti_inofree);
+		if(rptstatus) {
+			if(LOW_RES(ti->ti_diskfree, pc_bfree))
+				fprintf(stderr, "%s: low free blocks %s: %.2Lf%% < %.2Lf%%\n",
+						ti->ti_section, ti->ti_dirname, pc_bfree, ti->ti_diskfree);
+
+			if(LOW_RES(ti->ti_inofree, pc_ffree))
+				fprintf(stderr, "%s: low free inodes %s: %.2Lf%% < %.2Lf%%\n",
+						ti->ti_section, ti->ti_dirname, pc_ffree, ti->ti_inofree);
+
+			rptstatus = FALSE;						/* mute status alert */
+		}
 
 		/* low space, remove oldest file */
 
 		matches = findfile(ti, TRUE, ti->ti_dirname, &dinfo);
 
 		if(matches < 1 || (ti->ti_retmin && matches <= ti->ti_retmin)) {
-			/* no work, or match, but below the retention count */
-			/* reset the interval when reporting */
-			continue;
+			/* no matches, or matches below the retention count */
+			/* recompute the monitor rate */
+			interval = itimer((int)pc_bfree, (int)pc_ffree, SCANRATE);
+		} else {
+			/* match */
+			rmfile(ti, dinfo.di_file, "remove");
+			interval = 0;							/* 1 sec is too slow for inodes */
 		}
-
-		/* match */
-
-		rmfile(ti, dinfo.di_file, "remove");
-		rptstatus = TRUE;							/* enable status alert */
-		interval = 0;								/* 1 sec is too slow for inodes */
 	}
 
 	/* notreached */

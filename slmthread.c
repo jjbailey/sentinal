@@ -15,7 +15,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/inotify.h>
-#include <errno.h>
 #include <poll.h>
 #include <pthread.h>
 #include <signal.h>

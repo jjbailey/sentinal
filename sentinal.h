@@ -8,7 +8,7 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"1.5.0"
+#define	VERSION_STRING	"1.5.1"
 
 #ifndef _SYS_TYPES_H
 # include <sys/types.h>
@@ -76,7 +76,7 @@
 
 #define	ENV		"/usr/bin/env"
 #define	BASH	"/bin/bash"
-#define	PATH	"/usr/bin:/usr/sbin"
+#define	PATH	"/usr/bin:/usr/sbin:/bin"
 
 struct thread_info {
 	pthread_t dfs_tid;								/* dfs thread id */

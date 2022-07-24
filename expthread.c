@@ -24,6 +24,7 @@ void   *expthread(void *arg)
 	char    ebuf[BUFSIZ];
 	char    task[TASK_COMM_LEN];
 	char   *reason;
+	extern short dryrun;
 	int     interval;
 	long    matches;
 	struct dir_info dinfo;
@@ -58,9 +59,8 @@ void   *expthread(void *arg)
 				ti->ti_section, ti->ti_pcrestr, ti->ti_retmax);
 
 	/* monitor expiration times */
-	/* faster initial start */
 
-	interval = SCANRATE >> 2;
+	interval = dryrun ? 1 : SCANRATE >> 2;			/* faster initial start */
 
 	for(;;) {
 		sleep(interval);							/* expiry monitor rate */
