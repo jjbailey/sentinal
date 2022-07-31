@@ -27,6 +27,7 @@ void   *expthread(void *arg)
 	extern short dryrun;
 	int     interval;
 	long    matches;
+	short   expsizflag;
 	struct dir_info dinfo;
 	struct thread_info *ti = arg;
 	time_t  curtime;
@@ -85,13 +86,17 @@ void   *expthread(void *arg)
 
 		time(&curtime);
 
+		/* if expiresiz is set, use it, else true */
+
+		expsizflag = !ti->ti_expiresiz || dinfo.di_size > ti->ti_expiresiz;
+
 		if(ti->ti_retmax && matches > ti->ti_retmax)
 			reason = "retmax";
 
 		else if(ti->ti_dirlimit && dinfo.di_bytes > ti->ti_dirlimit)
 			reason = "dirlimit";
 
-		else if(dinfo.di_time + ti->ti_expire < curtime)
+		else if(expsizflag && dinfo.di_time + ti->ti_expire < curtime)
 			reason = "expire";
 
 		else {
