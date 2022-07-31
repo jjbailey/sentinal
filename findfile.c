@@ -30,7 +30,7 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 	DIR    *dirp;
 	char    filename[PATH_MAX];
 	long    direntries = 0L;						/* directory entries */
-	short   expflag;
+	short   expsizflag;
 	static long matches;							/* matching files */
 	struct dirent *dp;
 	struct stat stbuf;
@@ -85,10 +85,9 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 
 			time(&curtime);
 
-			expflag = !ti->ti_expiresiz ||
-				(ti->ti_expiresiz && stbuf.st_size > ti->ti_expiresiz);
+			expsizflag = !ti->ti_expiresiz || stbuf.st_size > ti->ti_expiresiz;
 
-			if(expflag && stbuf.st_mtim.tv_sec + ti->ti_expire < curtime) {
+			if(expsizflag && stbuf.st_mtim.tv_sec + ti->ti_expire < curtime) {
 				if(rmfile(ti, filename, "expire"))
 					if(direntries)
 						direntries--;
