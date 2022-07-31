@@ -31,7 +31,6 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 	char    filename[PATH_MAX];
 	long    direntries = 0L;						/* directory entries */
 	short   expflag;
-	short   exponly = TRUE;							/* conditional search */
 	static long matches;							/* matching files */
 	struct dirent *dp;
 	struct stat stbuf;
@@ -44,16 +43,6 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 		*di->di_file = '\0';
 		di->di_time = di->di_size = di->di_bytes = 0;
 		matches = 0L;
-	}
-
-	if(ti->ti_dirlimit || ti->ti_diskfree || ti->ti_inofree ||
-	   ti->ti_retmin || ti->ti_retmax) {
-		/*
-		 * if one of these conditions is set, search for the oldest file,
-		 * else any regex-matched file qualifies
-		 */
-
-		exponly = FALSE;
 	}
 
 	while(dp = readdir(dirp)) {
@@ -81,9 +70,6 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 
 				continue;
 			}
-
-			if(exponly == FALSE)					/* continue searching */
-				continue;
 		}
 
 		if(!S_ISREG(stbuf.st_mode) || !mylogfile(dp->d_name, ti->ti_pcrecmp))
@@ -111,10 +97,10 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 			}
 		}
 
+		/* save the oldest file */
+
 		if(ti->ti_dirlimit)							/* request total size of files found */
 			di->di_bytes += stbuf.st_size;
-
-		/* save the oldest file */
 
 		if(di->di_time == 0 || stbuf.st_mtim.tv_sec < di->di_time) {
 			strlcpy(di->di_file, filename, PATH_MAX);

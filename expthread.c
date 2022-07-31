@@ -64,7 +64,6 @@ void   *expthread(void *arg)
 
 	for(;;) {
 		sleep(interval);							/* expiry monitor rate */
-		time(&curtime);
 
 		/* search for expired files */
 
@@ -84,25 +83,15 @@ void   *expthread(void *arg)
 
 		/* match */
 
+		time(&curtime);
+
 		if(ti->ti_retmax && matches > ti->ti_retmax)
 			reason = "retmax";
 
 		else if(ti->ti_dirlimit && dinfo.di_bytes > ti->ti_dirlimit)
 			reason = "dirlimit";
 
-		else if(ti->ti_expiresiz && ti->ti_expire) {
-			/* expiresiz depends on expire */
-			/* keep file if not expired or below the size limit */
-
-			if(dinfo.di_time + ti->ti_expire > curtime ||
-			   dinfo.di_size <= ti->ti_expiresiz)
-				continue;
-		}
-
-		else if(ti->ti_expiresiz && dinfo.di_size > ti->ti_expiresiz)
-			reason = "expiresiz";
-
-		else if(ti->ti_expire && dinfo.di_time + ti->ti_expire < curtime)
+		else if(dinfo.di_time + ti->ti_expire < curtime)
 			reason = "expire";
 
 		else {
