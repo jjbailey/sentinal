@@ -40,7 +40,6 @@ void   *workthread(void *arg)
 	char    pcrebuf[BUFSIZ];
 	char    pipebuf[PIPEBUFSIZ];
 	char    shellbuf[BUFSIZ];
-	char    task[TASK_COMM_LEN];
 	char    tmplbuf[BUFSIZ];
 	char   *home;
 	char   *envp[MAXARGS];
@@ -63,7 +62,7 @@ void   *workthread(void *arg)
 	 *  - ti_template
 	 */
 
-	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _WRK_THR, task));
+	pthread_setname_np(pthread_self(), threadname(ti, _WRK_THR));
 
 	fprintf(stderr, "%s: command: %s\n", ti->ti_section, ti->ti_command);
 

@@ -32,7 +32,6 @@ static int inotify_watch(char *, char *);
 void   *slmthread(void *arg)
 {
 	char    filename[PATH_MAX];
-	char    task[TASK_COMM_LEN];
 	int     status;
 	struct stat stbuf;
 	struct thread_info *ti = arg;
@@ -45,7 +44,7 @@ void   *slmthread(void *arg)
 	 *  - ti_rotatesiz
 	 */
 
-	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _SLM_THR, task));
+	pthread_setname_np(pthread_self(), threadname(ti, _SLM_THR));
 
 	/* for slm, ti->ti_template is the logname */
 

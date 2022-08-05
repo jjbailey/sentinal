@@ -22,11 +22,10 @@
 void   *expthread(void *arg)
 {
 	char    ebuf[BUFSIZ];
-	char    task[TASK_COMM_LEN];
 	char   *reason;
 	extern short dryrun;
 	int     interval;
-	long    matches;
+	short   expsizflag;
 	struct dir_info dinfo;
 	struct thread_info *ti = arg;
 	time_t  curtime;
@@ -40,7 +39,7 @@ void   *expthread(void *arg)
 	 *    - ti_retmax
 	 */
 
-	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _EXP_THR, task));
+	pthread_setname_np(pthread_self(), threadname(ti, _EXP_THR));
 
 	if(ti->ti_dirlimit)
 		fprintf(stderr, "%s: monitor directory: %s for dirlimit %ldMiB\n",
@@ -64,45 +63,38 @@ void   *expthread(void *arg)
 
 	for(;;) {
 		sleep(interval);							/* expiry monitor rate */
-		time(&curtime);
 
 		/* search for expired files */
 
-		matches = findfile(ti, TRUE, ti->ti_dirname, &dinfo);
+		ti->ti_matches = findfile(ti, TRUE, ti->ti_dirname, &dinfo);
 
-		if(matches < 1) {							/* no work */
+		if(ti->ti_matches < 1) {					/* no work */
 			if(interval < SCANRATE)
 				interval = SCANRATE;				/* return to normal */
 
 			continue;
 		}
 
-		if(ti->ti_retmin && matches <= ti->ti_retmin) {
+		if(ti->ti_retmin && ti->ti_matches <= ti->ti_retmin) {
 			/* match, but below the retention count */
 			continue;
 		}
 
 		/* match */
 
-		if(ti->ti_retmax && matches > ti->ti_retmax)
+		time(&curtime);
+
+		/* if expiresiz is set, use it, else true */
+
+		expsizflag = !ti->ti_expiresiz || dinfo.di_size > ti->ti_expiresiz;
+
+		if(ti->ti_retmax && ti->ti_matches > ti->ti_retmax)
 			reason = "retmax";
 
 		else if(ti->ti_dirlimit && dinfo.di_bytes > ti->ti_dirlimit)
 			reason = "dirlimit";
 
-		else if(ti->ti_expiresiz && ti->ti_expire) {
-			/* expiresiz depends on expire */
-			/* keep file if not expired or below the size limit */
-
-			if(dinfo.di_time + ti->ti_expire > curtime ||
-			   dinfo.di_size <= ti->ti_expiresiz)
-				continue;
-		}
-
-		else if(ti->ti_expiresiz && dinfo.di_size > ti->ti_expiresiz)
-			reason = "expiresiz";
-
-		else if(ti->ti_expire && dinfo.di_time + ti->ti_expire < curtime)
+		else if(expsizflag && dinfo.di_time + ti->ti_expire < curtime)
 			reason = "expire";
 
 		else {

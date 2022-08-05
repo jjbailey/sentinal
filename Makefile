@@ -22,7 +22,6 @@ SENOBJS=	sentinal.o		\
 			logname.o		\
 			logretention.o	\
 			logsize.o		\
-			lpcthread.o		\
 			mylogfile.o		\
 			pcrecompile.o	\
 			postcmd.o		\

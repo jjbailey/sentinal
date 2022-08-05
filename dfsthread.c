@@ -34,10 +34,8 @@ static int itimer(int, int, int);
 void   *dfsthread(void *arg)
 {
 	char    mountdir[PATH_MAX];
-	char    task[TASK_COMM_LEN];
 	extern short dryrun;
 	int     interval;
-	long    matches;
 	long double pc_bfree;
 	long double pc_ffree;
 	short   lowres = FALSE;
@@ -54,7 +52,7 @@ void   *dfsthread(void *arg)
 	 *    - ti_inofree
 	 */
 
-	pthread_setname_np(pthread_self(), threadname(ti->ti_section, _DFS_THR, task));
+	pthread_setname_np(pthread_self(), threadname(ti, _DFS_THR));
 
 	findmnt(ti->ti_dirname, mountdir);				/* actual mountpoint */
 	memset(&svbuf, '\0', sizeof(svbuf));
@@ -156,9 +154,9 @@ void   *dfsthread(void *arg)
 
 		/* low space, remove oldest file */
 
-		matches = findfile(ti, TRUE, ti->ti_dirname, &dinfo);
+		ti->ti_matches = findfile(ti, TRUE, ti->ti_dirname, &dinfo);
 
-		if(matches < 1 || (ti->ti_retmin && matches <= ti->ti_retmin)) {
+		if(ti->ti_matches < 1 || (ti->ti_retmin && ti->ti_matches <= ti->ti_retmin)) {
 			/* no matches, or matches below the retention count */
 			/* recompute the monitor rate */
 			interval = itimer((int)pc_bfree, (int)pc_ffree, SCANRATE);
