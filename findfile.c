@@ -26,7 +26,7 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 {
 	DIR    *dirp;
 	char    filename[PATH_MAX];
-	long    direntries = 0L;						/* directory entries */
+	long    direntries = 0;							/* directory entries */
 	short   expsizflag;								/* expire size is set */
 	short   expthrflag;								/* is expire thread */
 	struct dirent *dp;
@@ -39,7 +39,7 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 	if(top) {										/* reset */
 		*di->di_file = '\0';
 		di->di_time = di->di_size = di->di_bytes = 0;
-		ti->ti_matches = 0L;
+		ti->ti_matches = 0;
 	}
 
 	expthrflag = strcmp(strrchr(ti->ti_task, '\0') - 3, _EXP_THR) == 0;
@@ -118,12 +118,10 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 
 	closedir(dirp);
 
-	if(expthrflag) {								/* run in expthread only */
-		if(direntries == 0L && !top)
-			if(ti->ti_rmdir) {						/* ok to remove empty dir */
-				if(rmfile(ti, dir, "rmdir"))
-					return (EOF);
-			}
+	if(expthrflag && !top) {						/* run in expthread only */
+		if(direntries == 0 && ti->ti_rmdir)			/* ok to remove empty dir */
+			if(rmfile(ti, dir, "rmdir"))
+				return (EOF);
 	}
 
 	return (ti->ti_matches);
