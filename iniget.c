@@ -14,9 +14,19 @@
 #include <string.h>
 #include "ini.h"
 
-#ifndef	NOT_NULL
-# define NOT_NULL(s) ((s) && *(s))
+#ifndef TRUE
+# define	TRUE		(short)1
 #endif
+
+#ifndef	FALSE
+# define	FALSE		(short)0
+#endif
+
+#ifndef	NOT_NULL
+# define	NOT_NULL(s) ((s) && *(s))
+#endif
+
+static short dup_section(int, char *, char **);
 
 char   *NullStr = "";								/* empty string for strdup, etc */
 
@@ -53,6 +63,9 @@ int get_sections(ini_t *inidata, int maxsect, char *sections[])
 			if(strcmp(p + 1, "global") == 0)		/* global is not a thread */
 				continue;
 
+			if(dup_section(i, p + 1, sections))
+				continue;
+
 			sections[i++] = strdup(p + 1);
 
 			if(i == maxsect)
@@ -60,6 +73,17 @@ int get_sections(ini_t *inidata, int maxsect, char *sections[])
 		}
 
 	return (i);
+}
+
+short dup_section(int nsect, char *s, char *sections[])
+{
+	int     i;
+
+	for(i = 0; i < nsect; i++)
+		if(strcmp(s, sections[i]) == 0)
+			return (TRUE);
+
+	return (FALSE);
 }
 
 void print_section(ini_t *inidata, char *section)
