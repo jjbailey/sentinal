@@ -118,13 +118,13 @@ struct thread_info {
 	short   ti_rmdir;								/* remove empty dirs */
 	short   ti_symlinks;							/* follow symlinks */
 	char   *ti_postcmd;								/* command to run after log closes */
-	long    ti_matches;								/* matching files */
 };
 
 struct dir_info {
 	char    di_file[PATH_MAX];						/* oldest file in directory */
 	time_t  di_time;								/* oldest file modification time */
 	off_t   di_size;								/* oldest file size */
+	long    di_matches;								/* matching files */
 	long double di_bytes;							/* total size of files found */
 };
 

@@ -36,11 +36,8 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 	if((dirp = opendir(dir)) == NULL)
 		return (0);
 
-	if(top) {										/* reset */
-		*di->di_file = '\0';
-		di->di_time = di->di_size = di->di_bytes = 0;
-		ti->ti_matches = 0;
-	}
+	if(top)											/* reset */
+		memset(di, '\0', sizeof(struct dir_info));
 
 	expthrflag = strcmp(strrchr(ti->ti_task, '\0') - 3, _EXP_THR) == 0;
 
@@ -113,7 +110,7 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 		if(ti->ti_dirlimit)							/* request total size of files found */
 			di->di_bytes += stbuf.st_size;
 
-		ti->ti_matches++;
+		di->di_matches++;
 	}
 
 	closedir(dirp);
@@ -124,7 +121,7 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 				return (EOF);
 	}
 
-	return (ti->ti_matches);
+	return (di->di_matches);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

@@ -154,9 +154,9 @@ void   *dfsthread(void *arg)
 
 		/* low space, remove oldest file */
 
-		ti->ti_matches = findfile(ti, TRUE, ti->ti_dirname, &dinfo);
+		dinfo.di_matches = findfile(ti, TRUE, ti->ti_dirname, &dinfo);
 
-		if(ti->ti_matches < 1 || (ti->ti_retmin && ti->ti_matches <= ti->ti_retmin)) {
+		if(dinfo.di_matches < 1 || (ti->ti_retmin && dinfo.di_matches <= ti->ti_retmin)) {
 			/* no matches, or matches below the retention count */
 			/* recompute the monitor rate */
 			interval = itimer((int)pc_bfree, (int)pc_ffree, SCANRATE);

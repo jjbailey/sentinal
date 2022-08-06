@@ -66,16 +66,16 @@ void   *expthread(void *arg)
 
 		/* search for expired files */
 
-		ti->ti_matches = findfile(ti, TRUE, ti->ti_dirname, &dinfo);
+		dinfo.di_matches = findfile(ti, TRUE, ti->ti_dirname, &dinfo);
 
-		if(ti->ti_matches < 1) {					/* no work */
+		if(dinfo.di_matches < 1) {					/* no work */
 			if(interval < SCANRATE)
 				interval = SCANRATE;				/* return to normal */
 
 			continue;
 		}
 
-		if(ti->ti_retmin && ti->ti_matches <= ti->ti_retmin) {
+		if(ti->ti_retmin && dinfo.di_matches <= ti->ti_retmin) {
 			/* match, but below the retention count */
 			continue;
 		}
@@ -88,7 +88,7 @@ void   *expthread(void *arg)
 
 		expsizflag = !ti->ti_expiresiz || dinfo.di_size > ti->ti_expiresiz;
 
-		if(ti->ti_retmax && ti->ti_matches > ti->ti_retmax)
+		if(ti->ti_retmax && dinfo.di_matches > ti->ti_retmax)
 			reason = "retmax";
 
 		else if(ti->ti_dirlimit && dinfo.di_bytes > ti->ti_dirlimit)
