@@ -43,7 +43,7 @@
 #include "sentinal.h"
 #include "basename.h"
 
-short   pcretest(char *, pcre2_code *);
+short pcretest(struct thread_info *, char *);
 
 int main(int argc, char *argv[])
 {
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 
 	for(i = 2; i < argc; i++) {
-		match = pcretest(argv[i], ti.ti_pcrecmp);
+		match = pcretest(&ti, argv[i]);
 
 		if(!ti.ti_terse)
 			fprintf(stdout, "%s %s\n", match ? "match:   " : "no match:", argv[i]);
@@ -83,21 +83,23 @@ int main(int argc, char *argv[])
 	exit(EXIT_SUCCESS);
 }
 
-short pcretest(char *s, pcre2_code *re)
+short pcretest(struct thread_info *ti, char *s)
 {
-	/* mostly copied from mylogfile.c */
-
 	int     rc;
 	pcre2_match_data *mdata;
 	uint32_t options = 0;
 
-	if(IS_NULL(s) || re == NULL)
+	/* mostly copied from mylogfile.c */
+
+	if(IS_NULL(s) || ti->ti_pcrecmp == NULL)
 		return (FALSE);
 
-	mdata = pcre2_match_data_create_from_pattern(re, NULL);
-	rc = pcre2_match(re, (PCRE2_SPTR) s, strlen(s), (PCRE2_SIZE) 0, options, mdata, NULL);
-	pcre2_match_data_free(mdata);
+	mdata = pcre2_match_data_create_from_pattern(ti->ti_pcrecmp, NULL);
 
+	rc = pcre2_match(ti->ti_pcrecmp, (PCRE2_SPTR) s, strlen(s), (PCRE2_SIZE) 0, options,
+					 mdata, NULL);
+
+	pcre2_match_data_free(mdata);
 	return (rc >= 0);
 }
 

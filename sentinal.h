@@ -141,7 +141,7 @@ int     workcmd(int, char **, char **);
 long    findfile(struct thread_info *, short, char *, struct dir_info *);
 off_t   logsize(char *);
 short   rmfile(struct thread_info *, char *, char *);
-short   mylogfile(char *, pcre2_code *);
+short   mylogfile(struct thread_info *, char *);
 short   pcrecompile(struct thread_info *);
 size_t  strlcat(char *, const char *, size_t);
 size_t  strlcpy(char *, const char *, size_t);

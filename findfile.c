@@ -68,7 +68,7 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 			}
 		}
 
-		if(!S_ISREG(stbuf.st_mode) || !mylogfile(dp->d_name, ti->ti_pcrecmp))
+		if(!S_ISREG(stbuf.st_mode) || !mylogfile(ti, dp->d_name))
 			continue;
 
 		/* match */
