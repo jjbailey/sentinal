@@ -10,6 +10,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include "sentinal.h"
 
 short pcrecompile(struct thread_info *ti)
@@ -21,8 +22,7 @@ short pcrecompile(struct thread_info *ti)
 
 	if(IS_NULL(ti->ti_pcrestr)) {
 		/*
-		 * null is ok
-		 * ensures mylogfile() always returns false
+		 * null is ok -- ensures mylogfile() always returns false
 		 */
 
 		ti->ti_pcrecmp = NULL;
@@ -31,8 +31,8 @@ short pcrecompile(struct thread_info *ti)
 									   options, &errnumber, &erroffset, NULL);
 
 		if(ti->ti_pcrecmp == NULL)
-			fprintf(stderr, "%s: pcre2 compilation failed: %s\n", ti->ti_section,
-					ti->ti_pcrestr);
+			fprintf(stderr, "%s: pcre2 compilation failed: %s\n",
+					ti->ti_section, ti->ti_pcrestr);
 	}
 
 	return (ti->ti_pcrecmp != NULL);

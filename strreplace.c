@@ -13,8 +13,8 @@
 #include <sys/types.h>
 #include <string.h>
 
-#ifndef IS_NULL
-# define IS_NULL(s) !((s) && *(s))
+#ifndef	IS_NULL
+# define	IS_NULL(s) !((s) && *(s))
 #endif
 
 size_t  strlcat(char *, const char *, size_t);

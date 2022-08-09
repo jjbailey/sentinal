@@ -25,10 +25,6 @@ int threadcheck(struct thread_info *ti, char *tname)
 	else if(strcmp(tname, _EXP_THR) == 0)			/* file expiration, retention, dirlimit */
 		pass = ti->ti_pcrecmp && (ti->ti_dirlimit || ti->ti_expire || ti->ti_retmax);
 
-	else if(strcmp(tname, _LPC_THR) == 0)			/* experimental linux page cache */
-		pass = !(threadcheck(ti, _DFS_THR) || threadcheck(ti, _EXP_THR) ||
-				 threadcheck(ti, _SLM_THR) || threadcheck(ti, _WRK_THR));
-
 	else if(strcmp(tname, _SLM_THR) == 0)			/* simple log monitor */
 		pass = IS_NULL(ti->ti_command) &&
 			NOT_NULL(ti->ti_template) && NOT_NULL(ti->ti_postcmd) && ti->ti_rotatesiz;
@@ -44,7 +40,6 @@ void activethreads(struct thread_info *ti)
 	fprintf(stdout, "# threads");
 	fprintf(stdout, "   %s: %s", _DFS_THR, THRCHECK(ti, _DFS_THR));
 	fprintf(stdout, "   %s: %s", _EXP_THR, THRCHECK(ti, _EXP_THR));
-	fprintf(stdout, "   %s: %s", _LPC_THR, THRCHECK(ti, _LPC_THR));
 	fprintf(stdout, "   %s: %s", _SLM_THR, THRCHECK(ti, _SLM_THR));
 	fprintf(stdout, "   %s: %s", _WRK_THR, THRCHECK(ti, _WRK_THR));
 	fprintf(stdout, "\n");

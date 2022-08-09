@@ -8,7 +8,7 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"1.5.1"
+#define	VERSION_STRING	"1.5.2"
 
 #ifndef _SYS_TYPES_H
 # include <sys/types.h>
@@ -57,6 +57,11 @@
 #define NOT_NULL(s)	((s) && *(s))
 #define IS_NULL(s)	!((s) && *(s))
 
+/* alternative to often-used strcmp() */
+
+#define	MY_DIR(d)		(*d == '.' && *(d + 1) == '\0')
+#define	MY_PARENT(d)	(*d == '.' && *(d + 1) == '.' && *(d + 2) == '\0')
+
 /* postcmd tokens */
 
 #define	_HOST_TOK	"%host"							/* hostname token */
@@ -68,7 +73,6 @@
 
 #define	_DFS_THR	"dfs"							/* filesystem free space */
 #define	_EXP_THR	"exp"							/* file expiration, retention */
-#define	_LPC_THR	"lpc"							/* linux page cache */
 #define	_SLM_THR	"slm"							/* simple log monitor */
 #define	_WRK_THR	"wrk"							/* worker (log ingestion) thread */
 
@@ -81,9 +85,9 @@
 struct thread_info {
 	pthread_t dfs_tid;								/* dfs thread id */
 	pthread_t exp_tid;								/* exp thread id */
-	pthread_t lpc_tid;								/* lpc thread id */
 	pthread_t slm_tid;								/* slm thread id */
 	pthread_t wrk_tid;								/* wrk thread id */
+	char    ti_task[TASK_COMM_LEN];					/* pthread_self */
 	char   *ti_section;								/* section name */
 	char   *ti_command;								/* thread command */
 	int     ti_argc;								/* number of args in command */
@@ -120,6 +124,7 @@ struct dir_info {
 	char    di_file[PATH_MAX];						/* oldest file in directory */
 	time_t  di_time;								/* oldest file modification time */
 	off_t   di_size;								/* oldest file size */
+	long    di_matches;								/* matching files */
 	long double di_bytes;							/* total size of files found */
 };
 
@@ -127,7 +132,7 @@ char   *convexpire(int, char *);
 char   *findmnt(char *, char *);
 char   *fullpath(char *, char *, char *);
 char   *logname(char *, char *);
-char   *threadname(char *, char *, char *);
+char   *threadname(struct thread_info *, char *);
 gid_t   verifygid(char *);
 int     logretention(char *);
 int     postcmd(struct thread_info *, char *);
@@ -136,7 +141,7 @@ int     workcmd(int, char **, char **);
 long    findfile(struct thread_info *, short, char *, struct dir_info *);
 off_t   logsize(char *);
 short   rmfile(struct thread_info *, char *, char *);
-short   mylogfile(char *, pcre2_code *);
+short   mylogfile(struct thread_info *, char *);
 short   pcrecompile(struct thread_info *);
 size_t  strlcat(char *, const char *, size_t);
 size_t  strlcpy(char *, const char *, size_t);
@@ -147,7 +152,6 @@ void    rlimit(int);
 void    strreplace(char *, char *, char *);
 void   *dfsthread(void *);
 void   *expthread(void *);
-void   *lpcthread(void *);
 void   *slmthread(void *);
 void   *workthread(void *);
 

@@ -348,13 +348,6 @@ int main(int argc, char *argv[])
 			pthread_create(&ti->exp_tid, NULL, &expthread, ti);
 		}
 
-		if(threadcheck(ti, _LPC_THR)) {				/* linux page cache */
-			usleep((useconds_t) 100000);
-			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _LPC_THR,
-					ti->ti_dirname);
-			pthread_create(&ti->lpc_tid, NULL, &lpcthread, ti);
-		}
-
 		if(threadcheck(ti, _SLM_THR)) {				/* simple log monitor */
 			usleep((useconds_t) 100000);
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _SLM_THR,
@@ -376,9 +369,6 @@ int main(int argc, char *argv[])
 
 		if(threadcheck(ti, _EXP_THR))
 			(void)pthread_join(ti->exp_tid, NULL);
-
-		if(threadcheck(ti, _LPC_THR))
-			(void)pthread_join(ti->lpc_tid, NULL);
 
 		if(threadcheck(ti, _SLM_THR))
 			(void)pthread_join(ti->slm_tid, NULL);
