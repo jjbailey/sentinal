@@ -115,11 +115,14 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 
 	closedir(dirp);
 
-	if(expthrflag && !top) {						/* run in expthread only */
-		if(direntries == 0 && ti->ti_rmdir)			/* ok to remove empty dir */
+	if(!top)
+		if(direntries == 0 && ti->ti_rmdir) {		/* ok to remove empty dir */
+			if(!expthrflag)							/* avoid dfs/exp race */
+				usleep((useconds_t) 100000);
+
 			if(rmfile(ti, dir, "rmdir"))
 				return (EOF);
-	}
+		}
 
 	return (di->di_matches);
 }
