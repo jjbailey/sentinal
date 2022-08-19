@@ -313,8 +313,6 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "%s: version %s\n", base(argv[0]), VERSION_STRING);
 
 	for(i = 0; i < nsect; i++) {
-		/* usleep for systemd journal */
-
 		ti = &tinfo[i];								/* shorthand */
 
 		/* print warnings if any */
@@ -333,6 +331,7 @@ int main(int argc, char *argv[])
 			}
 
 		/* start threads */
+		/* usleep for systemd journal */
 
 		if(threadcheck(ti, _DFS_THR)) {				/* filesystem free space */
 			usleep((useconds_t) 100000);
