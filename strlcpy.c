@@ -23,7 +23,7 @@ size_t strlcpy(char *dst, char *src, size_t dsize)
 			dleft--;
 		}
 
-	if(dsize && dp != dst)
+	if(dp > dst)
 		*dp = '\0';
 
 	return (dp - dst);

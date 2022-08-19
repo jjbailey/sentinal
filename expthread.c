@@ -17,7 +17,7 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-#define	SCANRATE		(ONE_MINUTE * 5)			/* default monitor rate */
+#define	SCANRATE		(ONE_MINUTE * 3)			/* default, considers large filesys */
 
 void   *expthread(void *arg)
 {
