@@ -249,9 +249,9 @@ intermediate files), and rotates the compressed log when it reaches 1GiB in size
 
 The combinations of `expire` and `expiresiz` settings affect expiration behavior.
 
- - If expire is set, remove files at expiration time
- - If expire and expiresiz are set, remove files larger than expiresiz at expiration time
- - If expiresiz is set and expire is unset, take no action
+ - If `expire` is set, remove files at expiration time
+ - If `expire` and `expiresiz` are set, remove files larger than `expiresiz` at expiration time
+ - If `expiresiz` is set and `expire` is unset, take no action
 
 ### systemd unit file
 
