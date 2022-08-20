@@ -242,9 +242,8 @@ intermediate files), and rotates the compressed log when it reaches 1GiB in size
 
 ### Precedence of Keys
 
-`retmin` takes precedence over `dirlimit`, `diskfree`, and `inofree`.
-`dirlimit`, `diskfree`, and `inofree` take precedence over `expire`, `retmax`.
-The lesser of `expire` and `retmax` takes precedence over the other.
+`retmin`, `retmax` take precedence over `dirlimit`, `diskfree`, `inofree`, `expire`.
+`dirlimit`, `diskfree`, `inofree` take precedence over `expire`.
 
 ### systemd unit file
 

@@ -27,7 +27,8 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 	DIR    *dirp;
 	char    filename[PATH_MAX];
 	long    direntries = 0;							/* directory entries */
-	short   expsizflag;								/* expire size is set */
+	short   expbysize;								/* consider expire size */
+	short   expbytime;								/* consider expire time */
 	short   expthrflag;								/* is expire thread */
 	struct dirent *dp;
 	struct stat stbuf;
@@ -87,9 +88,10 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 
 				time(&curtime);
 
-				expsizflag = !ti->ti_expiresiz || stbuf.st_size > ti->ti_expiresiz;
+				expbysize = !ti->ti_expiresiz || stbuf.st_size > ti->ti_expiresiz;
+				expbytime = stbuf.st_mtim.tv_sec + ti->ti_expire < curtime;
 
-				if(expsizflag && stbuf.st_mtim.tv_sec + ti->ti_expire < curtime) {
+				if(expbysize && expbytime) {
 					if(rmfile(ti, filename, "expire"))
 						if(direntries)
 							direntries--;
