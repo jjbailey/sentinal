@@ -13,6 +13,7 @@
 #include <ctype.h>
 #include <pwd.h>
 #include <grp.h>
+#include <unistd.h>
 #include "sentinal.h"
 
 #define	NOBODY	((uid_t) 65534)
@@ -21,7 +22,11 @@
 uid_t verifyuid(char *id)
 {
 	struct passwd *p;
+	uid_t   myuid;
 	uid_t   uid = NOBODY;
+
+	if((myuid = geteuid()) != 0)
+		return (myuid);
 
 	if(IS_NULL(id))
 		return (NOBODY);
@@ -47,7 +52,11 @@ uid_t verifyuid(char *id)
 gid_t verifygid(char *id)
 {
 	struct group *p;
+	gid_t   mygid;
 	gid_t   gid = NOGROUP;
+
+	if((mygid = getegid()) != 0)
+		return (mygid);
 
 	if(IS_NULL(id))
 		return (NOGROUP);
