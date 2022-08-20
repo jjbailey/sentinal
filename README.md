@@ -243,6 +243,7 @@ intermediate files), and rotates the compressed log when it reaches 1GiB in size
 ### Precedence of Keys
 
 `retmin`, `retmax` take precedence over `dirlimit`, `diskfree`, `inofree`, `expire`.
+<br/>
 `dirlimit`, `diskfree`, `inofree` take precedence over `expire`.
 
 ### File Expiration
