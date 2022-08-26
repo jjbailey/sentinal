@@ -242,9 +242,16 @@ intermediate files), and rotates the compressed log when it reaches 1GiB in size
 
 ### Precedence of Keys
 
-`retmin` takes precedence over `dirlimit`, `diskfree`, and `inofree`.
-`dirlimit`, `diskfree`, and `inofree` take precedence over `expire`, `retmax`.
-The lesser of `expire` and `retmax` takes precedence over the other.
+ - `retmin`, `retmax` take precedence over `dirlimit`, `diskfree`, `inofree`, `expire`.
+ - `dirlimit`, `diskfree`, `inofree` take precedence over `expire`.
+
+### File Expiration
+
+The combinations of `expire` and `expiresiz` settings affect expiration behavior.
+
+ - If `expire` is set, remove files at expiration time
+ - If `expire` and `expiresiz` are set, remove files larger than `expiresiz` at expiration time
+ - If `expiresiz` is set and `expire` is unset, take no action
 
 ### systemd unit file
 
