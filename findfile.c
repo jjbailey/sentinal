@@ -59,9 +59,11 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 		if(lstat(filename, &stbuf) == -1)
 			continue;
 
-		if(S_ISLNK(stbuf.st_mode))
-			if(!ti->ti_symlinks || stat(filename, &stbuf) == -1)
-				continue;
+		if(S_ISLNK(stbuf.st_mode) && !ti->ti_symlinks)
+			continue;
+
+		if(stat(filename, &stbuf) == -1)
+			continue;
 
 		if(S_ISDIR(stbuf.st_mode) && ti->ti_subdirs) {
 			/* search subdirectory */
