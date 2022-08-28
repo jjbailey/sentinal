@@ -8,12 +8,12 @@ an adjunct or an alternative to logrotate.
 
 Monitoring and management capabilities:
 
-- available disk space by percentage
-- available inode usage by percentage or count
-- files by size, age, or retention settings
-- inodes by age or retention settings
-- log ingestion, processing, and rotation
-- monitor and process log files when they reach a given size
+ - available disk space by percentage
+ - available inode usage by percentage or count
+ - files by size, age, or retention settings
+ - inodes by age or retention settings
+ - log ingestion, processing, and rotation
+ - monitor and process log files when they reach a given size
 
 ## Configuration
 
@@ -61,23 +61,26 @@ created by sentinal, owned by uid, in group gid:
 
 Note the following conditions.  If:
 
-`command` is set, `template` must be set.
+ - `command` is set, `template` must be set.
+ - `rotatesiz` is set, rotate the file after it reaches the specified size.
+ - `expiresiz` is set, remove files larger than the specified size at the expiration time.
+ - `diskfree` is set, create a thread to discard the oldest files to free disk space.
+ - `inofree` is set, create a thread to discard the oldest files to free inodes.
+ - `expire` is set, remove files older than the expiration time.
+ - `retmin` is set, retain `n` number of files, regardless of expiration or available disk space.
+ - `retmax` is set, retain a maximum number of `n` files, regardless of expiration.
+ - `postcmd` is specified, the value is passed as a command to `bash -c` after the file closes or rotates.  Optional.
 
-`rotatesiz` is greater than zero, sentinal rotates the log after it reaches the specified size.
+The combinations of `expire` and `expiresiz` settings affect expiration behavior.  If:
 
-`expiresiz` is greater than zero, sentinal removes files larger than the specified size at expire time.
+ - `expire` is set and `expiresiz` is unset, remove files older than the expiration time.
+ - `expire` and `expiresiz` are set, remove files larger than `expiresiz` at the expiration time.
+ - `expiresiz` is set and `expire` is unset, take no action.
 
-`diskfree` is greater than zero, sentinal creates a thread to discard the oldest files to free disk space.
+Precedence of Keys:
 
-`inofree` is greater than zero, sentinal creates a thread to discard the oldest files to free inodes.
-
-`expire` is greater than zero, sentinal removes files older than the specified time.
-
-`retmin` is greater than zero, sentinal retains `n` number of files, regardless of expiration or available disk space.
-
-`retmax` is greater than zero, sentinal retains a maximum number of `n` files, regardless of expiration.
-
-`postcmd` is specified, the value is passed as a command to `bash -c` after the log closes or rotates.  Optional.
+ - `retmin`, `retmax` take precedence over `dirlimit`, `diskfree`, `inofree`, `expire`.
+ - `dirlimit`, `diskfree`, `inofree` take precedence over `expire`.
 
 ### Disk Space Example
 
@@ -240,19 +243,6 @@ intermediate files), and rotates the compressed log when it reaches 1GiB in size
     gid       = appgroup
     rotatesiz = 1G
 
-### Precedence of Keys
-
- - `retmin`, `retmax` take precedence over `dirlimit`, `diskfree`, `inofree`, `expire`.
- - `dirlimit`, `diskfree`, `inofree` take precedence over `expire`.
-
-### File Expiration
-
-The combinations of `expire` and `expiresiz` settings affect expiration behavior.
-
- - If `expire` is set, remove files at expiration time
- - If `expire` and `expiresiz` are set, remove files larger than `expiresiz` at expiration time
- - If `expiresiz` is set and `expire` is unset, take no action
-
 ### systemd unit file
 
 sentinal runs as a systemd service.  The following is an example of a unit file:
@@ -276,16 +266,16 @@ sentinal runs as a systemd service.  The following is an example of a unit file:
 
 ### User/Group ID notes:
 
-- User/Group ID applies only to `command` and `postcmd`; otherwise, sentinal runs
+ - User/Group ID applies only to `command` and `postcmd`; otherwise, sentinal runs
 as the calling user.
 
-- If an application never needs root privileges to run and process logs, consider
+ - If an application never needs root privileges to run and process logs, consider
 setting and using the application's user and group IDs in the unit file.
 
-- Running sentinal as root is likely necessary when a single sentinal instance
+ - Running sentinal as root is likely necessary when a single sentinal instance
 monitors several different applications.
 
-- When unspecified, the user and group IDs are set to `nobody` and `nogroup`.
+ - When unspecified, the user and group IDs are set to `nobody` and `nogroup`.
 
 ## sentinal Status
 
@@ -346,7 +336,7 @@ Useful commands for monitoring sentinal:
     $ journalctl -f -n 20 -t sentinal
     $ journalctl -f _SYSTEMD_UNIT=example.service
     $ ps -lT -p $(pidof sentinal)
-    $ top -H -S -p $(pidof sentinal)
+    $ top -H -S -p $(echo $(pgrep sentinal) | sed 's/ /,/g')
     $ htop -d 5 -p $(pidof sentinal)
     # lslocks -p $(pidof sentinal)
 
@@ -358,25 +348,27 @@ Examples of on-demand log rotation:
 
 ## Notes
 
-- Linux processes which write to pipes block when processes are not reading from them.
+ - Linux processes writing to pipes block when processes are not reading from them.
 systemd manages sentinal to ensure sentinal is always running.  See README.fifo for more detail.
 
-- The default pipe size in Linux is either 64KB or 1MB. sentinal increases its pipe sizes on
+ - The default pipe size in Linux is either 64KB or 1MB. sentinal increases its pipe sizes on
 3.x.x and newer kernels to 64MiB.  Consider this a tuning parameter that can affect performance.
 
-- In the inline compression example, zstd can be changed to a different program, e.g.,
+ - In the inline compression example, zstd can be changed to a different program, e.g.,
 gzip or (p)bzip2, though they are slower and may impact the performance of the writer application.
 
-- For inode management, sentinal counts inodes in `dirname`, not inodes in the filesystem.
+ - For inode management, sentinal counts inodes in `dirname`, not inodes in the filesystem.
 
-- sentinal reports free space for unprivileged users, which may be less than privileged
+ - sentinal reports free space for unprivileged users, which may be less than privileged
 users' values reported by disk utility programs.
 
-- The `rotatesiz` key represents bytes written to disk.  When `command` specifies a
+ - The `rotatesiz` key represents bytes written to disk.  When `command` is a
 compression program, log rotation occurs after sentinal writes `rotatesiz` bytes
-post-compression.  If unset or zero, the thread requires some form of manual log rotation.
+post-compression.  If unset or zero, the thread requires manual log rotation.
 
-- sentinal removes empty directories within `dirname` when `rmdir` is true.
+ - sentinal removes empty directories within `dirname` when `rmdir` is true.
 To preserve a single directory, create a file in the directory with a file name
 that does not match `pcrestr`, for example, `.persist`.
+
+ - sentinal does not descend directories on other filesystems, similar to `find dir -xdev`.
 
