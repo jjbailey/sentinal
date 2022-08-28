@@ -8,7 +8,7 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"1.5.4"
+#define	VERSION_STRING	"1.5.5"
 
 #ifndef _SYS_TYPES_H
 # include <sys/types.h>
@@ -94,6 +94,7 @@ struct thread_info {
 	char   *ti_path;								/* path to command */
 	char   *ti_argv[MAXARGS];						/* args in command */
 	char   *ti_dirname;								/* directory name */
+	dev_t   ti_dev;									/* ID of device containing file */
 	long double ti_dirlimit;						/* directory size limit */
 	short   ti_subdirs;								/* subdirectory recursion flag */
 	char   *ti_pipename;							/* FIFO name */
