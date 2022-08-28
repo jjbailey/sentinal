@@ -38,7 +38,7 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 		return (0);
 
 	if(top) {										/* reset */
-		if(lstat(dir, &stbuf) == -1) {
+		if(stat(dir, &stbuf) == -1) {
 			fprintf(stderr, "%s: cannot stat: %s\n", ti->ti_section, dir);
 			return (0);
 		}
