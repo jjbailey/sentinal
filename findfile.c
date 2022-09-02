@@ -37,8 +37,15 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 	if((dirp = opendir(dir)) == NULL)
 		return (0);
 
-	if(top)											/* reset */
+	if(top) {										/* reset */
+		if(stat(dir, &stbuf) == -1) {
+			fprintf(stderr, "%s: cannot stat: %s\n", ti->ti_section, dir);
+			return (0);
+		}
+
 		memset(di, '\0', sizeof(struct dir_info));
+		ti->ti_dev = stbuf.st_dev;					/* save mountpoint device */
+	}
 
 	expthrflag = strcmp(strrchr(ti->ti_task, '\0') - 3, _EXP_THR) == 0;
 
@@ -52,12 +59,22 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 		if(lstat(filename, &stbuf) == -1)
 			continue;
 
-		if(S_ISLNK(stbuf.st_mode))
-			if(!ti->ti_symlinks || stat(filename, &stbuf) == -1)
-				continue;
+		if(S_ISLNK(stbuf.st_mode) && !ti->ti_symlinks)
+			continue;
+
+		if(stat(filename, &stbuf) == -1)
+			continue;
 
 		if(S_ISDIR(stbuf.st_mode) && ti->ti_subdirs) {
 			/* search subdirectory */
+
+			if(stbuf.st_dev != ti->ti_dev) {		/* don't cross filesystems */
+#if 0
+				fprintf(stderr, "%s: mountdev: %lx, thisdev: %lx\n",
+						ti->ti_section, ti->ti_dev, stbuf.st_dev);
+#endif
+				continue;
+			}
 
 			if(findfile(ti, FALSE, filename, di) == EOF) {
 				/* empty dir removed */
