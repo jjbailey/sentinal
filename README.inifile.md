@@ -57,7 +57,7 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
     retmax:    maximum number of logs to retain, regardless of expire time; 0 = no max (off)
                default off
 
-    terse:     file removal notification; true = quiet, false = record log removal
+    terse:     file removal notification; true = quiet, false = record file/directory removal
                default 0/false
 
     rmdir:     remove empty directories; true, false
