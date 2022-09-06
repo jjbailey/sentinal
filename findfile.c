@@ -68,13 +68,8 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 		if(S_ISDIR(stbuf.st_mode) && ti->ti_subdirs) {
 			/* search subdirectory */
 
-			if(stbuf.st_dev != ti->ti_dev) {		/* don't cross filesystems */
-#if 0
-				fprintf(stderr, "%s: mountdev: %lx, thisdev: %lx\n",
-						ti->ti_section, ti->ti_dev, stbuf.st_dev);
-#endif
+			if(stbuf.st_dev != ti->ti_dev)			/* don't cross filesystems */
 				continue;
-			}
 
 			if(findfile(ti, FALSE, filename, di) == EOF) {
 				/* empty dir removed */
