@@ -59,6 +59,34 @@ created by sentinal, owned by uid, in group gid:
     # ls -l example.log
     prw------- 1 sentinal sentinal 0 Dec  2 10:12 example.log
 
+### Thread Requirements
+
+* Diskfree thread
+    * pcrestr
+    and one or more of the following
+    * diskfree
+    * inofree
+
+* Expire thread
+    * pcrestr
+    and one or more of the following
+    * dirlimit
+    * expire
+    * retmax
+
+* Simple log monitor thread
+    * command unset
+    * template
+    * postcmd
+    * rotatesiz
+
+* Work (log ingestion) thread
+    * command
+    * pipename
+    * template
+    optional, but recommended
+    * rotatesiz
+
 Note the following conditions.  If:
 
  - `command` is set, `template` must be set.
@@ -277,7 +305,7 @@ monitors several different applications.
 
  - When unspecified, the user and group IDs are set to `nobody` and `nogroup`.
 
-## sentinal Status
+## Sentinal Status
 
 The INI file /opt/sentinal/etc/example.ini is used here as an example.
 
