@@ -1,6 +1,6 @@
 #!/bin/bash
-# vim: set tabstop=4 shiftwidth=4 expandtab:
 # redhat.sh
+# vim: set tabstop=4 shiftwidth=4 expandtab:
 
 # creates a spec file and creates an rpm from the current installation
 # to run this:
@@ -30,14 +30,15 @@ read MAJOR MINOR <<< $(echo $VERSION | sed 's/\./ /')
 BUILDIR=sentinal-$MAJOR
 RPMFILE=sentinal-$MAJOR-$MINOR.x86_64.rpm
 
-rm -fr rpmbuild $BUILDIR
-mkdir -p rpmbuild $BUILDIR || exit 1
-CWD=$PWD
-(cd rpmbuild && rpmdev-setuptree)
+# rpmdev-setuptree?
+export HOME=$PWD
+
+mkdir -p $HOME/rpmbuild $BUILDIR || exit 1
+(cd $HOME/rpmbuild && rpmdev-setuptree)
 cp -pr --parents /opt/sentinal $BUILDIR
 find $BUILDIR -name '*~' -delete
 find $BUILDIR -type p -delete
-tar czvf rpmbuild/SOURCES/sentinal-$MAJOR.$MINOR.tar.gz $BUILDIR
+tar czvf $HOME/rpmbuild/SOURCES/sentinal-$MAJOR.$MINOR.tar.gz $BUILDIR
 
 (
 
@@ -45,7 +46,7 @@ tar czvf rpmbuild/SOURCES/sentinal-$MAJOR.$MINOR.tar.gz $BUILDIR
 Name:           sentinal
 Version:        $MAJOR
 Release:        $MINOR
-Summary:        Software for logfile and inode management
+Summary:        Software for Logfile and Inode Management
 
 License:        MIT
 URL:            https://github.com/jjbailey/sentinal.git
@@ -83,9 +84,13 @@ EOF
     echo "%files"
     find /opt/sentinal/* -type d | sort
 
-) > rpmbuild/SPECS/sentinal.spec
+) > $HOME/rpmbuild/SPECS/sentinal.spec
 
-rpmbuild -bb rpmbuild/SPECS/sentinal.spec
-[ -f rpmbuild/RPMS/x86_64/$RPMFILE ] && rpm -Vp rpmbuild/RPMS/x86_64/$RPMFILE
-find $CWD -name '*.rpm'
+rpmbuild -bb $HOME/rpmbuild/SPECS/sentinal.spec
+
+[ -f $HOME/rpmbuild/RPMS/x86_64/$RPMFILE ] && {
+    rpm -Vp $HOME/rpmbuild/RPMS/x86_64/$RPMFILE
+    ls -o $HOME/rpmbuild/RPMS/x86_64/$RPMFILE
+}
+
 exit 0
