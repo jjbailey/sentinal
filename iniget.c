@@ -121,6 +121,7 @@ void print_section(ini_t *inidata, char *section)
 	fprintf(stdout, "rmdir     = %s\n", my_ini(inidata, section, "rmdir"));
 	fprintf(stdout, "symlinks  = %s\n", my_ini(inidata, section, "symlinks"));
 	fprintf(stdout, "postcmd   = %s\n", my_ini(inidata, section, "postcmd"));
+	fprintf(stdout, "truncate  = %s\n", my_ini(inidata, section, "truncate"));
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

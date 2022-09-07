@@ -119,6 +119,7 @@ struct thread_info {
 	short   ti_rmdir;								/* remove empty dirs */
 	short   ti_symlinks;							/* follow symlinks */
 	char   *ti_postcmd;								/* command to run after log closes */
+	short   ti_truncate;							/* truncate slm-managed files */
 };
 
 struct dir_info {
