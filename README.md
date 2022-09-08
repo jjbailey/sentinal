@@ -50,6 +50,7 @@ and up to 16 resources sections with unique names up to 11 characters in length.
     rmdir:     option to remove empty directories (false)
     symlinks:  option to follow symlinks (false)
     postcmd:   command to run after log closes or rotates, %file = filename
+    truncate:  option to truncate slm-managed files (false)
 
 `section` is the section name.  It must be unique in the INI file.
 
@@ -377,7 +378,8 @@ Examples of on-demand log rotation:
 ## Notes
 
  - Linux processes writing to pipes block when processes are not reading from them.
-systemd manages sentinal to ensure sentinal is always running.  See README.fifo for more detail.
+systemd manages sentinal to ensure sentinal is always running.  See README.fifo for additional
+information about pipes.
 
  - The default pipe size in Linux is either 64KB or 1MB. sentinal increases its pipe sizes on
 3.x.x and newer kernels to 64MiB.  Consider this a tuning parameter that can affect performance.
@@ -398,5 +400,5 @@ post-compression.  If unset or zero, the thread requires manual log rotation.
 To preserve a single directory, create a file in the directory with a file name
 that does not match `pcrestr`, for example, `.persist`.
 
- - sentinal does not descend directories on other filesystems, similar to `find dir -xdev`.
+ - sentinal does not descend into directories on other filesystems, similar to `find dir -xdev`.
 
