@@ -62,6 +62,7 @@ short pcrefind(struct thread_info *ti, short top, char *dir)
 			return (0);
 		}
 
+		ti->ti_dev = stbuf.st_dev;					/* save mountpoint device */
 		matches = 0;
 	}
 
