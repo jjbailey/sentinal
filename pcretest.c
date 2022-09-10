@@ -11,39 +11,14 @@
  *
  * This source code is licensed under the MIT license found
  * in the root directory of this source tree.
- *
- * Examples of usage:
- *
- * ends with a digit
- * $ pcretest '/var/log/sys.*\d$' /var/log/sys*
- * no match: /var/log/syslog
- * match:    /var/log/syslog.1
- * no match: /var/log/syslog.2.gz
- *
- * negative lookahead for pid files
- * $ pcretest '^(?!.*\.(?:pid)$)' notapidfile pidfile.pid
- * match:    notapidfile
- * no match: pidfile.pid
- *
- * negative lookbehind for pid files
- * $ pcretest '.*(?<!\.pid)$' notapidfile pidfile.pid
- * match:    notapidfile
- * no match: pidfile.pid
- *
- * negative lookahead for compressed files
- * $ pcretest '^(?!.*\.(?:bz2|gz|lz|zip|zst)$)' $(find testdir -type f)
- * no match: testdir/ddrescue-1.25.tar.lz
- * match:    testdir/nxserver.log
- * no match: testdir/syslog.2.gz
  */
 
 #include <stdio.h>
 #include <sys/types.h>
-#include <stdlib.h>
 #include "sentinal.h"
 #include "basename.h"
 
-short pcretest(struct thread_info *, char *);
+short   pcrematch(struct thread_info *, char *);
 
 int main(int argc, char *argv[])
 {
@@ -64,6 +39,8 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	memset(&ti, '\0', sizeof(struct thread_info));
+
 	ti.ti_section = myname;
 	ti.ti_pcrestr = argv[1];
 	ti.ti_terse = strcmp(myname, "pcretest");		/* decides what to print */
@@ -72,7 +49,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 
 	for(i = 2; i < argc; i++) {
-		match = pcretest(&ti, argv[i]);
+		match = pcrematch(&ti, argv[i]);
 
 		if(!ti.ti_terse)
 			fprintf(stdout, "%s %s\n", match ? "match:   " : "no match:", argv[i]);
@@ -81,26 +58,6 @@ int main(int argc, char *argv[])
 	}
 
 	exit(EXIT_SUCCESS);
-}
-
-short pcretest(struct thread_info *ti, char *s)
-{
-	int     rc;
-	pcre2_match_data *mdata;
-	uint32_t options = 0;
-
-	/* mostly copied from mylogfile.c */
-
-	if(IS_NULL(s) || ti->ti_pcrecmp == NULL)
-		return (FALSE);
-
-	mdata = pcre2_match_data_create_from_pattern(ti->ti_pcrecmp, NULL);
-
-	rc = pcre2_match(ti->ti_pcrecmp, (PCRE2_SPTR) s, strlen(s), (PCRE2_SIZE) 0, options,
-					 mdata, NULL);
-
-	pcre2_match_data_free(mdata);
-	return (rc >= 0);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
