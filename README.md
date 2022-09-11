@@ -54,13 +54,10 @@ and up to 16 resources sections with unique names up to 11 characters in length.
 
 `section` is the section name.  It must be unique in the INI file.
 
-`pipename` is the path to the FIFO, either absolute or relative to dirname,
-created by sentinal, owned by uid, in group gid:
-
-    # ls -l example.log
-    prw------- 1 sentinal sentinal 0 Dec  2 10:12 example.log
-
 ### Thread Requirements
+
+Threads need several keys defined in order for them to run.  Below are the
+thread types and their required keys:
 
 * Diskfree thread
     * pcrestr
