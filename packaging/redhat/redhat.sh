@@ -58,7 +58,7 @@ Packager:       JJB <itguy92075@gmail.com>
 Group:          System Management
 
 %description
-Software for logfile and inode management
+Software for Logfile and Inode Management
 Copyright (c) 2021, 2022 jjb
 
 %prep
