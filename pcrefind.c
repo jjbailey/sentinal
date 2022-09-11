@@ -28,8 +28,13 @@ int main(int argc, char *argv[])
 
 	myname = base(argv[0]);
 
-	if(argc < 3) {
-		fprintf(stderr, "Usage: %s <pcre> <list_of_directories>\n", myname);
+	if(argc > 1 && strcmp(argv[1], "-V") == 0) {
+		fprintf(stdout, "%s: version %s\n", myname, VERSION_STRING);
+		exit(EXIT_SUCCESS);
+	}
+
+	if(argc < 3 || IS_NULL(argv[1])) {
+		fprintf(stderr, "Usage: %s <pcre> <dir> [ <dir> ... ]\n", myname);
 		exit(EXIT_FAILURE);
 	}
 

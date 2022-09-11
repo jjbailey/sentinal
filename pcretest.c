@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 	}
 
 	if(argc < 3 || IS_NULL(argv[1])) {
-		fprintf(stderr, "Usage: %s <pcre> <list_of_test_strings>\n", myname);
+		fprintf(stderr, "Usage: %s <pcre> <string> [ <string> ... ]\n", myname);
 		exit(EXIT_FAILURE);
 	}
 
