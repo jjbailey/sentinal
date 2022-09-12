@@ -92,9 +92,9 @@ The `template` key can contain tokens similar to the date command:
 
 The `postcmd` key can contain the current directory, file, hostname, and section:
 
-    %host:  system hostname (nodename)
     %path:  current dirname (path)
     %file:  current filename
+    %host:  system hostname (nodename)
     %sect:  section name
 
 ## Threads
@@ -102,10 +102,10 @@ The `postcmd` key can contain the current directory, file, hostname, and section
 Thread names have a kernel-imposed length limit of 16 characters (15 + nul).
 Thread names are assigned `<sectionname>_<taskname>`.  Task names and purposes:
 
-    wrk:  worker (log ingestion) thread
     dfs:  filesystem free space monitor thread
     exp:  file expire monitor thread
     slm:  simple log monitor thread
+    wrk:  worker (log ingestion) thread
 
 Example: file expire thread name for the section called `console`: `console_exp`
 
