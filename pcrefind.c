@@ -42,7 +42,10 @@ int main(int argc, char *argv[])
 
 	ti.ti_section = myname;
 	ti.ti_pcrestr = argv[1];
+
+	/* we could just skip these tests in pcrefind() */
 	ti.ti_subdirs = TRUE;
+	ti.ti_symlinks = FALSE;
 
 	if(pcrecompile(&ti) == FALSE)
 		exit(EXIT_FAILURE);
