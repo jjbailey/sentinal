@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <errno.h>
 #include <string.h>
 #include "sentinal.h"
 #include "basename.h"
@@ -25,6 +26,7 @@ int main(int argc, char *argv[])
 	struct thread_info ti;
 	char   *myname;
 	int     i;
+	extern int errno;
 
 	myname = base(argv[0]);
 
@@ -81,8 +83,12 @@ short pcrefind(struct thread_info *ti, short top, char *dir)
 		matches++;
 	}
 
-	if((dirp = opendir(dir)) == NULL)				/* dir is not a directory */
+	if((dirp = opendir(dir)) == NULL) {
+		if(errno == EACCES)
+			perror(dir);
+
 		return (matches);
+	}
 
 	/* test the files */
 
