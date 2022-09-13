@@ -11,66 +11,69 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
     command:   command line to run
                absolute path, optional, working directory is `dirname`
 
-    dirname:   thread and `postcmd` working directory, file location
-               absolute path, required
-
     dirlimit:  directory size limit, units M = MiB, G = GiB; 0 = unlimited (off)
                default unlimited
 
-    subdirs:   option to search subdirectories; true, false
-               default 0/false
-
-    pipename:  named pipe/fifo fifo location
-               absolute or relative path, required when `command` is defined
-
-    template:  output file name, date(1) sequences %F %Y %m %d %H %M %S %s
-               relative to dirname, required when `command` is defined
-
-    pcrestr:   perl-compatible regex naming files to manage
-               valid perl-compatible regex, required for dfs and exp threads
-
-    uid:       worker and `postcmd` username or uid; username root ok, uid 0 not ok
-               default nobody
-
-    gid:       worker and `postcmd` groupname or gid; groupname root ok, gid 0 not ok
-               default nogroup
-
-    rotatesiz: wrk and slm threads: rotate size, units M = MiB, G = GiB; 0 = no rotate (off)
-               default off (no rotate)
-
-    expiresiz: dfs and exp threads: remove file if it exceeds specified size
-               default 0/any size
+    dirname:   thread and `postcmd` working directory, file location
+               absolute path, required
 
     diskfree:  percent blocks free for unprivileged users; 0 = no monitor (off)
-               default off
-
-    inofree:   percent inodes free for unprivileged users; 0 = no monitor (off)
                default off
 
     expire:    file retention, units = m, H, D, W, M, Y; 0 = no expiration (off)
                default unit = D
                default off
 
-    retmin:    minimum number of logs to retain, regardless of expire time; 0 = none (off)
+    expiresiz: dfs and exp threads: remove file if it exceeds specified size
+               default 0/any size
+
+    gid:       worker and `postcmd` groupname or gid; groupname root ok, gid 0 not ok
+               default nogroup
+
+    inofree:   percent inodes free for unprivileged users; 0 = no monitor (off)
                default off
 
-    retmax:    maximum number of logs to retain, regardless of expire time; 0 = no max (off)
-               default off
+    pcrestr:   perl-compatible regex naming files to manage
+               valid perl-compatible regex, required for dfs and exp threads
 
-    terse:     file removal notification; true = quiet, false = record log removal
-               default 0/false
-
-    rmdir:     remove empty directories; true, false
-               default 0/false
-
-    symlinks:  follow symlinks; true, false
-               default 0/false
+    pipename:  named pipe/fifo fifo location
+               absolute or relative path, required when `command` is defined
 
     postcmd:   command to run after the log closes or rotates, %file = filename
                string passed to bash -c, optional, working directory is `dirname`
                used when `command` is defined (log ingestion) or `template` is defined (slm)
                unused when `command` and `template` are not defined
                default none
+
+    retmax:    maximum number of logs to retain, regardless of expire time; 0 = no max (off)
+               default off
+
+    retmin:    minimum number of logs to retain, regardless of expire time; 0 = none (off)
+               default off
+
+    rmdir:     remove empty directories; true, false
+               default 0/false
+
+    rotatesiz: wrk and slm threads: rotate size, units M = MiB, G = GiB; 0 = no rotate (off)
+               default off (no rotate)
+
+    subdirs:   option to search subdirectories; true, false
+               default 0/false
+
+    symlinks:  follow symlinks; true, false
+               default 0/false
+
+    template:  output file name, date(1) sequences %F %Y %m %d %H %M %S %s
+               relative to dirname, required when `command` is defined
+
+    terse:     file removal notification; true = quiet, false = record file/directory removal
+               default 0/false
+
+    truncate:  truncate slm-managed files; true, false
+               default 0/false
+
+    uid:       worker and `postcmd` username or uid; username root ok, uid 0 not ok
+               default nobody
 
 The keys `template` and `pcrestr` are available as postcmd environment variables.
 
@@ -89,9 +92,9 @@ The `template` key can contain tokens similar to the date command:
 
 The `postcmd` key can contain the current directory, file, hostname, and section:
 
-    %host:  system hostname (nodename)
     %path:  current dirname (path)
     %file:  current filename
+    %host:  system hostname (nodename)
     %sect:  section name
 
 ## Threads
@@ -99,10 +102,10 @@ The `postcmd` key can contain the current directory, file, hostname, and section
 Thread names have a kernel-imposed length limit of 16 characters (15 + nul).
 Thread names are assigned `<sectionname>_<taskname>`.  Task names and purposes:
 
-    wrk:  worker thread
     dfs:  filesystem free space monitor thread
     exp:  file expire monitor thread
     slm:  simple log monitor thread
+    wrk:  worker (log ingestion) thread
 
 Example: file expire thread name for the section called `console`: `console_exp`
 
@@ -135,6 +138,7 @@ sentinal accepts two flags for debugging.
     rmdir     = 
     symlinks  = 
     postcmd   = 
+    truncate  = 
 
     $ /opt/sentinal/bin/sentinal -f /opt/sentinal/tests/test4.ini -v
 
@@ -161,5 +165,6 @@ sentinal accepts two flags for debugging.
     rmdir     = 0
     symlinks  = 0
     postcmd   = 
+    truncate  = 0
     # threads   dfs: true   exp: true   slm: false   wrk: true
 

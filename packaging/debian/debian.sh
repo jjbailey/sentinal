@@ -1,6 +1,6 @@
 #!/bin/bash
-# vim: set tabstop=4 shiftwidth=4 expandtab:
 # debian.sh
+# vim: set tabstop=4 shiftwidth=4 expandtab:
 
 # creates a control file and creates a deb from the current installation
 # to run this:
@@ -46,11 +46,15 @@ Vcs-Git: https://github.com/jjbailey/sentinal.git
 Section: base
 Priority: optional
 Depends: libpcre2-8-0
-Description: Software for logfile and inode management
+Description: Software for Logfile and Inode Management
  Copyright (c) 2021, 2022 jjb
 EOF
 
 dpkg-deb --build $BUILDIR
-[ -f $BUILDIR.deb ] && dpkg -c $BUILDIR.deb
-find $CWD -name '*.deb'
+
+[ -f $BUILDIR.deb ] && {
+    dpkg -c $BUILDIR.deb
+    ls -o $BUILDIR.deb
+}
+
 exit 0

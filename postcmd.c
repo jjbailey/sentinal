@@ -93,7 +93,16 @@ int postcmd(struct thread_info *ti, char *filename)
 		exit(EXIT_FAILURE);
 
 	default:
-		return (waitpid(pid, &status, 0) == -1 ? status : 0);
+		waitpid(pid, &status, 0);
+
+		if(ti->ti_truncate) {
+			/* slm only */
+
+			if(strcmp(strrchr(ti->ti_task, '\0') - 3, _SLM_THR) == 0)
+				truncate(filename, (off_t) 0);
+		}
+
+		return (status == -1 ? status : 0);
 	}
 }
 

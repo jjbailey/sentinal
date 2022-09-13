@@ -213,6 +213,9 @@ int main(int argc, char *argv[])
 		/* follow symlinks */
 		ti->ti_symlinks = setiniflag(inidata, ti->ti_section, "symlinks");
 
+		/* truncate slm-managed files */
+		ti->ti_truncate = setiniflag(inidata, ti->ti_section, "truncate");
+
 		/*
 		 * get/generate/vett real path of pipe
 		 * pipe might not exist, or it might not be in dirname
@@ -477,6 +480,8 @@ static void dump_thread_info(struct thread_info *ti)
 
 	if(NOT_NULL(ti->ti_postcmd))
 		fprintf(stdout, "#           %s\n", ti->ti_postcmd);
+
+	fprintf(stdout, "truncate  = %d\n", ti->ti_truncate);
 }
 
 static short create_pid_file(char *pidfile)

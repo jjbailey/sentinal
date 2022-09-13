@@ -60,6 +60,9 @@ void   *workthread(void *arg)
 	 *  - ti_command
 	 *  - ti_pipename
 	 *  - ti_template
+	 *
+	 * optional, but recommended:
+	 *  - ti_rotatesiz
 	 */
 
 	pthread_setname_np(pthread_self(), threadname(ti, _WRK_THR));

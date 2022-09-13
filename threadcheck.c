@@ -26,8 +26,8 @@ int threadcheck(struct thread_info *ti, char *tname)
 		pass = ti->ti_pcrecmp && (ti->ti_dirlimit || ti->ti_expire || ti->ti_retmax);
 
 	else if(strcmp(tname, _SLM_THR) == 0)			/* simple log monitor */
-		pass = IS_NULL(ti->ti_command) &&
-			NOT_NULL(ti->ti_template) && NOT_NULL(ti->ti_postcmd) && ti->ti_rotatesiz;
+		pass = !ti->ti_argc && NOT_NULL(ti->ti_template) && NOT_NULL(ti->ti_postcmd) &&
+			ti->ti_rotatesiz;
 
 	else if(strcmp(tname, _WRK_THR) == 0)			/* worker (log ingestion) thread */
 		pass = ti->ti_argc && NOT_NULL(ti->ti_pipename) && NOT_NULL(ti->ti_template);

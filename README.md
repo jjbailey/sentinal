@@ -50,14 +50,40 @@ and up to 16 resources sections with unique names up to 11 characters in length.
     rmdir:     option to remove empty directories (false)
     symlinks:  option to follow symlinks (false)
     postcmd:   command to run after log closes or rotates, %file = filename
+    truncate:  option to truncate slm-managed files (false)
 
 `section` is the section name.  It must be unique in the INI file.
 
-`pipename` is the path to the FIFO, either absolute or relative to dirname,
-created by sentinal, owned by uid, in group gid:
+### Thread Requirements
 
-    # ls -l example.log
-    prw------- 1 sentinal sentinal 0 Dec  2 10:12 example.log
+Threads need several keys defined in order for them to run.  Below are the
+thread types and their required keys:
+
+* Diskfree thread
+    * pcrestr
+    and one or more of the following
+    * diskfree
+    * inofree
+
+* Expire thread
+    * pcrestr
+    and one or more of the following
+    * dirlimit
+    * expire
+    * retmax
+
+* Simple log monitor thread
+    * command unset
+    * template
+    * postcmd
+    * rotatesiz
+
+* Work (log ingestion) thread
+    * command
+    * pipename
+    * template
+    optional, but recommended
+    * rotatesiz
 
 Note the following conditions.  If:
 
@@ -277,7 +303,7 @@ monitors several different applications.
 
  - When unspecified, the user and group IDs are set to `nobody` and `nogroup`.
 
-## sentinal Status
+## Sentinal Status
 
 The INI file /opt/sentinal/etc/example.ini is used here as an example.
 
@@ -349,7 +375,8 @@ Examples of on-demand log rotation:
 ## Notes
 
  - Linux processes writing to pipes block when processes are not reading from them.
-systemd manages sentinal to ensure sentinal is always running.  See README.fifo for more detail.
+systemd manages sentinal to ensure sentinal is always running.  See README.fifo for additional
+information about pipes.
 
  - The default pipe size in Linux is either 64KB or 1MB. sentinal increases its pipe sizes on
 3.x.x and newer kernels to 64MiB.  Consider this a tuning parameter that can affect performance.
@@ -370,5 +397,5 @@ post-compression.  If unset or zero, the thread requires manual log rotation.
 To preserve a single directory, create a file in the directory with a file name
 that does not match `pcrestr`, for example, `.persist`.
 
- - sentinal does not descend directories on other filesystems, similar to `find dir -xdev`.
+ - sentinal does not descend into directories on other filesystems, similar to `find dir -xdev`.
 

@@ -8,6 +8,7 @@
 
 all:		sentinal		\
 			sentinalpipe	\
+			pcrefind		\
 			pcretest
 
 SENOBJS=	sentinal.o		\
@@ -44,8 +45,15 @@ SPMOBJS=	sentinalpipe.o	\
 			iniget.o		\
 			strlcpy.o
 
+PCFOBJS=	pcrefind.o		\
+			fullpath.o		\
+			pcrecompile.o	\
+			pcrematch.o		\
+			strlcpy.o
+
 PCTOBJS=	pcretest.o		\
-			pcrecompile.o
+			pcrecompile.o	\
+			pcrematch.o
 
 SEN_HOME=	/opt/sentinal
 SEN_BIN=	$(SEN_HOME)/bin
@@ -73,6 +81,9 @@ sentinal:	$(SENOBJS)
 sentinalpipe:	$(SPMOBJS)
 				$(CC) $(LDFLAGS) -o $@ $(SPMOBJS) $(LIBS)
 
+pcrefind:	$(PCFOBJS)
+			$(CC) $(LDFLAGS) -o $@ $(PCFOBJS) $(LIBS)
+
 pcretest:	$(PCTOBJS)
 			$(CC) $(LDFLAGS) -o $@ $(PCTOBJS) $(LIBS)
 
@@ -81,6 +92,7 @@ install:	all
 			chown root:root $(SEN_HOME) $(SEN_BIN) $(SEN_ETC) $(SEN_DOC)
 			install -o root -g root -m 755 sentinal -t $(SEN_BIN)
 			install -o root -g root -m 755 sentinalpipe -t $(SEN_BIN)
+			install -o root -g root -m 755 pcrefind -t $(SEN_BIN)
 			install -o root -g root -m 755 pcretest -t $(SEN_BIN)
 			install -o root -g root -m 644 tests/test4.ini -T $(SEN_ETC)/example.ini
 			cp -p README.* $(SEN_DOC)
@@ -99,8 +111,6 @@ systemd:
 			sed "s,INI_FILE,$(SEN_ETC),"	\
 				services/sentinalpipe.systemd > sentinalpipe.service
 			install -o root -g root -m 644 sentinalpipe.service -t /etc/systemd/system
-			# systemctl daemon-reload
-			# systemctl start sentinal sentinalpipe
 
 deb:
 			bash packaging/debian/debian.sh
@@ -109,8 +119,8 @@ rpm:
 			bash packaging/redhat/redhat.sh
 
 clean:
-			rm -f $(SENOBJS) $(SPMOBJS) $(PCTOBJS)
-			rm -f sentinal sentinalpipe pcretest
+			rm -f $(SENOBJS) $(SPMOBJS) $(PCFOBJS) $(PCTOBJS)
+			rm -f sentinal sentinalpipe pcrefind pcretest
 			rm -f sentinal.service sentinalpipe.service
 			rm -fr packaging/debian/sentinal_*
 			rm -fr packaging/redhat/sentinal-* packaging/redhat/rpmbuild
