@@ -18,13 +18,12 @@
 #include "sentinal.h"
 
 #define	SCANRATE		(ONE_MINUTE * 3)			/* default, considers large filesys */
+#define	DRYSCAN			5							/* scanrate for dryrun */
 
 void   *expthread(void *arg)
 {
 	char    ebuf[BUFSIZ];
-	char   *reason;
 	extern short dryrun;
-	int     interval;
 	short   expbysize;								/* consider expire size */
 	short   expbytime;								/* consider expire time */
 	struct dir_info dinfo;
@@ -60,24 +59,15 @@ void   *expthread(void *arg)
 
 	/* monitor expiration times */
 
-	interval = dryrun ? 1 : SCANRATE >> 2;			/* faster initial start */
-
 	for(;;) {
-		sleep(interval);							/* expiry monitor rate */
+		sleep(dryrun ? DRYSCAN : SCANRATE);			/* expiry monitor rate */
 
 		/* search for expired files */
 
 		dinfo.di_matches = findfile(ti, TRUE, ti->ti_dirname, &dinfo);
 
-		if(dinfo.di_matches < 1) {					/* no work */
-			if(interval < SCANRATE)
-				interval = SCANRATE;				/* return to normal */
-
-			continue;
-		}
-
-		if(ti->ti_retmin && dinfo.di_matches <= ti->ti_retmin) {
-			/* match, but below the retention count */
+		if(dinfo.di_matches < 1 || (ti->ti_retmin && dinfo.di_matches <= ti->ti_retmin)) {
+			/* no matches, or matches below the retention count */
 			continue;
 		}
 
@@ -94,21 +84,15 @@ void   *expthread(void *arg)
 		expbytime = ti->ti_expire && dinfo.di_time + ti->ti_expire < curtime;
 
 		if(ti->ti_retmax && dinfo.di_matches > ti->ti_retmax)
-			reason = "retmax";
+			rmfile(ti, dinfo.di_file, "retmax");
 
 		else if(ti->ti_dirlimit && dinfo.di_bytes > ti->ti_dirlimit)
-			reason = "dirlimit";
+			rmfile(ti, dinfo.di_file, "dirlimit");
 
 		else if(expbysize && expbytime)
-			reason = "expire";
+			rmfile(ti, dinfo.di_file, "expire");
 
-		else {
-			interval = SCANRATE;					/* return to normal */
-			continue;
-		}
-
-		rmfile(ti, dinfo.di_file, reason);
-		interval = 0;								/* 1 sec is too slow for inodes */
+		/* oldest file, not expired */
 	}
 
 	/* notreached */
