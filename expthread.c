@@ -24,6 +24,7 @@ void   *expthread(void *arg)
 {
 	char    ebuf[BUFSIZ];
 	extern short dryrun;
+	int     interval = dryrun ? DRYSCAN : SCANRATE;
 	short   expbysize;								/* consider expire size */
 	short   expbytime;								/* consider expire time */
 	struct dir_info dinfo;
@@ -60,7 +61,7 @@ void   *expthread(void *arg)
 	/* monitor expiration times */
 
 	for(;;) {
-		sleep(dryrun ? DRYSCAN : SCANRATE);			/* expiry monitor rate */
+		sleep(interval);							/* expiry monitor rate */
 
 		/* search for expired files */
 
