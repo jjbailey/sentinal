@@ -53,7 +53,7 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 		if(MY_DIR(dp->d_name) || MY_PARENT(dp->d_name))
 			continue;
 
-		fullpath(dir, dp->d_name, filename);
+		snprintf(filename, PATH_MAX, "%s/%s", dir, dp->d_name);
 		direntries++;
 
 		if(lstat(filename, &stbuf) == -1)

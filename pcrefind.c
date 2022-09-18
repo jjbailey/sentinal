@@ -96,7 +96,7 @@ short pcrefind(struct thread_info *ti, short top, char *dir)
 		if(MY_DIR(dp->d_name) || MY_PARENT(dp->d_name))
 			continue;
 
-		fullpath(dir, dp->d_name, filename);
+		snprintf(filename, PATH_MAX, "%s/%s", dir, dp->d_name);
 
 		if(lstat(filename, &stbuf) == -1)
 			continue;
