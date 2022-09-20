@@ -30,16 +30,17 @@
 #define	LOW_RES(target,avail)	(target && avail < target)
 
 static int itimer(int, int, int);
+static void resourcestat(struct thread_info *, short, long double, long double);
 
 void   *dfsthread(void *arg)
 {
 	char    mountdir[PATH_MAX];
 	extern short dryrun;
 	int     interval;
-	long double pc_bfree;
-	long double pc_ffree;
+	long double pc_bfree = 0;
+	long double pc_ffree = 0;
 	short   lowres = FALSE;
-	short   rptstatus = TRUE;
+	short   rptstatus = FALSE;
 	struct dir_info dinfo;
 	struct statvfs svbuf;
 	struct thread_info *ti = arg;
@@ -70,6 +71,9 @@ void   *dfsthread(void *arg)
 			/* test for zero blocks reported */
 			fprintf(stderr, "%s: no block support: %s\n", ti->ti_section, mountdir);
 			ti->ti_diskfree = 0;
+		} else {
+			/* supported */
+			pc_bfree = PERCENT(svbuf.f_bavail, svbuf.f_blocks);
 		}
 	}
 
@@ -81,6 +85,9 @@ void   *dfsthread(void *arg)
 			/* test for zero inodes reported (e.g. AWS EFS) */
 			fprintf(stderr, "%s: no inode support: %s\n", ti->ti_section, mountdir);
 			ti->ti_inofree = 0;
+		} else {
+			/* supported */
+			pc_ffree = PERCENT(svbuf.f_favail, svbuf.f_files);
 		}
 	}
 
@@ -89,7 +96,9 @@ void   *dfsthread(void *arg)
 		return ((void *)0);
 	}
 
-	/* monitor filesystem based on available space */
+	/* initial report */
+
+	resourcestat(ti, FALSE, pc_bfree, pc_ffree);
 
 	interval = dryrun ? 1 : SCANRATE >> 2;			/* faster initial start */
 
@@ -107,52 +116,31 @@ void   *dfsthread(void *arg)
 		if(ti->ti_inofree)
 			pc_ffree = PERCENT(svbuf.f_favail, svbuf.f_files);
 
-		if(!LOW_RES(ti->ti_diskfree, pc_bfree) && !LOW_RES(ti->ti_inofree, pc_ffree)) {
+		if(LOW_RES(ti->ti_diskfree, pc_bfree) || LOW_RES(ti->ti_inofree, pc_ffree)) {
+			/* low resources */
+
+			if(!lowres) {
+				lowres = TRUE;
+				rptstatus = TRUE;					/* lowres report */
+			}
+		} else {
 			/* desired state */
 
-			if(lowres) {							/* toggle status and reporting */
+			if(lowres) {
 				lowres = FALSE;
-				rptstatus = TRUE;
+				rptstatus = TRUE;					/* recovery report */
 			}
-
-			if(rptstatus) {
-				if(ti->ti_diskfree)
-					fprintf(stderr, "%s: %s: %.2Lf%% blocks free\n",
-							ti->ti_section, ti->ti_dirname, pc_bfree);
-
-				if(ti->ti_inofree)
-					fprintf(stderr, "%s: %s: %.2Lf%% inodes free\n",
-							ti->ti_section, ti->ti_dirname, pc_ffree);
-
-				rptstatus = FALSE;					/* mute status alert */
-
-				/* recompute the monitor rate */
-				interval = itimer((int)pc_bfree, (int)pc_ffree, SCANRATE);
-			}
-
-			continue;
-		}
-
-		/* low resources */
-
-		if(!lowres) {								/* toggle status and reporting */
-			lowres = TRUE;
-			rptstatus = TRUE;
 		}
 
 		if(rptstatus) {
-			if(LOW_RES(ti->ti_diskfree, pc_bfree))
-				fprintf(stderr, "%s: low free blocks %s: %.2Lf%% < %.2Lf%%\n",
-						ti->ti_section, ti->ti_dirname, pc_bfree, ti->ti_diskfree);
-
-			if(LOW_RES(ti->ti_inofree, pc_ffree))
-				fprintf(stderr, "%s: low free inodes %s: %.2Lf%% < %.2Lf%%\n",
-						ti->ti_section, ti->ti_dirname, pc_ffree, ti->ti_inofree);
-
-			rptstatus = FALSE;						/* mute status alert */
+			resourcestat(ti, lowres, pc_bfree, pc_ffree);
+			rptstatus = FALSE;						/* mute until state change */
 		}
 
-		/* low space, remove oldest file */
+		if(!lowres)
+			continue;
+
+		/* low resources, remove oldest file */
 
 		dinfo.di_matches = findfile(ti, TRUE, ti->ti_dirname, &dinfo);
 
@@ -164,6 +152,7 @@ void   *dfsthread(void *arg)
 			/* match */
 			rmfile(ti, dinfo.di_file, "remove");
 			interval = 0;							/* 1 sec is too slow for inodes */
+			interval = 30;
 		}
 	}
 
@@ -185,6 +174,28 @@ static int itimer(int a, int b, int c)
 		a = b;
 
 	return (MAXIMUM(MINIMUM(a, b), c));
+}
+
+static void resourcestat(struct thread_info *ti, short lowres,
+						 long double blk, long double ino)
+{
+	if(lowres == FALSE) {							/* initial/recovery report */
+		if(ti->ti_diskfree)
+			fprintf(stderr, "%s: %s: %.2Lf%% blocks free\n",
+					ti->ti_section, ti->ti_dirname, blk);
+
+		if(ti->ti_inofree)
+			fprintf(stderr, "%s: %s: %.2Lf%% inodes free\n",
+					ti->ti_section, ti->ti_dirname, ino);
+	} else {										/* low resource report */
+		if(LOW_RES(ti->ti_diskfree, blk))
+			fprintf(stderr, "%s: low free blocks %s: %.2Lf%% < %.2Lf%%\n",
+					ti->ti_section, ti->ti_dirname, blk, ti->ti_diskfree);
+
+		if(LOW_RES(ti->ti_inofree, ino))
+			fprintf(stderr, "%s: low free inodes %s: %.2Lf%% < %.2Lf%%\n",
+					ti->ti_section, ti->ti_dirname, ino, ti->ti_inofree);
+	}
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
