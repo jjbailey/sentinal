@@ -152,7 +152,6 @@ void   *dfsthread(void *arg)
 			/* match */
 			rmfile(ti, dinfo.di_file, "remove");
 			interval = 0;							/* 1 sec is too slow for inodes */
-			interval = 30;
 		}
 	}
 
