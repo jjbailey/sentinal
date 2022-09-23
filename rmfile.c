@@ -10,24 +10,21 @@
  */
 
 #include <stdio.h>
-#include <unistd.h>
 #include "sentinal.h"
 
 short rmfile(struct thread_info *ti, char *obj, char *remark)
 {
 	extern short dryrun;
+	int     rc = 0;
 
-	if(access(obj, F_OK) == 0) {
-		/* not yet removed by another thread */
+	if(!dryrun)
+		if((rc = remove(obj)) != 0)
+			return (FALSE);
 
-		if(!ti->ti_terse)
-			fprintf(stderr, "%s: %s %s\n", ti->ti_section, remark, obj);
+	if(!ti->ti_terse && rc == 0)
+		fprintf(stderr, "%s: %s %s\n", ti->ti_section, remark, obj);
 
-		if(!dryrun)
-			return (remove(obj) == 0);
-	}
-
-	return (FALSE);
+	return (rc == 0);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
