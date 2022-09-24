@@ -139,8 +139,7 @@ void   *dfsthread(void *arg)
 
 		if(dinfo.di_matches < 1 || (ti->ti_retmin && dinfo.di_matches <= ti->ti_retmin)) {
 			/* no matches, or matches below the retention count */
-			/* recompute the monitor rate */
-			interval = itimer((int)pc_bfree, (int)pc_ffree, SCANRATE);
+			sleep(itimer((int)pc_bfree, (int)pc_ffree, SCANRATE));
 			continue;
 		}
 
