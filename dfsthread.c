@@ -40,7 +40,6 @@ void   *dfsthread(void *arg)
 	long double pc_bfree = 0;
 	long double pc_ffree = 0;
 	short   lowres = FALSE;
-	short   rptstatus = FALSE;
 	struct dir_info dinfo;
 	struct statvfs svbuf;
 	struct thread_info *ti = arg;
@@ -120,25 +119,19 @@ void   *dfsthread(void *arg)
 			/* low resources */
 
 			if(!lowres) {
-				lowres = TRUE;
-				rptstatus = TRUE;					/* lowres report */
+				resourcestat(ti, lowres = TRUE, pc_bfree, pc_ffree);
+				interval = 0;
 			}
 		} else {
 			/* desired state */
 
 			if(lowres) {
-				lowres = FALSE;
-				rptstatus = TRUE;					/* recovery report */
+				resourcestat(ti, lowres = FALSE, pc_bfree, pc_ffree);
+				interval = itimer((int)pc_bfree, (int)pc_ffree, SCANRATE);
 			}
-		}
 
-		if(rptstatus) {
-			resourcestat(ti, lowres, pc_bfree, pc_ffree);
-			rptstatus = FALSE;						/* mute until state change */
-		}
-
-		if(!lowres)
 			continue;
+		}
 
 		/* low resources, remove oldest file */
 
@@ -148,11 +141,12 @@ void   *dfsthread(void *arg)
 			/* no matches, or matches below the retention count */
 			/* recompute the monitor rate */
 			interval = itimer((int)pc_bfree, (int)pc_ffree, SCANRATE);
-		} else {
-			/* match */
-			rmfile(ti, dinfo.di_file, "remove");
-			interval = 0;							/* 1 sec is too slow for inodes */
+			continue;
 		}
+
+		/* match */
+
+		rmfile(ti, dinfo.di_file, "remove");
 	}
 
 	/* notreached */
