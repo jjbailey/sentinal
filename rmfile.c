@@ -10,15 +10,17 @@
  */
 
 #include <stdio.h>
+#include <errno.h>
 #include "sentinal.h"
 
 short rmfile(struct thread_info *ti, char *obj, char *remark)
 {
 	extern short dryrun;
+	extern int errno;
 
 	if(!dryrun)
 		if(remove(obj) != 0)
-			return (FALSE);
+			return (errno == ENOENT);
 
 	if(!ti->ti_terse)
 		fprintf(stderr, "%s: %s %s\n", ti->ti_section, remark, obj);
