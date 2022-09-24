@@ -15,16 +15,15 @@
 short rmfile(struct thread_info *ti, char *obj, char *remark)
 {
 	extern short dryrun;
-	int     rc = 0;
 
 	if(!dryrun)
-		if((rc = remove(obj)) != 0)
+		if(remove(obj) != 0)
 			return (FALSE);
 
-	if(!ti->ti_terse && rc == 0)
+	if(!ti->ti_terse)
 		fprintf(stderr, "%s: %s %s\n", ti->ti_section, remark, obj);
 
-	return (rc == 0);
+	return (TRUE);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
