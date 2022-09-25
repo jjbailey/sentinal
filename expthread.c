@@ -65,7 +65,7 @@ void   *expthread(void *arg)
 
 		/* search for expired files */
 
-		dinfo.di_matches = findfile(ti, TRUE, ti->ti_dirname, &dinfo);
+		findfile(ti, TRUE, ti->ti_dirname, &dinfo);
 
 		if(dinfo.di_matches < 1 || (ti->ti_retmin && dinfo.di_matches <= ti->ti_retmin)) {
 			/* no matches, or matches below the retention count */

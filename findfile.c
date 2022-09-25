@@ -22,7 +22,7 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
+short findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 {
 	DIR    *dirp;
 	char    filename[PATH_MAX];
