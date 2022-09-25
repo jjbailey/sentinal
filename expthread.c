@@ -17,7 +17,7 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-#define	SCANRATE		(ONE_MINUTE * 3)			/* default, considers large filesys */
+#define	SCANRATE		(ONE_MINUTE * 10)			/* default, considers large filesys */
 #define	DRYSCAN			5							/* scanrate for dryrun */
 
 void   *expthread(void *arg)
