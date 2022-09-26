@@ -103,13 +103,13 @@ short findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 				expbysize = !ti->ti_expiresiz || stbuf.st_size > ti->ti_expiresiz;
 				expbytime = stbuf.st_mtim.tv_sec + ti->ti_expire < curtime;
 
-				if(expbysize && expbytime) {
-					if(rmfile(ti, filename, "expire"))
+				if(expbysize && expbytime)
+					if(rmfile(ti, filename, "expire")) {
 						if(direntries)
 							direntries--;
 
-					continue;						/* continue searching */
-				}
+						continue;					/* continue searching */
+					}
 			}
 		}
 
