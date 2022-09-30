@@ -22,7 +22,7 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
+short findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 {
 	DIR    *dirp;
 	char    filename[PATH_MAX];
@@ -53,7 +53,7 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 		if(MY_DIR(dp->d_name) || MY_PARENT(dp->d_name))
 			continue;
 
-		fullpath(dir, dp->d_name, filename);
+		snprintf(filename, PATH_MAX, "%s/%s", dir, dp->d_name);
 		direntries++;
 
 		if(lstat(filename, &stbuf) == -1)
@@ -103,13 +103,13 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 				expbysize = !ti->ti_expiresiz || stbuf.st_size > ti->ti_expiresiz;
 				expbytime = stbuf.st_mtim.tv_sec + ti->ti_expire < curtime;
 
-				if(expbysize && expbytime) {
-					if(rmfile(ti, filename, "expire"))
+				if(expbysize && expbytime)
+					if(rmfile(ti, filename, "expire")) {
 						if(direntries)
 							direntries--;
 
-					continue;						/* continue searching */
-				}
+						continue;					/* continue searching */
+					}
 			}
 		}
 
@@ -131,9 +131,6 @@ long findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
 
 	if(!top)
 		if(direntries == 0 && ti->ti_rmdir) {		/* ok to remove empty dir */
-			if(!expthrflag)							/* avoid dfs/exp race */
-				usleep((useconds_t) 100000);
-
 			if(rmfile(ti, dir, "rmdir"))
 				return (EOF);
 		}

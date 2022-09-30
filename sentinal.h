@@ -8,7 +8,7 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"1.5.6"
+#define	VERSION_STRING	"1.5.7"
 
 #ifndef _SYS_TYPES_H
 # include <sys/types.h>
@@ -140,11 +140,11 @@ int     logretention(char *);
 int     postcmd(struct thread_info *, char *);
 int     threadcheck(struct thread_info *, char *);
 int     workcmd(int, char **, char **);
-long    findfile(struct thread_info *, short, char *, struct dir_info *);
 off_t   logsize(char *);
-short   rmfile(struct thread_info *, char *, char *);
+short   findfile(struct thread_info *, short, char *, struct dir_info *);
 short   mylogfile(struct thread_info *, char *);
 short   pcrecompile(struct thread_info *);
+short   rmfile(struct thread_info *, char *, char *);
 size_t  strlcat(char *, const char *, size_t);
 size_t  strlcpy(char *, const char *, size_t);
 uid_t   verifyuid(char *);

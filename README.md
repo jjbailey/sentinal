@@ -290,7 +290,7 @@ sentinal runs as a systemd service.  The following is an example of a unit file:
     [Install]
     WantedBy=multi-user.target
 
-### User/Group ID notes:
+### User/Group ID Notes:
 
  - User/Group ID applies only to `command` and `postcmd`; otherwise, sentinal runs
 as the calling user.
