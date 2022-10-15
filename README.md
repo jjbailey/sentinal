@@ -23,11 +23,16 @@ and the conditions for managing the resource.
 
 ### INI File Description
 
-An INI file must contain a section called `global` for the pidfile definition,
-and up to 16 resources sections with unique names up to 11 characters in length.
+An INI file must contain a section called `global`.  This section must include
+a pidfile definition and an optional sqlite3 database definition.  The database
+name can be `:memory:`, or a pathname of a disk file.
+
+Section names can be up to 11 characters in length (kernel max), and the
+characters must be alpha-numeric or underscore (valid sqlite3 table name).
 
     [global]
     pidfile:   sentinal process id and lock file, for manual logrotate
+    database:  name of the sqlite3 database
 
     [section]
     command:   command to run
@@ -115,6 +120,7 @@ and to retain at least 3 logs and at most 50 logs:
 
     [global]
     pidfile   = /run/diskfree.pid
+    database  = :memory:
 
     [console]
     dirname   = /opt/sentinal/log
@@ -127,11 +133,12 @@ This INI configuration removes gzipped files in /var/log and its subdirectories 
 
     [global]
     pidfile   = /run/varlog.pid
+    database  = :memory:
 
     [zipped]
     dirname   = /var/log
     subdirs   = true
-    pcrestr   = .*\.gz
+    pcrestr   = \.gz
     expire    = 2w
 
 ### Inode Usage Example
@@ -141,6 +148,7 @@ or when the files are older than 7 days, or when there are more than 5M files:
 
     [global]
     pidfile   = /run/inode-usage.pid
+    database  = :memory:
 
     [files]
     dirname   = /path/to/appfiles
@@ -157,6 +165,7 @@ space or the number of logs exceeds 21:
 
     [global]
     pidfile   = /run/myapplog.pid
+    database  = :memory:
 
     [myapp]
     dirname   = /var/log/myapp
@@ -173,17 +182,18 @@ logging the removals.
 
     [global]
     pidfile   = /run/sandbox.pid
+    database  = :memory:
 
     [sandbox2M]
     dirname   = /sandbox
     subdirs   = true
-    pcrestr   = .*\.(bz2|gz|lz|zip|zst)
+    pcrestr   = \.(bz2|gz|lz|zip|zst)
     expire    = 2M
 
     [sandbox1M]
     dirname   = /sandbox
     subdirs   = true
-    pcrestr   = .*\.(bz2|gz|lz|zip|zst)
+    pcrestr   = \.(bz2|gz|lz|zip|zst)
     rotatesiz = 10G
     expiresiz = 10G
     expire    = 1M
@@ -199,6 +209,7 @@ In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 5
 
     [global]
     pidfile   = /run/chattyapp.pid
+    database  = :memory:
 
     [chattyapp]
     dirname   = /var/log
@@ -212,6 +223,7 @@ This example is the same as above, adding a 20% diskfree check for logs processe
 
     [global]
     pidfile   = /run/chattyapp.pid
+    database  = :memory:
 
     [chattyapp]
     dirname   = /var/log

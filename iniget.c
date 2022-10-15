@@ -23,12 +23,17 @@
 #endif
 
 #ifndef	NOT_NULL
-# define	NOT_NULL(s) ((s) && *(s))
+# define	NOT_NULL(s)	((s) && *(s))
 #endif
 
-static short dup_section(int, char *, char **);
+#ifndef	STREQ
+# define	STREQ(s1,s2) (strcmp(s1, s2) == 0)
+#endif
 
-char   *NullStr = "";								/* empty string for strdup, etc */
+static short duplicate(int, char *, char **);
+short   validdbname(char *);
+
+char   *EmptyStr = "";								/* empty string for strdup, etc */
 
 char   *my_ini(ini_t *ini, char *section, char *key)
 {
@@ -36,7 +41,7 @@ char   *my_ini(ini_t *ini, char *section, char *key)
 	char   *sp;
 
 	if((p = ini_get(ini, section, key)) == NULL)
-		return (NullStr);
+		return (EmptyStr);
 
 	/* remove trailing slash */
 
@@ -63,10 +68,13 @@ int get_sections(ini_t *inidata, int maxsect, char *sections[])
 			if(strchr(p, ']'))						/* parser bug: not a real section name */
 				continue;
 
-			if(strcmp(p + 1, "global") == 0)		/* global is not a thread */
+			if(STREQ(p + 1, "global"))				/* global is not a thread */
 				continue;
 
-			if(dup_section(i, p + 1, sections))
+			if(duplicate(i, p + 1, sections))
+				continue;
+
+			if(validdbname(p + 1) == FALSE)
 				continue;
 
 			sections[i++] = strdup(p + 1);
@@ -78,23 +86,29 @@ int get_sections(ini_t *inidata, int maxsect, char *sections[])
 	return (i);
 }
 
-short dup_section(int nsect, char *s, char *sections[])
+static short duplicate(int nsect, char *s, char *sections[])
 {
 	int     i;
 
 	for(i = 0; i < nsect; i++)
-		if(strcmp(s, sections[i]) == 0)
+		if(STREQ(s, sections[i]))
 			return (TRUE);
 
 	return (FALSE);
+}
+
+void print_global(ini_t *inidata, char *inifile)
+{
+	fprintf(stdout, "# %s\n\n", inifile);
+	fprintf(stdout, "[global]\n");
+	fprintf(stdout, "pidfile   = %s\n", my_ini(inidata, "global", "pidfile"));
+	fprintf(stdout, "database  = %s\n", my_ini(inidata, "global", "database"));
 }
 
 void print_section(ini_t *inidata, char *section)
 {
 	/* dumps an INI section */
 	/* debugging only */
-
-	char   *p;										/* loglimit deprecated in v1.5.0 */
 
 	fprintf(stdout, "\n[%s]\n", section);
 	fprintf(stdout, "command   = %s\n", my_ini(inidata, section, "command"));
@@ -106,13 +120,6 @@ void print_section(ini_t *inidata, char *section)
 	fprintf(stdout, "pcrestr   = %s\n", my_ini(inidata, section, "pcrestr"));
 	fprintf(stdout, "uid       = %s\n", my_ini(inidata, section, "uid"));
 	fprintf(stdout, "gid       = %s\n", my_ini(inidata, section, "gid"));
-
-	/* loglimit deprecated in v1.5.0 */
-
-	if(p = my_ini(inidata, section, "loglimit"))
-		if(NOT_NULL(p))
-			fprintf(stdout, "#loglimit = %s\n", p);
-
 	fprintf(stdout, "rotatesiz = %s\n", my_ini(inidata, section, "rotatesiz"));
 	fprintf(stdout, "expiresiz = %s\n", my_ini(inidata, section, "expiresiz"));
 	fprintf(stdout, "diskfree  = %s\n", my_ini(inidata, section, "diskfree"));

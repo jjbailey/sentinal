@@ -20,7 +20,7 @@ short pcrematch(struct thread_info *ti, char *s)
 	pcre2_match_data *mdata;
 	uint32_t options = 0;
 
-	/* mostly copied from mylogfile.c */
+	/* mostly copied from namematch.c */
 
 	if(IS_NULL(s) || ti->ti_pcrecmp == NULL)
 		return (FALSE);

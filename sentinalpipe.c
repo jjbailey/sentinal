@@ -126,7 +126,6 @@ int main(int argc, char *argv[])
 		sleep(ONE_MINUTE);
 	}
 
-	/* notreached */
 	exit(EXIT_SUCCESS);
 }
 
@@ -178,10 +177,6 @@ static void sigcatch(int sig)
 	 */
 
 	signal(sig, sigcatch);
-
-#if 0
-	fprintf(stderr, "sigcatch caught signal %d\n", sig);
-#endif
 
 	if(sig == SIGHUP || sig == SIGTERM) {			/* systemd reload/restart */
 		signal(sig, SIG_IGN);

@@ -8,7 +8,7 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"1.5.7"
+#define	VERSION_STRING	"2.0.0"
 
 #ifndef _SYS_TYPES_H
 # include <sys/types.h>
@@ -16,6 +16,10 @@
 
 #ifndef _PTHREAD_H
 # include <pthread.h>
+#endif
+
+#ifndef SQLITE3_H
+# include <sqlite3.h>
 #endif
 
 #ifndef PCRE2_H_IDEMPOTENT_GUARD
@@ -31,7 +35,7 @@
 #define	MAXFILES	128								/* max open files */
 
 #ifndef PATH_MAX
-# define	PATH_MAX	256
+# define	PATH_MAX	255
 #endif
 
 #ifndef	TASK_COMM_LEN
@@ -54,8 +58,8 @@
 
 #define	FIFOSIZ		(64L * ONE_MiB)					/* tunable, just a guess */
 
-#define NOT_NULL(s)	((s) && *(s))
-#define IS_NULL(s)	!((s) && *(s))
+#define	NOT_NULL(s)	((s) && *(s))
+#define	IS_NULL(s)	!((s) && *(s))
 
 /* alternative to often-used strcmp() */
 
@@ -78,9 +82,9 @@
 
 /* execution environment */
 
-#define	ENV		"/usr/bin/env"
-#define	BASH	"/bin/bash"
-#define	PATH	"/usr/bin:/usr/sbin:/bin"
+#define	ENV			"/usr/bin/env"
+#define	BASH		"/bin/bash"
+#define	PATH		"/usr/bin:/usr/sbin:/bin"
 
 struct thread_info {
 	pthread_t dfs_tid;								/* dfs thread id */
@@ -107,7 +111,6 @@ struct thread_info {
 	gid_t   ti_gid;									/* thread gid */
 	int     ti_wfd;									/* worker stdin or EOF */
 	int     ti_sig;									/* signal number received */
-	off_t   ti_loglimit;							/* deprecated in v1.5.0 */
 	off_t   ti_rotatesiz;							/* logfile rotate size */
 	off_t   ti_expiresiz;							/* logfile expire size */
 	long double ti_diskfree;						/* desired percent blocks free */
@@ -122,14 +125,6 @@ struct thread_info {
 	short   ti_truncate;							/* truncate slm-managed files */
 };
 
-struct dir_info {
-	char    di_file[PATH_MAX];						/* oldest file in directory */
-	time_t  di_time;								/* oldest file modification time */
-	off_t   di_size;								/* oldest file size */
-	long    di_matches;								/* matching files */
-	long double di_bytes;							/* total size of files found */
-};
-
 char   *convexpire(int, char *);
 char   *findmnt(char *, char *);
 char   *fullpath(char *, char *, char *);
@@ -140,11 +135,12 @@ int     logretention(char *);
 int     postcmd(struct thread_info *, char *);
 int     threadcheck(struct thread_info *, char *);
 int     workcmd(int, char **, char **);
+long    findfile(struct thread_info *, short, uint32_t *, char *, sqlite3 *);
 off_t   logsize(char *);
-short   findfile(struct thread_info *, short, char *, struct dir_info *);
-short   mylogfile(struct thread_info *, char *);
+short   namematch(struct thread_info *, char *);
 short   pcrecompile(struct thread_info *);
 short   rmfile(struct thread_info *, char *, char *);
+short   validdbname(char *);
 size_t  strlcat(char *, const char *, size_t);
 size_t  strlcpy(char *, const char *, size_t);
 uid_t   verifyuid(char *);
@@ -156,5 +152,20 @@ void   *dfsthread(void *);
 void   *expthread(void *);
 void   *slmthread(void *);
 void   *workthread(void *);
+
+/* sqlite */
+
+#define	SQLMEMDB	":memory:"						/* pure in-memory database */
+#define	SQLTMPDB	":temp:"						/* temp database, for ini documentation */
+
+int     create_index(struct thread_info *, sqlite3 *);
+int     create_table(struct thread_info *, sqlite3 *);
+int     disable_journal(struct thread_info *, sqlite3 *);
+int     drop_table(struct thread_info *, sqlite3 *);
+int     sync_commit(struct thread_info *, sqlite3 *);
+long    count_dirs(struct thread_info *, sqlite3 *);
+long    count_files(struct thread_info *, sqlite3 *);
+short   sqlexec(struct thread_info *, sqlite3 *, char *, char *, ...);
+void    process_dirs(struct thread_info *, sqlite3 *);
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

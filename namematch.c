@@ -1,5 +1,5 @@
 /*
- * mylogfile.c
+ * namematch.c
  * Return TRUE if this is a file we're watching.
  *
  * Copyright (c) 2021, 2022 jjb
@@ -13,7 +13,7 @@
 #include <string.h>
 #include "sentinal.h"
 
-short mylogfile(struct thread_info *ti, char *f)
+short namematch(struct thread_info *ti, char *f)
 {
 	int     rc;
 	pcre2_match_data *mdata;

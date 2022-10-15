@@ -1,6 +1,6 @@
 /*
  * dfsthread.c
- * Filesystem monitor thread.
+ * Filesystem monitor thread.  Remove files to create the desired free space.
  *
  * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
@@ -16,33 +16,39 @@
 #include <sys/statvfs.h>
 #include <math.h>
 #include <pthread.h>
+#include <sqlite3.h>
 #include <string.h>
 #include <unistd.h>
 #include "sentinal.h"
 
 #define	FLOORF(v)		floorf(v * 100.0) / 100.0
 #define	PERCENT(x,y)	FLOORF(((long double)x / (long double)y) * 100.0)
-#define	SCANRATE		10							/* minimum (fastest) monitor rate */
 
-#define	MINIMUM(a,b)	(a < b ? a : b)
-#define	MAXIMUM(a,b)	(a > b ? a : b)
+#define	SCANRATE        (ONE_MINUTE)
+#define	DRYSCAN         30							/* scanrate for dryrun */
 
 #define	LOW_RES(target,avail)	(target && avail < target)
 
-static int itimer(int, int, int);
-static void resourcestat(struct thread_info *, short, long double, long double);
+static char *sql_selectfiles = "SELECT db_dir, db_file\n \
+	FROM  %s_dir, %s_file\n \
+	WHERE db_dirid = db_id\n \
+	ORDER BY db_time;";
+
+static char mountdir[PATH_MAX];						/* mount point */
+
+static void process_files(struct thread_info *, sqlite3 *);
+static void resreport(struct thread_info *, short, long double, long double);
 
 void   *dfsthread(void *arg)
 {
-	char    mountdir[PATH_MAX];
-	extern short dryrun;
-	int     interval;
-	long double pc_bfree = 0;
-	long double pc_ffree = 0;
-	short   lowres = FALSE;
-	struct dir_info dinfo;
-	struct statvfs svbuf;
+	extern short dryrun;							/* dry run bool */
+	extern sqlite3 *db;								/* db handle */
+	long double pc_bfree = 0;						/* blocks free */
+	long double pc_ffree = 0;						/* files free */
+	short   lowres = FALSE;							/* low resources bool */
+	struct statvfs svbuf;							/* filesystem status */
 	struct thread_info *ti = arg;
+	uint32_t nextid = 1;							/* db_id, db_dirid */
 
 	/*
 	 * this thread requires:
@@ -95,18 +101,15 @@ void   *dfsthread(void *arg)
 		return ((void *)0);
 	}
 
-	/* initial report */
+	/* monitor filesystem usage */
+	/* force an initial report */
 
-	resourcestat(ti, FALSE, pc_bfree, pc_ffree);
-
-	interval = dryrun ? 1 : SCANRATE >> 2;			/* faster initial start */
+	lowres = !(LOW_RES(ti->ti_diskfree, pc_bfree) || LOW_RES(ti->ti_inofree, pc_ffree));
 
 	for(;;) {
-		sleep(interval);							/* filesystem monitor rate */
-
 		if(statvfs(mountdir, &svbuf) == -1) {
 			fprintf(stderr, "%s: statvfs failed: %s\n", ti->ti_section, mountdir);
-			break;
+			return ((void *)0);
 		}
 
 		if(ti->ti_diskfree)
@@ -118,58 +121,41 @@ void   *dfsthread(void *arg)
 		if(LOW_RES(ti->ti_diskfree, pc_bfree) || LOW_RES(ti->ti_inofree, pc_ffree)) {
 			/* low resources */
 
-			if(!lowres) {
-				resourcestat(ti, lowres = TRUE, pc_bfree, pc_ffree);
-				interval = 0;
-			}
+			if(!lowres)
+				resreport(ti, lowres = TRUE, pc_bfree, pc_ffree);
 		} else {
 			/* desired state */
 
-			if(lowres) {
-				resourcestat(ti, lowres = FALSE, pc_bfree, pc_ffree);
-				interval = itimer((int)pc_bfree, (int)pc_ffree, SCANRATE);
-			}
-
-			continue;
+			if(lowres)
+				resreport(ti, lowres = FALSE, pc_bfree, pc_ffree);
 		}
 
-		/* low resources, remove oldest file */
+		sleep(dryrun ? DRYSCAN : SCANRATE);
 
-		findfile(ti, TRUE, ti->ti_dirname, &dinfo);
-
-		if(dinfo.di_matches < 1 || (ti->ti_retmin && dinfo.di_matches <= ti->ti_retmin)) {
-			/* no matches, or matches below the retention count */
-			sleep(itimer((int)pc_bfree, (int)pc_ffree, SCANRATE));
+		if(!lowres)
 			continue;
-		}
 
-		/* match */
+		/* low resources, find files in dirname */
 
-		rmfile(ti, dinfo.di_file, "remove");
+		if(findfile(ti, TRUE, &nextid, ti->ti_dirname, db) == 0)
+			continue;
+
+		/* process directories emptied by previous run */
+
+		if(ti->ti_rmdir)
+			process_dirs(ti, db);
+
+		/* process files matching criterion */
+
+		process_files(ti, db);
 	}
 
 	/* notreached */
 	return ((void *)0);
 }
 
-static int itimer(int a, int b, int c)
-{
-	/*
-	 * return the lesser of a, b, but no less than c
-	 * neither a nor b can be 0
-	 */
-
-	if(a && !b)
-		b = a;
-
-	else if(!a && b)
-		a = b;
-
-	return (MAXIMUM(MINIMUM(a, b), c));
-}
-
-static void resourcestat(struct thread_info *ti, short lowres,
-						 long double blk, long double ino)
+static void resreport(struct thread_info *ti, short lowres,
+					  long double blk, long double ino)
 {
 	if(lowres == FALSE) {							/* initial/recovery report */
 		if(ti->ti_diskfree)
@@ -188,6 +174,67 @@ static void resourcestat(struct thread_info *ti, short lowres,
 			fprintf(stderr, "%s: low free inodes %s: %.2Lf%% < %.2Lf%%\n",
 					ti->ti_section, ti->ti_dirname, ino, ti->ti_inofree);
 	}
+}
+
+static void process_files(struct thread_info *ti, sqlite3 *db)
+{
+	char    filename[PATH_MAX];						/* full pathname */
+	char    stmt[BUFSIZ];							/* statement buffer */
+	char   *db_dir;
+	char   *db_file;
+	extern short dryrun;							/* dry run bool */
+	long    filecount;								/* matching files */
+	long double pc_bfree = 0;						/* blocks free */
+	long double pc_ffree = 0;						/* files free */
+	sqlite3_stmt *pstmt;							/* prepared statement */
+	struct statvfs svbuf;							/* filesystem status */
+
+	/* count all files */
+
+	if((filecount = count_files(ti, db)) < 1)
+		return;
+
+	/* process all files */
+
+	snprintf(stmt, BUFSIZ, sql_selectfiles, ti->ti_task, ti->ti_task);
+	sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
+
+	for(;;) {
+		if(ti->ti_retmin && filecount <= ti->ti_retmin)
+			break;
+
+		if(sqlite3_step(pstmt) != SQLITE_ROW)
+			break;
+
+		db_dir = (char *)sqlite3_column_text(pstmt, 0);
+		db_file = (char *)sqlite3_column_text(pstmt, 1);
+
+		/* assemble filename: ti_dirname + / + db_dir + / + db_file */
+
+		if(IS_NULL(db_dir))
+			snprintf(filename, PATH_MAX, "%s/%s", ti->ti_dirname, db_file);
+		else
+			snprintf(filename, PATH_MAX, "%s/%s/%s", ti->ti_dirname, db_dir, db_file);
+
+		if(rmfile(ti, filename, "remove"))
+			filecount--;
+
+		if(statvfs(mountdir, &svbuf) == -1) {
+			fprintf(stderr, "%s: statvfs failed: %s\n", ti->ti_section, mountdir);
+			break;
+		}
+
+		if(ti->ti_diskfree)
+			pc_bfree = PERCENT(svbuf.f_bavail, svbuf.f_blocks);
+
+		if(ti->ti_inofree)
+			pc_ffree = PERCENT(svbuf.f_favail, svbuf.f_files);
+
+		if(!(LOW_RES(ti->ti_diskfree, pc_bfree) || LOW_RES(ti->ti_inofree, pc_ffree)))
+			break;
+	}
+
+	sqlite3_finalize(pstmt);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

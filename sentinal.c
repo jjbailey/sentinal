@@ -42,29 +42,30 @@ static short setiniflag(ini_t *, char *, char *);
 static void dump_thread_info(struct thread_info *);
 static void help(char *);
 
-/* external for signal handling */
-struct thread_info tinfo[MAXSECT];
-
-/* external dry run flag */
+/* externals */
 short   dryrun;
-
-/* external for token expansion */
+sqlite3 *db;
+struct thread_info tinfo[MAXSECT];
 struct utsname utsbuf;
 
 /* iniget.c functions */
 char   *my_ini(ini_t *, char *, char *);
 int     get_sections(ini_t *, int, char **);
+void    print_global(ini_t *, char *);
 void    print_section(ini_t *, char *);
 
 int main(int argc, char *argv[])
 {
 	DIR    *dirp;
-	char    inifile[PATH_MAX];
+	char    database[PATH_MAX];
+	char    inifile[PATH_MAX], rpinifile[PATH_MAX];
 	char    rbuf[PATH_MAX];
 	char    tbuf[PATH_MAX];
+	char   *p;
 	char   *pidfile;
 	char   *sections[MAXSECT];
 	ini_t  *inidata;
+	int     dbflags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX;
 	int     i;
 	int     nsect;
 	int     opt;
@@ -89,6 +90,7 @@ int main(int argc, char *argv[])
 
 		case 'f':									/* INI file name */
 			strlcpy(inifile, optarg, PATH_MAX);
+			realpath(inifile, rpinifile);
 			break;
 
 		case 'D':									/* dry run mode */
@@ -129,6 +131,8 @@ int main(int argc, char *argv[])
 	uname(&utsbuf);									/* for debug/token expansion */
 
 	if(debug) {
+		print_global(inidata, rpinifile);
+
 		for(i = 0; i < nsect; i++)
 			print_section(inidata, sections[i]);
 
@@ -137,7 +141,6 @@ int main(int argc, char *argv[])
 
 	/* INI global settings */
 
-	/* only global setting supported */
 	pidfile = strdup(my_ini(inidata, "global", "pidfile"));
 
 	if(IS_NULL(pidfile) || *pidfile != '/') {
@@ -145,12 +148,29 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	p = my_ini(inidata, "global", "database");		/* optional */
+
+	/* bug? centos7, sqlite3 3.7.17, temp db runs disk out of space */
+
+	if(IS_NULL(p) || strcmp(p, SQLTMPDB) == 0 || strcmp(p, SQLMEMDB) == 0)
+		strlcpy(database, SQLMEMDB, PATH_MAX);
+	else
+		strlcpy(database, p, PATH_MAX);				/* verbatim */
+
 	/* INI thread settings */
+
+	if(verbose) {
+		fprintf(stdout, "# %s\n\n", realpath(inifile, rbuf));
+		fprintf(stdout, "[global]\n");
+		fprintf(stdout, "pidfile   = %s\n", pidfile);
+		fprintf(stdout, "database  = %s\n", database);
+	}
 
 	for(i = 0; i < nsect; i++) {
 		ti = &tinfo[i];								/* shorthand */
 
 		ti->ti_section = sections[i];
+
 		ti->ti_command = strdup(my_ini(inidata, ti->ti_section, "command"));
 		ti->ti_argc = parsecmd(ti->ti_command, ti->ti_argv);
 
@@ -252,7 +272,6 @@ int main(int argc, char *argv[])
 		ti->ti_uid = verifyuid(my_ini(inidata, ti->ti_section, "uid"));
 		ti->ti_gid = verifygid(my_ini(inidata, ti->ti_section, "gid"));
 		ti->ti_dirlimit = logsize(my_ini(inidata, ti->ti_section, "dirlimit"));
-		ti->ti_loglimit = logsize(my_ini(inidata, ti->ti_section, "loglimit"));
 		ti->ti_rotatesiz = logsize(my_ini(inidata, ti->ti_section, "rotatesiz"));
 		ti->ti_expiresiz = logsize(my_ini(inidata, ti->ti_section, "expiresiz"));
 		ti->ti_diskfree = fabs(atof(my_ini(inidata, ti->ti_section, "diskfree")));
@@ -263,31 +282,6 @@ int main(int argc, char *argv[])
 		ti->ti_postcmd = malloc(BUFSIZ);
 		memset(ti->ti_postcmd, '\0', BUFSIZ);
 		strlcpy(ti->ti_postcmd, my_ini(inidata, ti->ti_section, "postcmd"), BUFSIZ);
-
-		/*
-		 * loglimit deprecated in v1.5.0
-		 * if rotatesiz and expiresiz are unset, set them to loglimit
-		 */
-
-		/* for slm */
-
-		if(!ti->ti_rotatesiz)
-			if(ti->ti_loglimit && IS_NULL(ti->ti_command) &&
-			   NOT_NULL(ti->ti_template) && NOT_NULL(ti->ti_postcmd))
-				ti->ti_rotatesiz = ti->ti_loglimit;
-
-		/* for wrk */
-
-		if(!ti->ti_rotatesiz)
-			if(ti->ti_loglimit && NOT_NULL(ti->ti_command) &&
-			   NOT_NULL(ti->ti_pipename) && NOT_NULL(ti->ti_template))
-				ti->ti_rotatesiz = ti->ti_loglimit;
-
-		/* for exp */
-
-		if(!ti->ti_expiresiz)
-			if(ti->ti_loglimit && ti->ti_expire)
-				ti->ti_expiresiz = ti->ti_loglimit;
 
 		if(verbose) {
 			dump_thread_info(ti);
@@ -310,10 +304,21 @@ int main(int argc, char *argv[])
 
 	/* version banner */
 
-	if(dryrun)
-		fprintf(stderr, "%s: version %s (DRY RUN)\n", base(argv[0]), VERSION_STRING);
-	else
-		fprintf(stderr, "%s: version %s\n", base(argv[0]), VERSION_STRING);
+	fprintf(stderr, "%s: version %s %s\n", base(argv[0]), VERSION_STRING,
+			dryrun ? "(DRY RUN)" : "");
+
+	/* create the database -- no point in keeping the old one */
+
+	if(strcmp(database, SQLMEMDB) != 0)
+		remove(database);
+
+	if(sqlite3_open_v2(database, &db, dbflags, NULL) != SQLITE_OK) {
+		fprintf(stderr, "%s: sqlite3_open_v2 failed\n", ti->ti_section);
+		exit(EXIT_FAILURE);
+	}
+
+	if(strcmp(database, SQLMEMDB) != 0)
+		chmod(database, 0600);
 
 	for(i = 0; i < nsect; i++) {
 		ti = &tinfo[i];								/* shorthand */
@@ -452,11 +457,6 @@ static void dump_thread_info(struct thread_info *ti)
 	fprintf(stdout, "pcrestr   = %s\n", ti->ti_pcrestr);
 	fprintf(stdout, "uid       = %d\n", ti->ti_uid);
 	fprintf(stdout, "gid       = %d\n", ti->ti_gid);
-
-	/* loglimit deprecated in v1.5.0 */
-
-	if(ti->ti_loglimit)
-		fprintf(stdout, "#loglimit = %ldMiB\n", MiB(ti->ti_loglimit));
 
 	fprintf(stdout, "rotatesiz = %ldMiB\n", MiB(ti->ti_rotatesiz));
 	fprintf(stdout, "expiresiz = %ldMiB\n", MiB(ti->ti_expiresiz));
