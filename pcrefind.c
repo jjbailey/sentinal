@@ -18,7 +18,7 @@
 #include "sentinal.h"
 #include "basename.h"
 
-short   pcrefind(struct thread_info *, short, char *);
+uint32_t pcrefind(struct thread_info *, short, char *);
 short   pcrematch(struct thread_info *, char *);
 
 int main(int argc, char *argv[])
@@ -58,13 +58,13 @@ int main(int argc, char *argv[])
 	exit(EXIT_SUCCESS);
 }
 
-short pcrefind(struct thread_info *ti, short top, char *dir)
+uint32_t pcrefind(struct thread_info *ti, short top, char *dir)
 {
 	DIR    *dirp;
-	char    filename[PATH_MAX];
-	long    matches;
+	char    filename[PATH_MAX];						/* full pathname */
 	struct dirent *dp;
-	struct stat stbuf;
+	struct stat stbuf;								/* file status */
+	uint32_t entries = 0;							/* file entries */
 
 	if(top) {										/* reset */
 		if(stat(dir, &stbuf) == -1) {
@@ -73,21 +73,20 @@ short pcrefind(struct thread_info *ti, short top, char *dir)
 		}
 
 		ti->ti_dev = stbuf.st_dev;					/* save mountpoint device */
-		matches = 0;
 	}
 
 	/* test the directory itself */
 
 	if(pcrematch(ti, dir)) {
 		fprintf(stdout, "%s\n", dir);
-		matches++;
+		entries++;
 	}
 
 	if((dirp = opendir(dir)) == NULL) {
 		if(errno == EACCES)
 			perror(dir);
 
-		return (matches);
+		return (entries);
 	}
 
 	/* test the files */
@@ -108,22 +107,18 @@ short pcrefind(struct thread_info *ti, short top, char *dir)
 			continue;
 
 		if(S_ISDIR(stbuf.st_mode) && ti->ti_subdirs) {
-			/* search subdirectory */
-
-			if(stbuf.st_dev != ti->ti_dev)			/* don't cross filesystems */
-				continue;
-
-			matches += pcrefind(ti, FALSE, filename);
-		}
-
-		if(pcrematch(ti, filename)) {
-			fprintf(stdout, "%s\n", filename);
-			matches++;
+			if(ti->ti_subdirs && stbuf.st_dev == ti->ti_dev)
+				entries += pcrefind(ti, FALSE, filename);
+		} else {
+			if(pcrematch(ti, filename)) {
+				fprintf(stdout, "%s\n", filename);
+				entries++;
+			}
 		}
 	}
 
 	closedir(dirp);
-	return (matches);
+	return (entries);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
