@@ -104,13 +104,13 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	char   *db_file;
 	char   *reason;
 	extern short dryrun;							/* dry run bool */
-	long    db_size;
-	long    filecount;								/* matching files */
 	short   expbysize;								/* consider expire size */
 	short   expbytime;								/* consider expire time */
 	sqlite3_stmt *pstmt;							/* prepared statement */
 	struct stat stbuf;								/* file status */
 	time_t  curtime;
+	uint32_t db_size;
+	uint32_t filecount;								/* matching files */
 	unsigned long long dirbytes;					/* dirsize in bytes */
 
 	/* count all files */
@@ -142,7 +142,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 
 		db_dir = (char *)sqlite3_column_text(pstmt, 0);
 		db_file = (char *)sqlite3_column_text(pstmt, 1);
-		db_size = (long)sqlite3_column_int(pstmt, 3);
+		db_size = (uint32_t) sqlite3_column_int(pstmt, 3);
 
 		/* assemble filename: ti_dirname + / + db_dir + / + db_file */
 

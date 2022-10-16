@@ -19,8 +19,8 @@
 
 short sqlexec(struct thread_info *ti, sqlite3 *db, char *desc, char *format, ...)
 {
-	char    stmt[BUFSIZ];
-	int     tries;
+	char    stmt[BUFSIZ];							/* statement buffer */
+	int     tries;									/* lock retries */
 	va_list ap;
 
 	va_start(ap, format);
@@ -68,14 +68,14 @@ int create_table(struct thread_info *ti, sqlite3 *db)
 	/* VARCHAR -- see sqlite3 faq #9 */
 
 	char   *sql_dir = "CREATE TABLE IF NOT EXISTS %s_dir (\n \
-		db_id     MEDIUMINT NOT NULL,\n \
+		db_id     INT NOT NULL,\n \
 		db_dir    VARCHAR(255) NOT NULL,\n \
 		db_empty  BOOLEAN NOT NULL);";
 
 	char   *sql_file = "CREATE TABLE IF NOT EXISTS %s_file (\n \
-		db_dirid  MEDIUMINT NOT NULL,\n \
+		db_dirid  INT NOT NULL,\n \
 		db_file   VARCHAR(255) NOT NULL,\n \
-		db_time   MEDIUMINT NOT NULL,\n \
+		db_time   INT NOT NULL,\n \
 		db_size   UNSIGNED BIG INT NOT NULL);";
 
 	if(sqlexec(ti, db, "create table", sql_dir, ti->ti_task) == FALSE)
@@ -123,11 +123,11 @@ int sync_commit(struct thread_info *ti, sqlite3 *db)
 	return (TRUE);
 }
 
-long count_dirs(struct thread_info *ti, sqlite3 *db)
+uint32_t count_dirs(struct thread_info *ti, sqlite3 *db)
 {
-	char    stmt[BUFSIZ];
-	long    dircount;
-	sqlite3_stmt *pstmt;
+	char    stmt[BUFSIZ];							/* statement buffer */
+	sqlite3_stmt *pstmt;							/* prepared statement */
+	uint32_t dircount;
 
 	char   *sql_dircount = "SELECT COUNT(*)\n \
 		FROM  %s_dir\n \
@@ -136,16 +136,16 @@ long count_dirs(struct thread_info *ti, sqlite3 *db)
 	snprintf(stmt, BUFSIZ, sql_dircount, ti->ti_task);
 	sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
 	sqlite3_step(pstmt);
-	dircount = (long)sqlite3_column_int(pstmt, 0);
+	dircount = (uint32_t) sqlite3_column_int(pstmt, 0);
 	sqlite3_finalize(pstmt);
 	return (dircount);
 }
 
-long count_files(struct thread_info *ti, sqlite3 *db)
+uint32_t count_files(struct thread_info *ti, sqlite3 *db)
 {
-	char    stmt[BUFSIZ];
-	long    filecount;
-	sqlite3_stmt *pstmt;
+	char    stmt[BUFSIZ];							/* statement buffer */
+	sqlite3_stmt *pstmt;							/* prepared statement */
+	uint32_t filecount;
 
 	char   *sql_filecount = "SELECT COUNT(*)\n \
 		FROM  %s_dir, %s_file\n \
@@ -154,18 +154,18 @@ long count_files(struct thread_info *ti, sqlite3 *db)
 	snprintf(stmt, BUFSIZ, sql_filecount, ti->ti_task, ti->ti_task);
 	sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
 	sqlite3_step(pstmt);
-	filecount = (long)sqlite3_column_int(pstmt, 0);
+	filecount = (uint32_t) sqlite3_column_int(pstmt, 0);
 	sqlite3_finalize(pstmt);
 	return (filecount);
 }
 
 void process_dirs(struct thread_info *ti, sqlite3 *db)
 {
-	char    filename[PATH_MAX];
-	char    stmt[BUFSIZ];
+	char    filename[PATH_MAX];						/* full pathname */
+	char    stmt[BUFSIZ];							/* statement buffer */
 	char   *db_dir;
-	long    dircount;
-	sqlite3_stmt *pstmt;
+	sqlite3_stmt *pstmt;							/* prepared statement */
+	uint32_t dircount;
 
 	char   *sql_emptydirs = "SELECT db_dir\n \
 		FROM  %s_dir\n \

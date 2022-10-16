@@ -135,7 +135,6 @@ int     logretention(char *);
 int     postcmd(struct thread_info *, char *);
 int     threadcheck(struct thread_info *, char *);
 int     workcmd(int, char **, char **);
-long    findfile(struct thread_info *, short, uint32_t *, char *, sqlite3 *);
 off_t   logsize(char *);
 short   namematch(struct thread_info *, char *);
 short   pcrecompile(struct thread_info *);
@@ -144,6 +143,7 @@ short   validdbname(char *);
 size_t  strlcat(char *, const char *, size_t);
 size_t  strlcpy(char *, const char *, size_t);
 uid_t   verifyuid(char *);
+uint32_t findfile(struct thread_info *, short, uint32_t *, char *, sqlite3 *);
 void    activethreads(struct thread_info *);
 void    parentsignals(void);
 void    rlimit(int);
@@ -163,9 +163,9 @@ int     create_table(struct thread_info *, sqlite3 *);
 int     disable_journal(struct thread_info *, sqlite3 *);
 int     drop_table(struct thread_info *, sqlite3 *);
 int     sync_commit(struct thread_info *, sqlite3 *);
-long    count_dirs(struct thread_info *, sqlite3 *);
-long    count_files(struct thread_info *, sqlite3 *);
 short   sqlexec(struct thread_info *, sqlite3 *, char *, char *, ...);
+uint32_t count_dirs(struct thread_info *, sqlite3 *);
+uint32_t count_files(struct thread_info *, sqlite3 *);
 void    process_dirs(struct thread_info *, sqlite3 *);
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

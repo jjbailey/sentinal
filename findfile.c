@@ -25,16 +25,16 @@ static char *sql_insertdir = "INSERT INTO %s_dir VALUES(%u, '%s', 0);";
 static char *sql_insertfile = "INSERT INTO %s_file VALUES(?, ?, ?, ?);";
 static char *sql_updatedir = "UPDATE %s_dir SET db_empty = 1 WHERE db_id = %d;";
 
-long findfile(struct thread_info *ti, short top, uint32_t *nextid,
-			  char *dir, sqlite3 *db)
+uint32_t findfile(struct thread_info *ti, short top, uint32_t *nextid,
+				  char *dir, sqlite3 *db)
 {
 	DIR    *dirp;
-	char    filename[PATH_MAX];
-	char    stmt[BUFSIZ];
-	long    entries = 0;							/* file entries */
-	sqlite3_stmt *pstmt;
+	char    filename[PATH_MAX];						/* full pathname */
+	char    stmt[BUFSIZ];							/* statement buffer */
+	sqlite3_stmt *pstmt;							/* prepared statement */
 	struct dirent *dp;
-	struct stat stbuf;
+	struct stat stbuf;								/* file status */
+	uint32_t entries = 0;							/* file entries */
 	uint32_t rowid = *nextid;
 
 	if((dirp = opendir(dir)) == NULL)

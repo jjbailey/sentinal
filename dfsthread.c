@@ -183,11 +183,11 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	char   *db_dir;
 	char   *db_file;
 	extern short dryrun;							/* dry run bool */
-	long    filecount;								/* matching files */
 	long double pc_bfree = 0;						/* blocks free */
 	long double pc_ffree = 0;						/* files free */
 	sqlite3_stmt *pstmt;							/* prepared statement */
 	struct statvfs svbuf;							/* filesystem status */
+	uint32_t filecount;								/* matching files */
 
 	/* count all files */
 
