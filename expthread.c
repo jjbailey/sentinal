@@ -115,8 +115,6 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 
 	/* count all files */
 
-	time(&curtime);
-
 	if((filecount = count_files(ti, db)) < 1)
 		return;
 
@@ -132,6 +130,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 
 	snprintf(stmt, BUFSIZ, sql_selectfiles, ti->ti_task, ti->ti_task);
 	sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
+	time(&curtime);
 
 	for(;;) {
 		if(ti->ti_retmin && filecount <= ti->ti_retmin)
