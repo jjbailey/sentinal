@@ -165,14 +165,13 @@ void process_dirs(struct thread_info *ti, sqlite3 *db)
 	char    stmt[BUFSIZ];							/* statement buffer */
 	char   *db_dir;
 	sqlite3_stmt *pstmt;							/* prepared statement */
-	uint32_t dircount;
 
 	char   *sql_emptydirs = "SELECT db_dir\n \
 		FROM  %s_dir\n \
 		WHERE db_empty = 1\n \
 		ORDER BY db_dir DESC;";
 
-	if((dircount = count_dirs(ti, db)) < 1)
+	if(count_dirs(ti, db) < 1)
 		return;
 
 	snprintf(stmt, BUFSIZ, sql_emptydirs, ti->ti_task);
@@ -188,9 +187,7 @@ void process_dirs(struct thread_info *ti, sqlite3 *db)
 			/* assemble filename: ti_dirname + / + db_dir */
 
 			snprintf(filename, PATH_MAX, "%s/%s", ti->ti_dirname, db_dir);
-
-			if(rmfile(ti, filename, "rmdir"))
-				dircount--;
+			rmfile(ti, filename, "rmdir");
 		}
 	}
 
