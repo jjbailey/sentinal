@@ -37,7 +37,6 @@ void   *expthread(void *arg)
 	char    ebuf[BUFSIZ];							/* expire buffer */
 	extern short dryrun;							/* dry run bool */
 	extern sqlite3 *db;								/* db handle */
-	short   loop1;
 	struct thread_info *ti = arg;
 	uint32_t nextid = 1;							/* db_id, db_dirid */
 
@@ -71,25 +70,23 @@ void   *expthread(void *arg)
 	/* monitor expiration times */
 	/* force a quick initial scan */
 
-	loop1 = TRUE;
+	sleep(dryrun);
 
 	for(;;) {
-		sleep(dryrun || loop1 ? DRYSCAN : SCANRATE);
-		loop1 = FALSE;
-
 		/* find files in dirname */
 
-		if(findfile(ti, TRUE, &nextid, ti->ti_dirname, db) == 0)
-			continue;
+		if(findfile(ti, TRUE, &nextid, ti->ti_dirname, db) > 0) {
+			/* process directories emptied by previous run */
 
-		/* process directories emptied by previous run */
+			if(ti->ti_rmdir)
+				process_dirs(ti, db);
 
-		if(ti->ti_rmdir)
-			process_dirs(ti, db);
+			/* process matching files */
 
-		/* process files matching criterion */
+			process_files(ti, db);
+		}
 
-		process_files(ti, db);
+		sleep(dryrun ? DRYSCAN : SCANRATE);
 	}
 
 	/* notreached */
