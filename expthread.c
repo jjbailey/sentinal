@@ -115,13 +115,13 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	if((filecount = count_files(ti, db)) < 1)
 		return;
 
-	/* count bytes in dir */
-
-	snprintf(stmt, BUFSIZ, sql_selectbytes, ti->ti_task);
-	sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
-	sqlite3_step(pstmt);
-	dirbytes = (unsigned long long)sqlite3_column_int64(pstmt, 0);
-	sqlite3_finalize(pstmt);
+	if(ti->ti_dirlimit) {							/* count bytes in dir */
+		snprintf(stmt, BUFSIZ, sql_selectbytes, ti->ti_task);
+		sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
+		sqlite3_step(pstmt);
+		dirbytes = (unsigned long long)sqlite3_column_int64(pstmt, 0);
+		sqlite3_finalize(pstmt);
+	}
 
 	/* process expired files */
 
