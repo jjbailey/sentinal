@@ -101,6 +101,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	char   *db_file;
 	char   *reason;
 	extern short dryrun;							/* dry run bool */
+	int     drcount = 0;							/* dryrun count */
 	short   expbysize;								/* consider expire size */
 	short   expbytime;								/* consider expire time */
 	sqlite3_stmt *pstmt;							/* prepared statement */
@@ -133,19 +134,24 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 		if(ti->ti_retmin && filecount <= ti->ti_retmin)
 			break;
 
+		if(dryrun && drcount++ == 10) {				/* dryrun doesn't remove anything */
+			fprintf(stderr, "%s: ...\n", ti->ti_section);
+			break;
+		}
+
 		if(sqlite3_step(pstmt) != SQLITE_ROW)
 			break;
 
 		db_dir = (char *)sqlite3_column_text(pstmt, 0);
 		db_file = (char *)sqlite3_column_text(pstmt, 1);
-		db_size = (uint32_t) sqlite3_column_int(pstmt, 3);
+		db_size = (uint32_t) sqlite3_column_int(pstmt, 2);
 
 		/* assemble filename: ti_dirname + / + db_dir + / + db_file */
 
-		if(IS_NULL(db_dir))
-			snprintf(filename, PATH_MAX, "%s/%s", ti->ti_dirname, db_file);
-		else
+		if(NOT_NULL(db_dir))
 			snprintf(filename, PATH_MAX, "%s/%s/%s", ti->ti_dirname, db_dir, db_file);
+		else
+			snprintf(filename, PATH_MAX, "%s/%s", ti->ti_dirname, db_file);
 
 		if(stat(filename, &stbuf) == -1)			/* check for changes since db load */
 			continue;
