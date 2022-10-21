@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <pthread.h>
 #include <sqlite3.h>
 #include <unistd.h>
@@ -101,6 +102,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	char   *db_file;
 	char   *reason;
 	extern short dryrun;							/* dry run bool */
+	int     dfd;									/* dirname fd */
 	int     drcount = 0;							/* dryrun count */
 	short   expbysize;								/* consider expire size */
 	short   expbytime;								/* consider expire time */
@@ -135,7 +137,9 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 			break;
 
 		if(dryrun && drcount++ == 10) {				/* dryrun doesn't remove anything */
-			fprintf(stderr, "%s: ...\n", ti->ti_section);
+			if(!ti->ti_terse)
+				fprintf(stderr, "%s: ...\n", ti->ti_section);
+
 			break;
 		}
 
@@ -185,6 +189,13 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 			filecount--;
 			dirbytes -= db_size;
 		}
+	}
+
+	/* modified buffer cache pages */
+
+	if((dfd = open(ti->ti_dirname, R_OK)) > 0) {
+		fdatasync(dfd);
+		close(dfd);
 	}
 
 	sqlite3_finalize(pstmt);

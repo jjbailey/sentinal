@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/statvfs.h>
+#include <fcntl.h>
 #include <math.h>
 #include <pthread.h>
 #include <sqlite3.h>
@@ -28,6 +29,7 @@
 #define	DRYSCAN         30							/* scanrate for dryrun */
 
 #define	LOW_RES(target,avail)	(target && avail < target)
+#define	PADDING			(float)0.05					/* step over border condition */
 
 static char *sql_selectfiles = "SELECT db_dir, db_file\n \
 	FROM  %s_dir, %s_file\n \
@@ -36,6 +38,7 @@ static char *sql_selectfiles = "SELECT db_dir, db_file\n \
 
 static char mountdir[PATH_MAX];						/* mount point */
 
+static short getvfsstats(struct thread_info *, long double *, long double *);
 static void process_files(struct thread_info *, sqlite3 *);
 static void resreport(struct thread_info *, short, long double, long double);
 
@@ -46,6 +49,7 @@ void   *dfsthread(void *arg)
 	long double pc_bfree = 0;						/* blocks free */
 	long double pc_ffree = 0;						/* files free */
 	short   lowres = FALSE;							/* low resources bool */
+	short   runreport = TRUE;						/* for resreport */
 	struct statvfs svbuf;							/* filesystem status */
 	struct thread_info *ti = arg;
 	uint32_t nextid = 1;							/* db_id, db_dirid */
@@ -102,52 +106,36 @@ void   *dfsthread(void *arg)
 	}
 
 	/* monitor filesystem usage */
-	/* force an initial report */
-
-	lowres = !(LOW_RES(ti->ti_diskfree, pc_bfree) || LOW_RES(ti->ti_inofree, pc_ffree));
 
 	for(;;) {
-		if(statvfs(mountdir, &svbuf) == -1) {
-			fprintf(stderr, "%s: statvfs failed: %s\n", ti->ti_section, mountdir);
+		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == FALSE)
 			return ((void *)0);
+
+		lowres = LOW_RES(ti->ti_diskfree, pc_bfree) || LOW_RES(ti->ti_inofree, pc_ffree);
+
+		if(lowres || runreport) {
+			resreport(ti, lowres, pc_bfree, pc_ffree);
+			runreport = FALSE;
 		}
 
-		if(ti->ti_diskfree)
-			pc_bfree = PERCENT(svbuf.f_bavail, svbuf.f_blocks);
+		if(lowres) {
+			if(findfile(ti, TRUE, &nextid, ti->ti_dirname, db) > 0) {
+				/* process directories emptied by previous run */
 
-		if(ti->ti_inofree)
-			pc_ffree = PERCENT(svbuf.f_favail, svbuf.f_files);
+				if(ti->ti_rmdir)
+					process_dirs(ti, db);
 
-		if(LOW_RES(ti->ti_diskfree, pc_bfree) || LOW_RES(ti->ti_inofree, pc_ffree)) {
-			/* low resources */
+				/* process matching files */
 
-			if(!lowres)
-				resreport(ti, lowres = TRUE, pc_bfree, pc_ffree);
-		} else {
-			/* desired state */
+				process_files(ti, db);
 
-			if(lowres)
-				resreport(ti, lowres = FALSE, pc_bfree, pc_ffree);
-		}
+				if(dryrun)
+					sleep(DRYSCAN);
 
-		sleep(dryrun ? DRYSCAN : SCANRATE);
-
-		if(!lowres)
-			continue;
-
-		/* low resources, find files in dirname */
-
-		if(findfile(ti, TRUE, &nextid, ti->ti_dirname, db) == 0)
-			continue;
-
-		/* process directories emptied by previous run */
-
-		if(ti->ti_rmdir)
-			process_dirs(ti, db);
-
-		/* process files matching criterion */
-
-		process_files(ti, db);
+				runreport = TRUE;
+			}
+		} else
+			sleep(dryrun ? DRYSCAN : SCANRATE);
 	}
 
 	/* notreached */
@@ -174,6 +162,8 @@ static void resreport(struct thread_info *ti, short lowres,
 			fprintf(stderr, "%s: low free inodes %s: %.2Lf%% < %.2Lf%%\n",
 					ti->ti_section, ti->ti_dirname, ino, ti->ti_inofree);
 	}
+
+	fflush(stderr);
 }
 
 static void process_files(struct thread_info *ti, sqlite3 *db)
@@ -183,10 +173,11 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	char   *db_dir;
 	char   *db_file;
 	extern short dryrun;							/* dry run bool */
+	int     dfd;									/* dirname fd */
+	int     drcount = 0;							/* dryrun count */
 	long double pc_bfree = 0;						/* blocks free */
 	long double pc_ffree = 0;						/* files free */
 	sqlite3_stmt *pstmt;							/* prepared statement */
-	struct statvfs svbuf;							/* filesystem status */
 	uint32_t filecount;								/* matching files */
 
 	/* count all files */
@@ -203,6 +194,13 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 		if(ti->ti_retmin && filecount <= ti->ti_retmin)
 			break;
 
+		if(dryrun && drcount++ == 10) {				/* dryrun doesn't remove anything */
+			if(!ti->ti_terse)
+				fprintf(stderr, "%s: ...\n", ti->ti_section);
+
+			break;
+		}
+
 		if(sqlite3_step(pstmt) != SQLITE_ROW)
 			break;
 
@@ -211,30 +209,53 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 
 		/* assemble filename: ti_dirname + / + db_dir + / + db_file */
 
-		if(IS_NULL(db_dir))
-			snprintf(filename, PATH_MAX, "%s/%s", ti->ti_dirname, db_file);
-		else
+		if(NOT_NULL(db_dir))
 			snprintf(filename, PATH_MAX, "%s/%s/%s", ti->ti_dirname, db_dir, db_file);
+		else
+			snprintf(filename, PATH_MAX, "%s/%s", ti->ti_dirname, db_file);
 
 		if(rmfile(ti, filename, "remove"))
 			filecount--;
 
-		if(statvfs(mountdir, &svbuf) == -1) {
-			fprintf(stderr, "%s: statvfs failed: %s\n", ti->ti_section, mountdir);
+		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == FALSE)
 			break;
-		}
 
-		if(ti->ti_diskfree)
-			pc_bfree = PERCENT(svbuf.f_bavail, svbuf.f_blocks);
+		/*
+		 * subtract padding from available space
+		 * provide a bit more space than the configured value
+		 */
 
-		if(ti->ti_inofree)
-			pc_ffree = PERCENT(svbuf.f_favail, svbuf.f_files);
-
-		if(!(LOW_RES(ti->ti_diskfree, pc_bfree) || LOW_RES(ti->ti_inofree, pc_ffree)))
+		if(!LOW_RES(ti->ti_diskfree, pc_bfree - PADDING) &&
+		   !LOW_RES(ti->ti_inofree, pc_ffree - PADDING))
 			break;
 	}
 
 	sqlite3_finalize(pstmt);
+
+	/* modified buffer cache pages */
+
+	if((dfd = open(ti->ti_dirname, R_OK)) > 0) {
+		fdatasync(dfd);
+		close(dfd);
+	}
+}
+
+static short getvfsstats(struct thread_info *ti, long double *blk, long double *ino)
+{
+	struct statvfs svbuf;							/* filesystem status */
+
+	if(statvfs(mountdir, &svbuf) == -1) {
+		fprintf(stderr, "%s: cannot stat: %s\n", ti->ti_section, mountdir);
+		return (FALSE);
+	}
+
+	if(ti->ti_diskfree)
+		*blk = PERCENT(svbuf.f_bavail, svbuf.f_blocks);
+
+	if(ti->ti_inofree)
+		*ino = PERCENT(svbuf.f_favail, svbuf.f_files);
+
+	return (TRUE);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
