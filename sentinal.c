@@ -389,9 +389,9 @@ int main(int argc, char *argv[])
 
 static int parsecmd(char *cmd, char *argv[])
 {
+	char    str[BUFSIZ];
 	char   *ap, argv0[PATH_MAX];
 	char   *p;
-	char    str[BUFSIZ];
 	int     i = 0;
 
 	if(IS_NULL(cmd))

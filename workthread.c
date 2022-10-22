@@ -41,8 +41,8 @@ void   *workthread(void *arg)
 	char    pipebuf[PIPEBUFSIZ];
 	char    shellbuf[BUFSIZ];
 	char    tmplbuf[BUFSIZ];
-	char   *home;
 	char   *envp[MAXARGS];
+	char   *home;
 	char   *zargv[MAXARGS];
 	extern int errno;
 	int     holdfd;									/* fd to hold FIFO open */

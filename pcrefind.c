@@ -23,10 +23,10 @@ short   pcrematch(struct thread_info *, char *);
 
 int main(int argc, char *argv[])
 {
-	struct thread_info ti;
 	char   *myname;
-	int     i;
 	extern int errno;
+	int     i;
+	struct thread_info ti;
 
 	myname = base(argv[0]);
 

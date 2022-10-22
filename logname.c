@@ -65,7 +65,7 @@ static void substrval(char *template, char *token, time_t value)
 	char    search[PATH_MAX];
 	char    valbuf[PATH_MAX];
 	char   *p;
-	int     len;
+	size_t  len;
 
 	if(IS_NULL(token) || *token != '%')
 		return;

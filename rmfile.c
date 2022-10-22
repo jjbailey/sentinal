@@ -15,8 +15,8 @@
 
 short rmfile(struct thread_info *ti, char *obj, char *remark)
 {
-	extern short dryrun;
 	extern int errno;
+	extern short dryrun;
 
 	if(!dryrun)
 		if(remove(obj) != 0)
