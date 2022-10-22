@@ -49,7 +49,7 @@ short sqlexec(struct thread_info *ti, sqlite3 *db, char *desc, char *format, ...
 	return (FALSE);
 }
 
-int drop_table(struct thread_info *ti, sqlite3 *db)
+short drop_table(struct thread_info *ti, sqlite3 *db)
 {
 	char   *sql_dir = "DROP TABLE IF EXISTS %s_dir;";
 	char   *sql_file = "DROP TABLE IF EXISTS %s_file;";
@@ -63,7 +63,7 @@ int drop_table(struct thread_info *ti, sqlite3 *db)
 	return (TRUE);
 }
 
-int create_table(struct thread_info *ti, sqlite3 *db)
+short create_table(struct thread_info *ti, sqlite3 *db)
 {
 	/* VARCHAR -- see sqlite3 faq #9 */
 
@@ -87,7 +87,7 @@ int create_table(struct thread_info *ti, sqlite3 *db)
 	return (TRUE);
 }
 
-int create_index(struct thread_info *ti, sqlite3 *db)
+short create_index(struct thread_info *ti, sqlite3 *db)
 {
 	char   *sql_dir = "CREATE INDEX IF NOT EXISTS idx_%s_dir ON %s_dir (%s);";
 	char   *sql_file = "CREATE INDEX IF NOT EXISTS idx_%s_file ON %s_file (%s);";
@@ -103,7 +103,7 @@ int create_index(struct thread_info *ti, sqlite3 *db)
 	return (TRUE);
 }
 
-int disable_journal(struct thread_info *ti, sqlite3 *db)
+short journal_mode(struct thread_info *ti, sqlite3 *db)
 {
 	char   *sql_journal = "PRAGMA journal_mode = OFF;";
 
@@ -113,9 +113,9 @@ int disable_journal(struct thread_info *ti, sqlite3 *db)
 	return (TRUE);
 }
 
-int sync_commit(struct thread_info *ti, sqlite3 *db)
+short sync_commit(struct thread_info *ti, sqlite3 *db)
 {
-	char   *sql_sync = "PRAGMA synchronous = normal;";
+	char   *sql_sync = "PRAGMA synchronous = NORMAL;";
 
 	if(sqlexec(ti, db, "synchronous commit", sql_sync) == FALSE)
 		return (FALSE);

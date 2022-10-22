@@ -52,7 +52,7 @@ uint32_t findfile(struct thread_info *ti, short top, uint32_t *nextid,
 		if(create_table(ti, db) == FALSE)
 			return (0);
 
-		if(disable_journal(ti, db) == FALSE)
+		if(journal_mode(ti, db) == FALSE)
 			return (0);
 
 		if(sync_commit(ti, db) == FALSE)

@@ -158,12 +158,12 @@ void   *workthread(void *);
 #define	SQLMEMDB	":memory:"						/* pure in-memory database */
 #define	SQLTMPDB	":temp:"						/* temp database, for ini documentation */
 
-int     create_index(struct thread_info *, sqlite3 *);
-int     create_table(struct thread_info *, sqlite3 *);
-int     disable_journal(struct thread_info *, sqlite3 *);
-int     drop_table(struct thread_info *, sqlite3 *);
-int     sync_commit(struct thread_info *, sqlite3 *);
+short   create_index(struct thread_info *, sqlite3 *);
+short   create_table(struct thread_info *, sqlite3 *);
+short   drop_table(struct thread_info *, sqlite3 *);
+short   journal_mode(struct thread_info *, sqlite3 *);
 short   sqlexec(struct thread_info *, sqlite3 *, char *, char *, ...);
+short   sync_commit(struct thread_info *, sqlite3 *);
 uint32_t count_dirs(struct thread_info *, sqlite3 *);
 uint32_t count_files(struct thread_info *, sqlite3 *);
 void    process_dirs(struct thread_info *, sqlite3 *);

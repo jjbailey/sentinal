@@ -9,6 +9,7 @@ After=network.target network-online.target systemd-networkd.service
 
 [Service]
 Type=simple
+Nice=10
 Restart=always
 RestartSec=2
 User=root
