@@ -164,6 +164,8 @@ void process_dirs(struct thread_info *ti, sqlite3 *db)
 	char    filename[PATH_MAX];						/* full pathname */
 	char    stmt[BUFSIZ];							/* statement buffer */
 	char   *db_dir;
+	extern short dryrun;							/* dry run bool */
+	int     drcount = 0;							/* dryrun count */
 	sqlite3_stmt *pstmt;							/* prepared statement */
 
 	char   *sql_emptydirs = "SELECT db_dir\n \
@@ -180,6 +182,13 @@ void process_dirs(struct thread_info *ti, sqlite3 *db)
 	for(;;) {
 		if(sqlite3_step(pstmt) != SQLITE_ROW)
 			break;
+
+		if(dryrun && drcount++ == 10) {				/* dryrun doesn't remove anything */
+			if(!ti->ti_terse)
+				fprintf(stderr, "%s: ...\n", ti->ti_section);
+
+			break;
+		}
 
 		db_dir = (char *)sqlite3_column_text(pstmt, 0);
 
