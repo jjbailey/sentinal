@@ -35,7 +35,7 @@ uint32_t findfile(struct thread_info *ti, short top, uint32_t *nextid,
 	struct dirent *dp;
 	struct stat stbuf;								/* file status */
 	uint32_t entries = 0;							/* file entries */
-	uint32_t rowid = *nextid;
+	uint32_t rowid = *nextid;						/* db_id, db_dirid */
 
 	if((dirp = opendir(dir)) == NULL)
 		return (0);
