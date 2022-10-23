@@ -163,7 +163,7 @@ void process_dirs(struct thread_info *ti, sqlite3 *db)
 {
 	char    filename[PATH_MAX];						/* full pathname */
 	char    stmt[BUFSIZ];							/* statement buffer */
-	char   *db_dir;
+	char   *db_dir;									/* sql data */
 	extern short dryrun;							/* dry run bool */
 	int     drcount = 0;							/* dryrun count */
 	sqlite3_stmt *pstmt;							/* prepared statement */

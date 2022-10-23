@@ -31,7 +31,7 @@ static void substrval(char *, char *, time_t);
 char   *logname(char *template, char *filename)
 {
 	struct tm tbuf;
-	time_t  curtime;
+	time_t  curtime;								/* now */
 
 	/*
 	 * filename becomes the completed template

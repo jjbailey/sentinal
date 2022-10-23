@@ -98,9 +98,9 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 {
 	char    filename[PATH_MAX];						/* full pathname */
 	char    stmt[BUFSIZ];							/* statement buffer */
-	char   *db_dir;
-	char   *db_file;
-	char   *reason;
+	char   *db_dir;									/* sql data */
+	char   *db_file;								/* sql data */
+	char   *reason;									/* why */
 	extern short dryrun;							/* dry run bool */
 	int     dfd;									/* dirname fd */
 	int     drcount = 0;							/* dryrun count */
@@ -108,8 +108,8 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	short   expbytime;								/* consider expire time */
 	sqlite3_stmt *pstmt;							/* prepared statement */
 	struct stat stbuf;								/* file status */
-	time_t  curtime;
-	uint32_t db_size;
+	time_t  curtime;								/* now */
+	uint32_t db_size;								/* sql data */
 	uint32_t filecount;								/* matching files */
 	unsigned long long dirbytes;					/* dirsize in bytes */
 

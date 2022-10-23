@@ -170,8 +170,8 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 {
 	char    filename[PATH_MAX];						/* full pathname */
 	char    stmt[BUFSIZ];							/* statement buffer */
-	char   *db_dir;
-	char   *db_file;
+	char   *db_dir;									/* sql data */
+	char   *db_file;								/* sql data */
 	extern short dryrun;							/* dry run bool */
 	int     dfd;									/* dirname fd */
 	int     drcount = 0;							/* dryrun count */
