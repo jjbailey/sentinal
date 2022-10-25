@@ -29,12 +29,20 @@
 #include <dirent.h>
 #include <libgen.h>
 #include <limits.h>
+#include <getopt.h>
 #include <math.h>
 #include <pthread.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include "sentinal.h"
 #include "basename.h"
 #include "ini.h"
+
+/* externals */
+int     dryrun = FALSE;								/* dry run bool */
+sqlite3 *db;										/* db handle */
+struct thread_info tinfo[MAXSECT];
+struct utsname utsbuf;
 
 static int parsecmd(char *, char **);
 static short create_pid_file(char *);
@@ -42,11 +50,18 @@ static short setiniflag(ini_t *, char *, char *);
 static void dump_thread_info(struct thread_info *);
 static void help(char *);
 
-/* externals */
-short   dryrun;
-sqlite3 *db;
-struct thread_info tinfo[MAXSECT];
-struct utsname utsbuf;
+static int debug = FALSE;
+static int verbose = FALSE;
+
+static struct option long_options[] = {
+	{ "dry-run", no_argument, &dryrun, 'D' },
+	{ "debug", no_argument, &debug, 'd' },
+	{ "version", no_argument, NULL, 'V' },
+	{ "verbose", no_argument, &verbose, 'v' },
+	{ "ini-file", required_argument, NULL, 'f' },
+	{ "help", no_argument, NULL, 'h' },
+	{ 0, 0, 0, 0 }
+};
 
 /* iniget.c functions */
 char   *my_ini(ini_t *, char *, char *);
@@ -65,24 +80,35 @@ int main(int argc, char *argv[])
 	char   *pidfile;
 	char   *sections[MAXSECT];
 	ini_t  *inidata;
+	int     c;
 	int     dbflags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX;
 	int     i;
+	int     index = 0;
 	int     nsect;
-	int     opt;
-	short   debug = FALSE;
-	short   verbose = FALSE;
 	struct thread_info *ti;
 
 	umask(umask(0) | 022);							/* don't set less restrictive */
 	*inifile = '\0';
-	dryrun = FALSE;
 
-	while((opt = getopt(argc, argv, "dvf:DV?")) != -1) {
-		switch (opt) {
+	while(1) {
+		c = getopt_long(argc, argv, "DdVvf:h?", long_options, &index);
+
+		if(c == -1)									/* end of options */
+			break;
+
+		switch (c) {
+
+		case 'D':									/* dry run mode */
+			dryrun = TRUE;
+			break;
 
 		case 'd':									/* debug INI parse */
 			debug = TRUE;
 			break;
+
+		case 'V':									/* print version */
+			fprintf(stdout, "%s: version %s\n", base(argv[0]), VERSION_STRING);
+			exit(EXIT_SUCCESS);
 
 		case 'v':									/* verbose debug */
 			verbose = TRUE;
@@ -93,21 +119,10 @@ int main(int argc, char *argv[])
 			realpath(inifile, rpinifile);
 			break;
 
-		case 'D':									/* dry run mode */
-			dryrun = TRUE;
-			break;
-
-		case 'V':									/* print version */
-			fprintf(stdout, "%s: version %s\n", base(argv[0]), VERSION_STRING);
-			exit(EXIT_SUCCESS);
-
-		case '?':									/* print usage */
+		case 'h':									/* print usage */
+		case '?':
 			help(argv[0]);
 			exit(EXIT_SUCCESS);
-
-		default:									/* print error and usage */
-			help(argv[0]);
-			exit(EXIT_FAILURE);
 		}
 	}
 
@@ -115,6 +130,12 @@ int main(int argc, char *argv[])
 		help(argv[0]);
 		exit(EXIT_FAILURE);
 	}
+
+	/* convert long_options flags to bool */
+
+	debug = debug ? TRUE : FALSE;
+	dryrun = dryrun ? TRUE : FALSE;
+	verbose = verbose ? TRUE : FALSE;
 
 	/* configure the threads */
 
@@ -526,15 +547,15 @@ static void help(char *prog)
 	char   *p = base(prog);
 
 	fprintf(stderr, "\nUsage:\n");
-	fprintf(stderr, "%s -f <inifile>\n\n", p);
+	fprintf(stderr, "%s -f|--ini-file ini-file\n\n", p);
 	fprintf(stderr, "Print the INI file as parsed, exit:\n");
-	fprintf(stderr, "%s -f <inifile> -d\n\n", p);
+	fprintf(stderr, "%s -f|--ini-file ini-file -d|--debug\n\n", p);
 	fprintf(stderr, "Print the INI file as interpreted, exit:\n");
-	fprintf(stderr, "%s -f <inifile> -v\n\n", p);
+	fprintf(stderr, "%s -f|--ini-file ini-file -v|--verbose\n\n", p);
 	fprintf(stderr, "Dry run mode:\n");
-	fprintf(stderr, "%s -D <options>\n\n", p);
+	fprintf(stderr, "%s -f|--ini-file ini-file -D|--dry-run\n\n", p);
 	fprintf(stderr, "Print the program version, exit:\n");
-	fprintf(stderr, "%s -V\n\n", p);
+	fprintf(stderr, "%s -V|--version\n\n", p);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
