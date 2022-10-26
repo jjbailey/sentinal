@@ -53,7 +53,7 @@ void   *workthread(void *arg)
 	int     status;
 	struct passwd *p;
 	struct stat stbuf;
-	struct thread_info *ti = arg;
+	struct thread_info *ti = arg;					/* thread settings */
 
 	/*
 	 * this thread requires:

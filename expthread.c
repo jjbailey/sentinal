@@ -38,7 +38,7 @@ void   *expthread(void *arg)
 	char    ebuf[BUFSIZ];							/* expire buffer */
 	extern short dryrun;							/* dry run bool */
 	extern sqlite3 *db;								/* db handle */
-	struct thread_info *ti = arg;
+	struct thread_info *ti = arg;					/* thread settings */
 	uint32_t nextid = 1;							/* db_id, db_dirid */
 
 	/*

@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 	char   *myname;
 	extern int errno;
 	int     i;
-	struct thread_info ti;
+	struct thread_info ti;							/* so we can use pcrecompile.c */
 
 	myname = base(argv[0]);
 

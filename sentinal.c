@@ -32,7 +32,6 @@
 #include <getopt.h>
 #include <math.h>
 #include <pthread.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include "sentinal.h"
 #include "basename.h"
@@ -41,8 +40,8 @@
 /* externals */
 int     dryrun = FALSE;								/* dry run bool */
 sqlite3 *db;										/* db handle */
-struct thread_info tinfo[MAXSECT];
-struct utsname utsbuf;
+struct thread_info tinfo[MAXSECT];					/* our threads */
+struct utsname utsbuf;								/* for host info */
 
 static int parsecmd(char *, char **);
 static short create_pid_file(char *);
@@ -85,7 +84,7 @@ int main(int argc, char *argv[])
 	int     i;
 	int     index = 0;
 	int     nsect;
-	struct thread_info *ti;
+	struct thread_info *ti;							/* thread settings */
 
 	umask(umask(0) | 022);							/* don't set less restrictive */
 	*inifile = '\0';

@@ -34,7 +34,7 @@ void   *slmthread(void *arg)
 	char    filename[PATH_MAX];
 	int     status;
 	struct stat stbuf;
-	struct thread_info *ti = arg;
+	struct thread_info *ti = arg;					/* thread settings */
 
 	/*
 	 * this thread requires:

@@ -36,7 +36,7 @@ static char *sql_selectfiles = "SELECT db_dir, db_file\n \
 	WHERE db_dirid = db_id\n \
 	ORDER BY db_time;";
 
-static char mountdir[PATH_MAX];						/* mount point */
+static char mountdir[PATH_MAX];						/* mountpoint */
 
 static short getvfsstats(struct thread_info *, long double *, long double *);
 static void process_files(struct thread_info *, sqlite3 *);
@@ -51,7 +51,7 @@ void   *dfsthread(void *arg)
 	short   lowres = FALSE;							/* low resources bool */
 	short   runreport = TRUE;						/* for resreport */
 	struct statvfs svbuf;							/* filesystem status */
-	struct thread_info *ti = arg;
+	struct thread_info *ti = arg;					/* thread settings */
 	uint32_t nextid = 1;							/* db_id, db_dirid */
 
 	/*
