@@ -29,7 +29,9 @@
 #define	DRYSCAN         30							/* scanrate for dryrun */
 
 #define	LOW_RES(target,avail)	(target && avail < target)
-#define	PADDING			(float)0.05					/* step over border condition */
+
+/* subtract from avail for extra space, reduce flapping */
+#define	PADDING			(float)0.09
 
 static char *sql_selectfiles = "SELECT db_dir, db_file\n \
 	FROM  %s_dir, %s_file\n \
