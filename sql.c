@@ -167,6 +167,7 @@ void process_dirs(struct thread_info *ti, sqlite3 *db)
 	extern short dryrun;							/* dry run bool */
 	int     drcount = 0;							/* dryrun count */
 	sqlite3_stmt *pstmt;							/* prepared statement */
+	uint32_t removed = 0;							/* directories removed */
 
 	char   *sql_emptydirs = "SELECT db_dir\n \
 		FROM  %s_dir\n \
@@ -196,11 +197,17 @@ void process_dirs(struct thread_info *ti, sqlite3 *db)
 			/* assemble filename: ti_dirname + / + db_dir */
 
 			snprintf(filename, PATH_MAX, "%s/%s", ti->ti_dirname, db_dir);
-			rmfile(ti, filename, "rmdir");
+
+			if(rmfile(ti, filename, "rmdir"))
+				removed++;
 		}
 	}
 
 	sqlite3_finalize(pstmt);
+
+	if(removed)
+		fprintf(stderr, "%s: %u empty %s removed\n", ti->ti_section,
+				removed, removed == 1 ? "directory" : "directories");
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

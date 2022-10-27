@@ -111,6 +111,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	time_t  curtime;								/* now */
 	uint32_t db_size;								/* sql data */
 	uint32_t filecount;								/* matching files */
+	uint32_t removed = 0;							/* matching files removed */
 	unsigned long long dirbytes;					/* dirsize in bytes */
 
 	/* count all files */
@@ -186,6 +187,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 			continue;
 
 		if(rmfile(ti, filename, reason)) {
+			removed++;
 			filecount--;
 			dirbytes -= db_size;
 		}
@@ -199,6 +201,10 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	}
 
 	sqlite3_finalize(pstmt);
+
+	if(removed)
+		fprintf(stderr, "%s: %u %s expired\n", ti->ti_section,
+				removed, removed == 1 ? "file" : "files");
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
