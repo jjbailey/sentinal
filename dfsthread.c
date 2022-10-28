@@ -181,6 +181,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	long double pc_ffree = 0;						/* files free */
 	sqlite3_stmt *pstmt;							/* prepared statement */
 	uint32_t filecount;								/* matching files */
+	uint32_t removed = 0;							/* matching files removed */
 
 	/* count all files */
 
@@ -216,8 +217,10 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 		else
 			snprintf(filename, PATH_MAX, "%s/%s", ti->ti_dirname, db_file);
 
-		if(rmfile(ti, filename, "remove"))
+		if(rmfile(ti, filename, "remove")) {
+			removed++;
 			filecount--;
+		}
 
 		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == FALSE)
 			break;
@@ -240,6 +243,10 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 		fdatasync(dfd);
 		close(dfd);
 	}
+
+	if(removed)
+		fprintf(stderr, "%s: %u %s removed\n", ti->ti_section,
+				removed, removed == 1 ? "file" : "files");
 }
 
 static short getvfsstats(struct thread_info *ti, long double *blk, long double *ino)
