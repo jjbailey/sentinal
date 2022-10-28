@@ -203,7 +203,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	sqlite3_finalize(pstmt);
 
 	if(removed)
-		fprintf(stderr, "%s: %u %s expired\n", ti->ti_section,
+		fprintf(stderr, "%s: %u %s removed\n", ti->ti_section,
 				removed, removed == 1 ? "file" : "files");
 }
 
