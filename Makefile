@@ -9,7 +9,8 @@
 all:		sentinal		\
 			sentinalpipe	\
 			pcrefind		\
-			pcretest
+			pcretest		\
+			pcre2.so
 
 SENOBJS=	sentinal.o		\
 			convexpire.o	\
@@ -23,18 +24,20 @@ SENOBJS=	sentinal.o		\
 			logname.o		\
 			logretention.o	\
 			logsize.o		\
-			mylogfile.o		\
+			namematch.o		\
 			pcrecompile.o	\
 			postcmd.o		\
 			rlimit.o		\
 			rmfile.o		\
 			signals.o		\
 			slmthread.o		\
+			sql.o			\
 			strlcat.o		\
 			strlcpy.o		\
 			strreplace.o	\
 			threadcheck.o	\
 			threadname.o	\
+			validdbname.o	\
 			verifyids.o		\
 			workcmd.o		\
 			workthread.o
@@ -43,7 +46,8 @@ SPMOBJS=	sentinalpipe.o	\
 			fullpath.o		\
 			ini.o			\
 			iniget.o		\
-			strlcpy.o
+			strlcpy.o		\
+			validdbname.o
 
 PCFOBJS=	pcrefind.o		\
 			fullpath.o		\
@@ -55,19 +59,22 @@ PCTOBJS=	pcretest.o		\
 			pcrecompile.o	\
 			pcrematch.o
 
+PCRESO=		pcre2.so
+
 SEN_HOME=	/opt/sentinal
 SEN_BIN=	$(SEN_HOME)/bin
 SEN_ETC=	$(SEN_HOME)/etc
 SEN_DOC=	$(SEN_HOME)/doc
 SEN_TEST=	$(SEN_HOME)/tests
+PCRE_DIR=	/usr/lib/sqlite3
 
 CC=			gcc
 WARNINGS=	-Wno-unused-result -Wunused-variable -Wunused-but-set-variable
-CFLAGS=		-g -fstack-protector -O2 -pthread $(WARNINGS)
+CFLAGS=		-g -fstack-protector -pthread $(WARNINGS)
 
 PCRELIB=	-lpcre2-8
 
-LIBS=		-lpthread $(PCRELIB) -lm
+LIBS=		-lpthread $(PCRELIB) -lm -lsqlite3
 
 $(SENOBJS):	sentinal.h basename.h ini.h
 
@@ -87,14 +94,18 @@ pcrefind:	$(PCFOBJS)
 pcretest:	$(PCTOBJS)
 			$(CC) $(LDFLAGS) -o $@ $(PCTOBJS) $(LIBS)
 
+pcre2.so:	pcre2.c
+			$(CC) -shared -o $@ -fPIC -W -Werror $? $(PCRELIB)
+
 install:	all
-			mkdir -p $(SEN_HOME) $(SEN_BIN) $(SEN_ETC) $(SEN_DOC)
+			mkdir -p $(SEN_HOME) $(SEN_BIN) $(SEN_ETC) $(SEN_DOC) $(PCRE_DIR)
 			chown root:root $(SEN_HOME) $(SEN_BIN) $(SEN_ETC) $(SEN_DOC)
 			install -o root -g root -m 755 sentinal -t $(SEN_BIN)
 			install -o root -g root -m 755 sentinalpipe -t $(SEN_BIN)
 			install -o root -g root -m 755 pcrefind -t $(SEN_BIN)
 			install -o root -g root -m 755 pcretest -t $(SEN_BIN)
 			install -o root -g root -m 644 tests/test4.ini -T $(SEN_ETC)/example.ini
+			# install -o root -g root -m 755 pcre2.so $(PCRE_DIR)/pcre2.so
 			cp -p README.* $(SEN_DOC)
 			chown -R root:root $(SEN_DOC)
 
@@ -119,7 +130,7 @@ rpm:
 			bash packaging/redhat/redhat.sh
 
 clean:
-			rm -f $(SENOBJS) $(SPMOBJS) $(PCFOBJS) $(PCTOBJS)
+			rm -f $(SENOBJS) $(SPMOBJS) $(PCFOBJS) $(PCTOBJS) $(PCRESO)
 			rm -f sentinal sentinalpipe pcrefind pcretest
 			rm -f sentinal.service sentinalpipe.service
 			rm -fr packaging/debian/sentinal_*

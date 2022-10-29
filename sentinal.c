@@ -29,6 +29,7 @@
 #include <dirent.h>
 #include <libgen.h>
 #include <limits.h>
+#include <getopt.h>
 #include <math.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -36,52 +37,77 @@
 #include "basename.h"
 #include "ini.h"
 
+/* externals */
+int     dryrun = FALSE;								/* dry run bool */
+sqlite3 *db;										/* db handle */
+struct thread_info tinfo[MAXSECT];					/* our threads */
+struct utsname utsbuf;								/* for host info */
+
 static int parsecmd(char *, char **);
 static short create_pid_file(char *);
 static short setiniflag(ini_t *, char *, char *);
 static void dump_thread_info(struct thread_info *);
 static void help(char *);
 
-/* external for signal handling */
-struct thread_info tinfo[MAXSECT];
+static int debug = FALSE;
+static int verbose = FALSE;
 
-/* external dry run flag */
-short   dryrun;
-
-/* external for token expansion */
-struct utsname utsbuf;
+static struct option long_options[] = {
+	{ "dry-run", no_argument, &dryrun, 'D' },
+	{ "debug", no_argument, &debug, 'd' },
+	{ "version", no_argument, NULL, 'V' },
+	{ "verbose", no_argument, &verbose, 'v' },
+	{ "ini-file", required_argument, NULL, 'f' },
+	{ "help", no_argument, NULL, 'h' },
+	{ 0, 0, 0, 0 }
+};
 
 /* iniget.c functions */
 char   *my_ini(ini_t *, char *, char *);
 int     get_sections(ini_t *, int, char **);
+void    print_global(ini_t *, char *);
 void    print_section(ini_t *, char *);
 
 int main(int argc, char *argv[])
 {
 	DIR    *dirp;
-	char    inifile[PATH_MAX];
+	char    database[PATH_MAX];
+	char    inifile[PATH_MAX], rpinifile[PATH_MAX];
 	char    rbuf[PATH_MAX];
 	char    tbuf[PATH_MAX];
+	char   *p;
 	char   *pidfile;
 	char   *sections[MAXSECT];
 	ini_t  *inidata;
+	int     c;
+	int     dbflags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX;
 	int     i;
+	int     index = 0;
 	int     nsect;
-	int     opt;
-	short   debug = FALSE;
-	short   verbose = FALSE;
-	struct thread_info *ti;
+	struct thread_info *ti;							/* thread settings */
 
 	umask(umask(0) | 022);							/* don't set less restrictive */
 	*inifile = '\0';
-	dryrun = FALSE;
 
-	while((opt = getopt(argc, argv, "dvf:DV?")) != -1) {
-		switch (opt) {
+	while(1) {
+		c = getopt_long(argc, argv, "DdVvf:h?", long_options, &index);
+
+		if(c == -1)									/* end of options */
+			break;
+
+		switch (c) {
+
+		case 'D':									/* dry run mode */
+			dryrun = TRUE;
+			break;
 
 		case 'd':									/* debug INI parse */
 			debug = TRUE;
 			break;
+
+		case 'V':									/* print version */
+			fprintf(stdout, "%s: version %s\n", base(argv[0]), VERSION_STRING);
+			exit(EXIT_SUCCESS);
 
 		case 'v':									/* verbose debug */
 			verbose = TRUE;
@@ -89,23 +115,13 @@ int main(int argc, char *argv[])
 
 		case 'f':									/* INI file name */
 			strlcpy(inifile, optarg, PATH_MAX);
+			realpath(inifile, rpinifile);
 			break;
 
-		case 'D':									/* dry run mode */
-			dryrun = TRUE;
-			break;
-
-		case 'V':									/* print version */
-			fprintf(stdout, "%s: version %s\n", base(argv[0]), VERSION_STRING);
-			exit(EXIT_SUCCESS);
-
-		case '?':									/* print usage */
+		case 'h':									/* print usage */
+		case '?':
 			help(argv[0]);
 			exit(EXIT_SUCCESS);
-
-		default:									/* print error and usage */
-			help(argv[0]);
-			exit(EXIT_FAILURE);
 		}
 	}
 
@@ -113,6 +129,12 @@ int main(int argc, char *argv[])
 		help(argv[0]);
 		exit(EXIT_FAILURE);
 	}
+
+	/* convert long_options flags to bool */
+
+	debug = debug ? TRUE : FALSE;
+	dryrun = dryrun ? TRUE : FALSE;
+	verbose = verbose ? TRUE : FALSE;
 
 	/* configure the threads */
 
@@ -129,6 +151,8 @@ int main(int argc, char *argv[])
 	uname(&utsbuf);									/* for debug/token expansion */
 
 	if(debug) {
+		print_global(inidata, rpinifile);
+
 		for(i = 0; i < nsect; i++)
 			print_section(inidata, sections[i]);
 
@@ -137,7 +161,6 @@ int main(int argc, char *argv[])
 
 	/* INI global settings */
 
-	/* only global setting supported */
 	pidfile = strdup(my_ini(inidata, "global", "pidfile"));
 
 	if(IS_NULL(pidfile) || *pidfile != '/') {
@@ -145,12 +168,29 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	p = my_ini(inidata, "global", "database");		/* optional */
+
+	/* bug? centos7, sqlite3 3.7.17, temp db runs disk out of space */
+
+	if(IS_NULL(p) || strcmp(p, SQLTMPDB) == 0 || strcmp(p, SQLMEMDB) == 0)
+		strlcpy(database, SQLMEMDB, PATH_MAX);
+	else
+		strlcpy(database, p, PATH_MAX);				/* verbatim */
+
 	/* INI thread settings */
+
+	if(verbose) {
+		fprintf(stdout, "# %s\n\n", realpath(inifile, rbuf));
+		fprintf(stdout, "[global]\n");
+		fprintf(stdout, "pidfile   = %s\n", pidfile);
+		fprintf(stdout, "database  = %s\n", database);
+	}
 
 	for(i = 0; i < nsect; i++) {
 		ti = &tinfo[i];								/* shorthand */
 
 		ti->ti_section = sections[i];
+
 		ti->ti_command = strdup(my_ini(inidata, ti->ti_section, "command"));
 		ti->ti_argc = parsecmd(ti->ti_command, ti->ti_argv);
 
@@ -252,7 +292,6 @@ int main(int argc, char *argv[])
 		ti->ti_uid = verifyuid(my_ini(inidata, ti->ti_section, "uid"));
 		ti->ti_gid = verifygid(my_ini(inidata, ti->ti_section, "gid"));
 		ti->ti_dirlimit = logsize(my_ini(inidata, ti->ti_section, "dirlimit"));
-		ti->ti_loglimit = logsize(my_ini(inidata, ti->ti_section, "loglimit"));
 		ti->ti_rotatesiz = logsize(my_ini(inidata, ti->ti_section, "rotatesiz"));
 		ti->ti_expiresiz = logsize(my_ini(inidata, ti->ti_section, "expiresiz"));
 		ti->ti_diskfree = fabs(atof(my_ini(inidata, ti->ti_section, "diskfree")));
@@ -263,31 +302,6 @@ int main(int argc, char *argv[])
 		ti->ti_postcmd = malloc(BUFSIZ);
 		memset(ti->ti_postcmd, '\0', BUFSIZ);
 		strlcpy(ti->ti_postcmd, my_ini(inidata, ti->ti_section, "postcmd"), BUFSIZ);
-
-		/*
-		 * loglimit deprecated in v1.5.0
-		 * if rotatesiz and expiresiz are unset, set them to loglimit
-		 */
-
-		/* for slm */
-
-		if(!ti->ti_rotatesiz)
-			if(ti->ti_loglimit && IS_NULL(ti->ti_command) &&
-			   NOT_NULL(ti->ti_template) && NOT_NULL(ti->ti_postcmd))
-				ti->ti_rotatesiz = ti->ti_loglimit;
-
-		/* for wrk */
-
-		if(!ti->ti_rotatesiz)
-			if(ti->ti_loglimit && NOT_NULL(ti->ti_command) &&
-			   NOT_NULL(ti->ti_pipename) && NOT_NULL(ti->ti_template))
-				ti->ti_rotatesiz = ti->ti_loglimit;
-
-		/* for exp */
-
-		if(!ti->ti_expiresiz)
-			if(ti->ti_loglimit && ti->ti_expire)
-				ti->ti_expiresiz = ti->ti_loglimit;
 
 		if(verbose) {
 			dump_thread_info(ti);
@@ -310,10 +324,21 @@ int main(int argc, char *argv[])
 
 	/* version banner */
 
-	if(dryrun)
-		fprintf(stderr, "%s: version %s (DRY RUN)\n", base(argv[0]), VERSION_STRING);
-	else
-		fprintf(stderr, "%s: version %s\n", base(argv[0]), VERSION_STRING);
+	fprintf(stderr, "%s: version %s %s\n", base(argv[0]), VERSION_STRING,
+			dryrun ? "(DRY RUN)" : "");
+
+	/* create the database -- no point in keeping the old one */
+
+	if(strcmp(database, SQLMEMDB) != 0)
+		remove(database);
+
+	if(sqlite3_open_v2(database, &db, dbflags, NULL) != SQLITE_OK) {
+		fprintf(stderr, "%s: sqlite3_open_v2 failed\n", ti->ti_section);
+		exit(EXIT_FAILURE);
+	}
+
+	if(strcmp(database, SQLMEMDB) != 0)
+		chmod(database, 0600);
 
 	for(i = 0; i < nsect; i++) {
 		ti = &tinfo[i];								/* shorthand */
@@ -384,9 +409,9 @@ int main(int argc, char *argv[])
 
 static int parsecmd(char *cmd, char *argv[])
 {
+	char    str[BUFSIZ];
 	char   *ap, argv0[PATH_MAX];
 	char   *p;
-	char    str[BUFSIZ];
 	int     i = 0;
 
 	if(IS_NULL(cmd))
@@ -452,11 +477,6 @@ static void dump_thread_info(struct thread_info *ti)
 	fprintf(stdout, "pcrestr   = %s\n", ti->ti_pcrestr);
 	fprintf(stdout, "uid       = %d\n", ti->ti_uid);
 	fprintf(stdout, "gid       = %d\n", ti->ti_gid);
-
-	/* loglimit deprecated in v1.5.0 */
-
-	if(ti->ti_loglimit)
-		fprintf(stdout, "#loglimit = %ldMiB\n", MiB(ti->ti_loglimit));
 
 	fprintf(stdout, "rotatesiz = %ldMiB\n", MiB(ti->ti_rotatesiz));
 	fprintf(stdout, "expiresiz = %ldMiB\n", MiB(ti->ti_expiresiz));
@@ -526,15 +546,15 @@ static void help(char *prog)
 	char   *p = base(prog);
 
 	fprintf(stderr, "\nUsage:\n");
-	fprintf(stderr, "%s -f <inifile>\n\n", p);
+	fprintf(stderr, "%s -f|--ini-file ini-file\n\n", p);
 	fprintf(stderr, "Print the INI file as parsed, exit:\n");
-	fprintf(stderr, "%s -f <inifile> -d\n\n", p);
+	fprintf(stderr, "%s -f|--ini-file ini-file -d|--debug\n\n", p);
 	fprintf(stderr, "Print the INI file as interpreted, exit:\n");
-	fprintf(stderr, "%s -f <inifile> -v\n\n", p);
+	fprintf(stderr, "%s -f|--ini-file ini-file -v|--verbose\n\n", p);
 	fprintf(stderr, "Dry run mode:\n");
-	fprintf(stderr, "%s -D <options>\n\n", p);
+	fprintf(stderr, "%s -f|--ini-file ini-file -D|--dry-run\n\n", p);
 	fprintf(stderr, "Print the program version, exit:\n");
-	fprintf(stderr, "%s -V\n\n", p);
+	fprintf(stderr, "%s -V|--version\n\n", p);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

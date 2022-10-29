@@ -22,7 +22,7 @@ short pcrecompile(struct thread_info *ti)
 
 	if(IS_NULL(ti->ti_pcrestr)) {
 		/*
-		 * null is ok -- ensures mylogfile() always returns false
+		 * null is ok -- ensures namematch() always returns false
 		 */
 
 		ti->ti_pcrecmp = NULL;

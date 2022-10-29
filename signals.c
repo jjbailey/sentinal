@@ -64,10 +64,6 @@ static void sigparent(int sig)
 
 	signal(sig, sigparent);							/* reset */
 
-#if 0
-	fprintf(stderr, "sigparent caught signal %d\n", sig);
-#endif
-
 	if(sig == SIGINT || sig == SIGTERM)
 		exit(EXIT_SUCCESS);
 
@@ -89,10 +85,6 @@ static void sigparent(int sig)
 static void sigreject(int sig)
 {
 	signal(sig, sigreject);
-
-#if 0
-	fprintf(stderr, "sigreject caught signal %d\n", sig);
-#endif
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

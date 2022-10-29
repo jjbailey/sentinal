@@ -15,7 +15,7 @@
 
 #define	THRCHECK(ti,n)	threadcheck(ti, n) ? "true" : "false"
 
-int threadcheck(struct thread_info *ti, char *tname)
+short threadcheck(struct thread_info *ti, char *tname)
 {
 	short   pass = FALSE;
 

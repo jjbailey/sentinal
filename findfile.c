@@ -3,9 +3,6 @@
  * Check dir and possibly subdirs for files matching pcrestr (pcrecmp).
  * Return the number of files matching pcrestr.
  *
- * Expiration policy included here to improve performance: when we find expired
- * files, don't wait for the calling function to remove them -- remove them now.
- *
  * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
  *
@@ -13,48 +10,73 @@
  * in the root directory of this source tree.
  */
 
+#define	_GNU_SOURCE
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <pthread.h>
+#include <sqlite3.h>
 #include <string.h>
-#include <time.h>
-#include <unistd.h>
 #include "sentinal.h"
 
-short findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di)
+static char *sql_insertdir = "INSERT INTO %s_dir VALUES(%u, '%s', 0);";
+static char *sql_insertfile = "INSERT INTO %s_file VALUES(?, ?, ?, ?);";
+static char *sql_updatedir = "UPDATE %s_dir SET db_empty = 1 WHERE db_id = %d;";
+
+uint32_t findfile(struct thread_info *ti, short top, uint32_t *nextid,
+				  char *dir, sqlite3 *db)
 {
 	DIR    *dirp;
-	char    filename[PATH_MAX];
-	long    direntries = 0;							/* directory entries */
-	short   expbysize;								/* consider expire size */
-	short   expbytime;								/* consider expire time */
-	short   expthrflag;								/* is expire thread */
+	char    filename[PATH_MAX];						/* full pathname */
+	char    stmt[BUFSIZ];							/* statement buffer */
+	sqlite3_stmt *pstmt;							/* prepared statement */
 	struct dirent *dp;
-	struct stat stbuf;
-	time_t  curtime;
+	struct stat stbuf;								/* file status */
+	uint32_t entries = 0;							/* file entries */
+	uint32_t rowid = *nextid;						/* db_id, db_dirid */
 
 	if((dirp = opendir(dir)) == NULL)
 		return (0);
 
-	if(top) {										/* reset */
+	if(top) {
 		if(stat(dir, &stbuf) == -1) {
 			fprintf(stderr, "%s: cannot stat: %s\n", ti->ti_section, dir);
 			return (0);
 		}
 
-		memset(di, '\0', sizeof(struct dir_info));
+		if(drop_table(ti, db) == FALSE)
+			return (0);
+
+		if(create_table(ti, db) == FALSE)
+			return (0);
+
+		if(journal_mode(ti, db) == FALSE)
+			return (0);
+
+		if(sync_commit(ti, db) == FALSE)
+			return (0);
+
 		ti->ti_dev = stbuf.st_dev;					/* save mountpoint device */
+		rowid = *nextid = 1;						/* starting over */
 	}
 
-	expthrflag = strcmp(strrchr(ti->ti_task, '\0') - 3, _EXP_THR) == 0;
+	/* directory insert */
+
+	sqlexec(ti, db, "insert", sql_insertdir,
+			ti->ti_task, rowid, top ? "" : dir + strlen(ti->ti_dirname) + 1);
+
+	/* prepare file insert */
+
+	snprintf(stmt, BUFSIZ, sql_insertfile, ti->ti_task);
+	sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
 
 	while(dp = readdir(dirp)) {
 		if(MY_DIR(dp->d_name) || MY_PARENT(dp->d_name))
 			continue;
 
 		snprintf(filename, PATH_MAX, "%s/%s", dir, dp->d_name);
-		direntries++;
 
 		if(lstat(filename, &stbuf) == -1)
 			continue;
@@ -65,77 +87,45 @@ short findfile(struct thread_info *ti, short top, char *dir, struct dir_info *di
 		if(stat(filename, &stbuf) == -1)
 			continue;
 
-		if(S_ISDIR(stbuf.st_mode) && ti->ti_subdirs) {
-			/* search subdirectory */
-
-			if(stbuf.st_dev != ti->ti_dev)			/* don't cross filesystems */
-				continue;
-
-			if(findfile(ti, FALSE, filename, di) == EOF) {
-				/* empty dir removed */
-
-				if(direntries)
-					direntries--;
-
-				continue;
+		if(S_ISDIR(stbuf.st_mode)) {
+			if(ti->ti_subdirs && stbuf.st_dev == ti->ti_dev) {
+				/* next db_dirid */
+				(*nextid)++;
+				entries += findfile(ti, FALSE, nextid, filename, db);
 			}
+
+			continue;
 		}
 
-		if(!S_ISREG(stbuf.st_mode) || !mylogfile(ti, dp->d_name))
+		entries++;
+
+		if(!S_ISREG(stbuf.st_mode) || !namematch(ti, dp->d_name))
 			continue;
 
-		/* match */
-
-		if(expthrflag) {
-			/*
-			 * dfsthread and expthread can race to remove the same file
-			 * run in expthread only
-			 */
-
-			if(ti->ti_expire && !ti->ti_retmin) {
-				/*
-				 * ok to expire now
-				 * if expiresiz is set, use it, else true
-				 */
-
-				time(&curtime);
-
-				expbysize = !ti->ti_expiresiz || stbuf.st_size > ti->ti_expiresiz;
-				expbytime = stbuf.st_mtim.tv_sec + ti->ti_expire < curtime;
-
-				if(expbysize && expbytime)
-					if(rmfile(ti, filename, "expire")) {
-						if(direntries)
-							direntries--;
-
-						continue;					/* continue searching */
-					}
-			}
-		}
-
-		/* save the oldest file */
-
-		if(di->di_time == 0 || stbuf.st_mtim.tv_sec < di->di_time) {
-			strlcpy(di->di_file, filename, PATH_MAX);
-			di->di_time = stbuf.st_mtim.tv_sec;
-			di->di_size = stbuf.st_size;
-		}
-
-		if(ti->ti_dirlimit)							/* request total size of files found */
-			di->di_bytes += stbuf.st_size;
-
-		di->di_matches++;
+		sqlite3_reset(pstmt);
+		sqlite3_bind_int(pstmt, 1, rowid);
+		sqlite3_bind_text(pstmt, 2, dp->d_name, -1, NULL);
+		sqlite3_bind_int(pstmt, 3, stbuf.st_mtim.tv_sec);
+		sqlite3_bind_int(pstmt, 4, stbuf.st_size);
+		sqlite3_step(pstmt);
 	}
 
+	sqlite3_finalize(pstmt);
 	closedir(dirp);
 
-	if(!top)
-		if(direntries == 0 && ti->ti_rmdir) {		/* ok to remove empty dir */
-			if(rmfile(ti, dir, "rmdir"))
-				return (EOF);
-		}
+	/*
+	 * directory entries update
+	 * we are interested only in empty directories
+	 */
 
-	return (di->di_matches);
+	if(!entries)
+		sqlexec(ti, db, "update", sql_updatedir, ti->ti_task, rowid);
+
+	if(top)											/* indexes */
+		create_index(ti, db);
+
+	/* sqlite3_db_cacheflush(db); */
+	return (entries);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

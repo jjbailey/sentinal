@@ -24,7 +24,7 @@ void strreplace(char *template, char *oldstr, char *newstr)
 {
 	char    newbuf[BUFSIZ];
 	char   *p;
-	int     len;
+	size_t  len;
 
 	if(IS_NULL(oldstr) || IS_NULL(newstr))			/* null */
 		return;

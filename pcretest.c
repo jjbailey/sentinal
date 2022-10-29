@@ -22,10 +22,10 @@ short   pcrematch(struct thread_info *, char *);
 
 int main(int argc, char *argv[])
 {
-	struct thread_info ti;							/* so we can use pcrecompile.c */
 	char   *myname;
 	int     i;
 	short   match;
+	struct thread_info ti;							/* so we can use pcrecompile.c */
 
 	myname = base(argv[0]);
 

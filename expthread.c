@@ -1,6 +1,6 @@
 /*
  * expthread.c
- * Log expiration thread.
+ * File expiration thread.  Remove files older than expire time.
  *
  * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
@@ -13,23 +13,33 @@
 
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <pthread.h>
+#include <sqlite3.h>
 #include <unistd.h>
 #include "sentinal.h"
 
-#define	SCANRATE		(ONE_MINUTE * 10)			/* default, considers large filesys */
-#define	DRYSCAN			5							/* scanrate for dryrun */
+#define	SCANRATE		(ONE_MINUTE * 10)
+#define	DRYSCAN			30							/* scanrate for dryrun */
+
+static char *sql_selectfiles = "SELECT db_dir, db_file, db_size\n \
+	FROM  %s_dir, %s_file\n \
+	WHERE db_dirid = db_id\n \
+	ORDER BY db_time;";
+
+static char *sql_selectbytes = "SELECT SUM(db_size)\n \
+	FROM  %s_file;";
+
+static void process_files(struct thread_info *, sqlite3 *);
 
 void   *expthread(void *arg)
 {
-	char    ebuf[BUFSIZ];
-	extern short dryrun;
-	int     interval = dryrun ? DRYSCAN : SCANRATE;
-	short   expbysize;								/* consider expire size */
-	short   expbytime;								/* consider expire time */
-	struct dir_info dinfo;
-	struct thread_info *ti = arg;
-	time_t  curtime;
+	char    ebuf[BUFSIZ];							/* expire buffer */
+	extern short dryrun;							/* dry run bool */
+	extern sqlite3 *db;								/* db handle */
+	struct thread_info *ti = arg;					/* thread settings */
+	uint32_t nextid = 1;							/* db_id, db_dirid */
 
 	/*
 	 * this thread requires:
@@ -59,45 +69,142 @@ void   *expthread(void *arg)
 				ti->ti_section, ti->ti_pcrestr, ti->ti_retmax);
 
 	/* monitor expiration times */
+	/* force a quick initial scan */
+
+	sleep(dryrun);
 
 	for(;;) {
-		sleep(interval);							/* expiry monitor rate */
+		/* find files in dirname */
 
-		/* search for expired files */
+		if(findfile(ti, TRUE, &nextid, ti->ti_dirname, db) > 0) {
+			/* process directories emptied by previous run */
 
-		findfile(ti, TRUE, ti->ti_dirname, &dinfo);
+			if(ti->ti_rmdir)
+				process_dirs(ti, db);
 
-		if(dinfo.di_matches < 1 || (ti->ti_retmin && dinfo.di_matches <= ti->ti_retmin)) {
-			/* no matches, or matches below the retention count */
-			continue;
+			/* process matching files */
+
+			process_files(ti, db);
 		}
 
-		/* match */
+		sleep(dryrun ? DRYSCAN : SCANRATE);
+	}
 
-		time(&curtime);
+	/* notreached */
+	return ((void *)0);
+}
+
+static void process_files(struct thread_info *ti, sqlite3 *db)
+{
+	char    filename[PATH_MAX];						/* full pathname */
+	char    stmt[BUFSIZ];							/* statement buffer */
+	char   *db_dir;									/* sql data */
+	char   *db_file;								/* sql data */
+	char   *reason;									/* why */
+	extern short dryrun;							/* dry run bool */
+	int     dfd;									/* dirname fd */
+	int     drcount = 0;							/* dryrun count */
+	short   expbysize;								/* consider expire size */
+	short   expbytime;								/* consider expire time */
+	sqlite3_stmt *pstmt;							/* prepared statement */
+	struct stat stbuf;								/* file status */
+	time_t  curtime;								/* now */
+	uint32_t db_size;								/* sql data */
+	uint32_t filecount;								/* matching files */
+	uint32_t removed = 0;							/* matching files removed */
+	unsigned long long dirbytes;					/* dirsize in bytes */
+
+	/* count all files */
+
+	if((filecount = count_files(ti, db)) < 1)
+		return;
+
+	if(ti->ti_dirlimit) {							/* count bytes in dir */
+		snprintf(stmt, BUFSIZ, sql_selectbytes, ti->ti_task);
+		sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
+		sqlite3_step(pstmt);
+		dirbytes = (unsigned long long)sqlite3_column_int64(pstmt, 0);
+		sqlite3_finalize(pstmt);
+	}
+
+	/* process expired files */
+
+	snprintf(stmt, BUFSIZ, sql_selectfiles, ti->ti_task, ti->ti_task);
+	sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
+	time(&curtime);
+
+	for(;;) {
+		if(ti->ti_retmin && filecount <= ti->ti_retmin)
+			break;
+
+		if(dryrun && drcount++ == 10) {				/* dryrun doesn't remove anything */
+			if(!ti->ti_terse)
+				fprintf(stderr, "%s: ...\n", ti->ti_section);
+
+			break;
+		}
+
+		if(sqlite3_step(pstmt) != SQLITE_ROW)
+			break;
+
+		db_dir = (char *)sqlite3_column_text(pstmt, 0);
+		db_file = (char *)sqlite3_column_text(pstmt, 1);
+		db_size = (uint32_t) sqlite3_column_int(pstmt, 2);
+
+		/* assemble filename: ti_dirname + / + db_dir + / + db_file */
+
+		if(NOT_NULL(db_dir))
+			snprintf(filename, PATH_MAX, "%s/%s/%s", ti->ti_dirname, db_dir, db_file);
+		else
+			snprintf(filename, PATH_MAX, "%s/%s", ti->ti_dirname, db_file);
+
+		if(stat(filename, &stbuf) == -1)			/* check for changes since db load */
+			continue;
 
 		/*
 		 * if expiresiz is set, use it, else true
 		 * if expire is set, use it, else false
 		 */
 
-		expbysize = !ti->ti_expiresiz || dinfo.di_size > ti->ti_expiresiz;
-		expbytime = ti->ti_expire && dinfo.di_time + ti->ti_expire < curtime;
+		expbysize = !ti->ti_expiresiz || stbuf.st_size > ti->ti_expiresiz;
+		expbytime = ti->ti_expire && stbuf.st_mtim.tv_sec + ti->ti_expire < curtime;
 
-		if(ti->ti_retmax && dinfo.di_matches > ti->ti_retmax)
-			rmfile(ti, dinfo.di_file, "retmax");
+		/* files are sorted by time */
 
-		else if(ti->ti_dirlimit && dinfo.di_bytes > ti->ti_dirlimit)
-			rmfile(ti, dinfo.di_file, "dirlimit");
+		if(ti->ti_retmax && filecount > ti->ti_retmax)
+			reason = "retmax";						/* too many */
+
+		else if(ti->ti_dirlimit && dirbytes > ti->ti_dirlimit)
+			reason = "dirlimit";					/* too much */
 
 		else if(expbysize && expbytime)
-			rmfile(ti, dinfo.di_file, "expire");
+			reason = "expire";						/* too old */
 
-		/* oldest file, not expired */
+		else if(!expbytime)							/* done with the list */
+			break;
+
+		else										/* none of the above */
+			continue;
+
+		if(rmfile(ti, filename, reason)) {
+			removed++;
+			filecount--;
+			dirbytes -= db_size;
+		}
 	}
 
-	/* notreached */
-	return ((void *)0);
+	/* modified buffer cache pages */
+
+	if((dfd = open(ti->ti_dirname, R_OK)) > 0) {
+		fdatasync(dfd);
+		close(dfd);
+	}
+
+	sqlite3_finalize(pstmt);
+
+	if(removed)
+		fprintf(stderr, "%s: %u %s removed\n", ti->ti_section,
+				removed, removed == 1 ? "file" : "files");
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

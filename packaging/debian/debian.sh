@@ -53,8 +53,8 @@ EOF
 dpkg-deb --build $BUILDIR
 
 [ -f $BUILDIR.deb ] && {
-    dpkg -c $BUILDIR.deb
-    ls -o $BUILDIR.deb
+    dpkg -c $CWD/$BUILDIR.deb
+    ls -o $CWD/$BUILDIR.deb
 }
 
 exit 0

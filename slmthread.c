@@ -21,7 +21,7 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-static int inotify_watch(char *, char *);
+static short inotify_watch(char *, char *);
 
 #define	SCANRATE		2							/* default monitor rate */
 #define	POLLTIMEOUT		(120 * 1000)				/* 2 minutes in milliseconds */
@@ -34,7 +34,7 @@ void   *slmthread(void *arg)
 	char    filename[PATH_MAX];
 	int     status;
 	struct stat stbuf;
-	struct thread_info *ti = arg;
+	struct thread_info *ti = arg;					/* thread settings */
 
 	/*
 	 * this thread requires:
@@ -75,7 +75,7 @@ void   *slmthread(void *arg)
 	return ((void *)0);
 }
 
-static int inotify_watch(char *section, char *filename)
+static short inotify_watch(char *section, char *filename)
 {
 	char    buf[BUFSIZ];
 	int     fd;
