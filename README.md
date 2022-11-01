@@ -29,6 +29,7 @@ name can be `:memory:`, or a pathname of a disk file.
 
 Section names can be up to 11 characters in length (kernel max), and the
 characters must be alpha-numeric or underscore (valid sqlite3 table name).
+Section names must be unique in the INI file.
 
     [global]
     pidfile:   sentinal process id and lock file, for manual logrotate
@@ -57,33 +58,31 @@ characters must be alpha-numeric or underscore (valid sqlite3 table name).
     postcmd:   command to run after log closes or rotates, %file = filename
     truncate:  option to truncate slm-managed files (false)
 
-`section` is the section name.  It must be unique in the INI file.
-
 ### Thread Requirements
 
 Threads need several keys defined in order for them to run.  Below are the
 thread types and their required keys:
 
-* Diskfree thread
+* Diskfree (DFS) Thread
     * pcrestr
     and one or more of the following
     * diskfree
     * inofree
 
-* Expire thread
+* Expire (EXP) Thread
     * pcrestr
     and one or more of the following
     * dirlimit
     * expire
     * retmax
 
-* Simple log monitor thread
+* Simple log Monitor (SLM) Thread
     * command unset
     * template
     * postcmd
     * rotatesiz
 
-* Work (log ingestion) thread
+* Work (log ingestion, WRK) Thread
     * command
     * pipename
     * template
@@ -140,23 +139,6 @@ This INI configuration removes gzipped files in /var/log and its subdirectories 
     subdirs   = true
     pcrestr   = \.gz
     expire    = 2w
-
-### Inode Usage Example
-
-Remove files starting with `appdata-` when inode free falls below 15%,
-or when the files are older than 7 days, or when there are more than 5M files:
-
-    [global]
-    pidfile   = /run/inode-usage.pid
-    database  = :memory:
-
-    [files]
-    dirname   = /path/to/appfiles
-    subdirs   = true
-    pcrestr   = appdata-
-    inofree   = 15
-    expire    = 7D
-    retmax    = 5M
 
 ### Directory Usage Example
 
@@ -359,9 +341,9 @@ to install an example as a starting point.
 
 ## Test INI Files
 
-sentinal provides two options for testing INI files.  `-d` prints INI file
-sections as parsed, where the output is similar to the input.  `-v` prints
-INI file sections with the keys evaluated as they would be at run time,
+sentinal provides two options for testing INI files.  `-d|--debug` prints INI
+file sections as parsed, where the output is similar to the input.  `-v|--verbose`
+prints INI file sections with the keys evaluated as they would be at run time,
 including symlink resolution and relative to full pathname conversion.
 
 ## Run
