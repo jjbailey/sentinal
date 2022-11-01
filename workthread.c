@@ -78,12 +78,12 @@ void   *workthread(void *arg)
 
 		if((logfd = fifoopen(ti)) == -1) {
 			/* open/create FIFO failed */
-			SLOWEXIT(EXIT_FAILURE);
+			return ((void *)0);
 		}
 
 		if(pipe(pipefd) == -1) {
 			fprintf(stderr, "%s: can't create IPC pipe\n", ti->ti_section);
-			exit(EXIT_FAILURE);
+			return ((void *)0);
 		}
 
 		logname(ti->ti_template, ti->ti_filename);
@@ -103,7 +103,7 @@ void   *workthread(void *arg)
 
 		case -1:
 			fprintf(stderr, "%s: can't fork command\n", ti->ti_section);
-			SLOWEXIT(EXIT_FAILURE);
+			return ((void *)0);
 
 		case 0:
 			/*
@@ -252,17 +252,6 @@ static void fifosize(struct thread_info *ti, int size)
 
 	if((cursize = fcntl(fd, F_GETPIPE_SZ)) != size)
 		fcntl(fd, F_SETPIPE_SZ, size);
-
-# if 0
-	char    buf[BUFSIZ];
-
-	if((cursize = fcntl(fd, F_GETPIPE_SZ)) >= ONE_MiB)
-		snprintf(buf, BUFSIZ, "%ldMiB", MiB(cursize));
-	else
-		snprintf(buf, BUFSIZ, "%ldKiB", KiB(cursize));
-
-	fprintf(stderr, "%s: %s pipesize: %s\n", ti->ti_section, base(ti->ti_pipename), buf);
-# endif
 
 	close(fd);
 
