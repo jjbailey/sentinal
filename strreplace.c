@@ -36,7 +36,7 @@ void strreplace(char *template, char *oldstr, char *newstr)
 	memset(newbuf, '\0', BUFSIZ);
 
 	while(p = strstr(template, oldstr)) {
-		strlcpy(newbuf, template, (p - template) + 1);
+		strlcpy(newbuf, template, (p - template) + 1);	/* add NUL */
 		strlcat(newbuf, newstr, BUFSIZ);
 		strlcat(newbuf, p + len, BUFSIZ);
 		strlcpy(template, newbuf, BUFSIZ);

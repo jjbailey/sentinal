@@ -78,7 +78,7 @@ static void substrval(char *template, char *token, time_t value)
 
 	while(p = strstr(search, token)) {
 		memset(newbuf, '\0', PATH_MAX);
-		strlcpy(newbuf, search, (p - search) + 1);
+		strlcpy(newbuf, search, (p - search) + 1);	/* add NUL */
 		snprintf(valbuf, PATH_MAX, "%02ld", value);
 		strlcat(newbuf, valbuf, PATH_MAX);
 		strlcat(newbuf, p + len, PATH_MAX);
