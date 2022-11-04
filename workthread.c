@@ -63,6 +63,9 @@ void   *workthread(void *arg)
 	 *
 	 * optional, but recommended:
 	 *  - ti_rotatesiz
+	 *
+	 * optional:
+	 *  - ti_postcmd
 	 */
 
 	pthread_setname_np(pthread_self(), threadname(ti, _WRK_THR));
@@ -220,10 +223,11 @@ void   *workthread(void *arg)
 			/* No space left on device (cannot write compressed block) */
 
 			if(STAT(filename, stbuf) > 0) {			/* success */
-				if((status = postcmd(ti, filename)) != 0) {
-					fprintf(stderr, "%s: postcmd exit: %d\n", ti->ti_section, status);
-					sleep(5);						/* be nice */
-				}
+				if(NOT_NULL(ti->ti_postcmd))
+					if((status = postcmd(ti, filename)) != 0) {
+						fprintf(stderr, "%s: postcmd exit: %d\n", ti->ti_section, status);
+						sleep(5);					/* be nice */
+					}
 			} else {								/* fail */
 				remove(filename);					/* exists? */
 				sleep(5);							/* be nice */
