@@ -30,9 +30,10 @@ int postcmd(struct thread_info *ti, char *filename)
 	char    shellbuf[BUFSIZ];
 	char    tmplbuf[BUFSIZ];
 	char   *home;
+	extern short dryrun;							/* dry run bool */
 	int     i;
-	int     status;
-	pid_t   pid;
+	int     status;									/* postcmd child exit */
+	pid_t   pid;									/* postcmd pid */
 	struct passwd *p;
 
 	if(IS_NULL(ti->ti_postcmd)) {
@@ -74,6 +75,9 @@ int postcmd(struct thread_info *ti, char *filename)
 		strreplace(cmdbuf, _SECT_TOK, ti->ti_section);
 
 		fprintf(stderr, "%s: %s\n", ti->ti_section, cmdbuf);
+
+		if(dryrun)
+			exit(EXIT_SUCCESS);
 
 		/* close parent's and unused fds */
 
