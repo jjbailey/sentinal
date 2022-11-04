@@ -52,6 +52,13 @@ int postcmd(struct thread_info *ti, char *filename)
 			setuid(ti->ti_uid);
 		}
 
+		if(access(ti->ti_dirname, R_OK | W_OK | X_OK) == -1) {
+			fprintf(stderr, "%s: insufficient permissions for %s\n",
+					ti->ti_section, ti->ti_dirname);
+
+			exit(EXIT_FAILURE);
+		}
+
 		if(chdir(ti->ti_dirname) == -1) {
 			fprintf(stderr, "%s: can't cd to %s\n", ti->ti_section, ti->ti_dirname);
 			exit(EXIT_FAILURE);
@@ -95,7 +102,7 @@ int postcmd(struct thread_info *ti, char *filename)
 	default:
 		waitpid(pid, &status, 0);
 
-		if(ti->ti_truncate) {
+		if(ti->ti_truncate && NOT_NULL(filename)) {
 			/* slm only */
 
 			if(strcmp(strrchr(ti->ti_task, '\0') - 3, _SLM_THR) == 0)
