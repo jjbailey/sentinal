@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <getopt.h>
 #include <libgen.h>
 #include <signal.h>
 #include <unistd.h>
@@ -33,6 +34,13 @@ static void pipeopen(int);
 static void sigcatch(int);
 static void systemd_signals(void);
 
+static struct option long_options[] = {
+	{ "version", no_argument, NULL, 'V' },
+	{ "ini-file", required_argument, NULL, 'f' },
+	{ "help", no_argument, NULL, 'h' },
+	{ 0, 0, 0, 0 }
+};
+
 /* iniget.c functions */
 char   *my_ini(ini_t *, char *, char *);
 int     get_sections(ini_t *, int, char **);
@@ -46,30 +54,33 @@ int main(int argc, char *argv[])
 	char   *p1, *p2;
 	char   *sections[MAXSECT];
 	ini_t  *inidata;
+	int     c;
 	int     i;
+	int     index = 0;
 	int     nsect;
-	int     opt;
 
 	*inifile = '\0';
 
-	while((opt = getopt(argc, argv, "f:V?")) != -1) {
-		switch (opt) {
+	while(1) {
+		c = getopt_long(argc, argv, "f:Vh?", long_options, &index);
 
-		case 'f':									/* INI file name */
-			strlcpy(inifile, optarg, PATH_MAX);
+		if(c == -1)									/* end of options */
 			break;
+
+		switch (c) {
 
 		case 'V':									/* print version */
 			fprintf(stdout, "%s: version %s\n", base(argv[0]), VERSION_STRING);
 			exit(EXIT_SUCCESS);
 
-		case '?':									/* print usage */
+		case 'f':									/* INI file name */
+			strlcpy(inifile, optarg, PATH_MAX);
+			break;
+
+		case 'h':									/* print usage */
+		case '?':
 			help(argv[0]);
 			exit(EXIT_SUCCESS);
-
-		default:									/* print error and usage */
-			help(argv[0]);
-			exit(EXIT_FAILURE);
 		}
 	}
 
@@ -191,9 +202,9 @@ static void help(char *prog)
 	char   *p = base(prog);
 
 	fprintf(stderr, "\nUsage:\n");
-	fprintf(stderr, "%s -f <inifile>\n\n", p);
+	fprintf(stderr, "%s -f|--ini-file ini-file\n\n", p);
 	fprintf(stderr, "Print the program version, exit\n");
-	fprintf(stderr, "%s -V\n\n", p);
+	fprintf(stderr, "%s -V|--version\n\n", p);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
