@@ -88,6 +88,8 @@ thread types and their required keys:
     * template
     optional, but recommended
     * rotatesiz
+    optional
+    * postcmd
 
 Note the following conditions.  If:
 
