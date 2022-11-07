@@ -63,33 +63,33 @@ Section names must be unique in the INI file.
 Threads need several keys defined in order for them to run.  Below are the
 thread types and their required keys:
 
-* Diskfree (DFS) Thread
-    * pcrestr
-    and one or more of the following
-    * diskfree
-    * inofree
+Diskfree (DFS) Thread
+ - pcrestr
+ - one or more of the following
+   - diskfree
+   - inofree
 
-* Expire (EXP) Thread
-    * pcrestr
-    and one or more of the following
-    * dirlimit
-    * expire
-    * retmax
+Expire (EXP) Thread
+ - pcrestr
+ - one or more of the following
+   - dirlimit
+   - expire
+   - retmax
 
-* Simple log Monitor (SLM) Thread
-    * command unset
-    * template
-    * postcmd
-    * rotatesiz
+ Simple log Monitor (SLM) Thread
+  - command unset
+  - template
+  - postcmd
+  - rotatesiz
 
-* Work (log ingestion, WRK) Thread
-    * command
-    * pipename
-    * template
-    optional, but recommended
-    * rotatesiz
-    optional
-    * postcmd
+ Work (log ingestion, WRK) Thread
+  - command
+  - pipename
+  - template
+  - optional, but recommended
+    - rotatesiz
+  - optional
+    - postcmd
 
 Note the following conditions.  If:
 
