@@ -9,12 +9,13 @@
  * in the root directory of this source tree.
  *
  * examples of commands to monitor activity:
- *  $ journalctl -f -n 20 -t sentinal
- *  $ journalctl -f _SYSTEMD_UNIT=example.service
+ *  # journalctl -f -n 20 -t sentinal
+ *  # journalctl -f _SYSTEMD_UNIT=example.service
  *  $ ps -lT -p $(pidof sentinal)
  *  $ top -H -S -p $(echo $(pgrep sentinal) | sed 's/ /,/g')
  *  $ htop -d 5 -p $(echo $(pgrep sentinal) | sed 's/ /,/g')
  *  # lslocks -p $(pidof sentinal)
+ *  # pmap -X $(pidof sentinal)
  *
  * clean up the systemd logs:
  *  journalctl --vacuum-time=2d
@@ -27,9 +28,9 @@
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <dirent.h>
+#include <getopt.h>
 #include <libgen.h>
 #include <limits.h>
-#include <getopt.h>
 #include <math.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -115,7 +116,6 @@ int main(int argc, char *argv[])
 
 		case 'f':									/* INI file name */
 			strlcpy(inifile, optarg, PATH_MAX);
-			realpath(inifile, rpinifile);
 			break;
 
 		case 'h':									/* print usage */
@@ -151,6 +151,7 @@ int main(int argc, char *argv[])
 	uname(&utsbuf);									/* for debug/token expansion */
 
 	if(debug) {
+		realpath(inifile, rpinifile);
 		print_global(inidata, rpinifile);
 
 		for(i = 0; i < nsect; i++)

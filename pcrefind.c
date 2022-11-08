@@ -18,8 +18,8 @@
 #include "sentinal.h"
 #include "basename.h"
 
-uint32_t pcrefind(struct thread_info *, short, char *);
 short   pcrematch(struct thread_info *, char *);
+uint32_t pcrefind(struct thread_info *, short, char *);
 
 int main(int argc, char *argv[])
 {

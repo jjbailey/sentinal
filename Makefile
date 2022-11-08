@@ -70,7 +70,7 @@ PCRE_DIR=	/usr/lib/sqlite3
 
 CC=			gcc
 WARNINGS=	-Wno-unused-result -Wunused-variable -Wunused-but-set-variable
-CFLAGS=		-g -fstack-protector -pthread $(WARNINGS)
+CFLAGS=		-O -fstack-protector -pthread $(WARNINGS)
 
 PCRELIB=	-lpcre2-8
 

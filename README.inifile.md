@@ -5,6 +5,8 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
 ## Global Section Keys
 
     pidfile:   process id file, absolute path, required
+    database:  name of the sqlite3 database, optional, :memory: or path
+               default :memory:
 
 ## Section Keys
 
@@ -111,9 +113,9 @@ Example: file expire thread name for the section called `console`: `console_exp`
 
 ## Debugging INI Files
 
-sentinal accepts two flags for debugging.
-`-d` prints INI files as parsed.
-`-v` prints INI files as interpreted and the threads that will run.
+sentinal accepts two options for debugging.
+`-d|--debug` prints INI files as parsed.
+`-v|--verbose` prints INI files as interpreted and the threads that will run.
 
     $ /opt/sentinal/bin/sentinal -f /opt/sentinal/tests/test4.ini -d
 

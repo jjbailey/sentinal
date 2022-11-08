@@ -30,9 +30,10 @@ int postcmd(struct thread_info *ti, char *filename)
 	char    shellbuf[BUFSIZ];
 	char    tmplbuf[BUFSIZ];
 	char   *home;
+	extern short dryrun;							/* dry run bool */
 	int     i;
-	int     status;
-	pid_t   pid;
+	int     status;									/* postcmd child exit */
+	pid_t   pid;									/* postcmd pid */
 	struct passwd *p;
 
 	if(IS_NULL(ti->ti_postcmd)) {
@@ -52,6 +53,13 @@ int postcmd(struct thread_info *ti, char *filename)
 			setuid(ti->ti_uid);
 		}
 
+		if(access(ti->ti_dirname, R_OK | W_OK | X_OK) == -1) {
+			fprintf(stderr, "%s: insufficient permissions for %s\n",
+					ti->ti_section, ti->ti_dirname);
+
+			exit(EXIT_FAILURE);
+		}
+
 		if(chdir(ti->ti_dirname) == -1) {
 			fprintf(stderr, "%s: can't cd to %s\n", ti->ti_section, ti->ti_dirname);
 			exit(EXIT_FAILURE);
@@ -67,6 +75,9 @@ int postcmd(struct thread_info *ti, char *filename)
 		strreplace(cmdbuf, _SECT_TOK, ti->ti_section);
 
 		fprintf(stderr, "%s: %s\n", ti->ti_section, cmdbuf);
+
+		if(dryrun)
+			exit(EXIT_SUCCESS);
 
 		/* close parent's and unused fds */
 
@@ -95,7 +106,7 @@ int postcmd(struct thread_info *ti, char *filename)
 	default:
 		waitpid(pid, &status, 0);
 
-		if(ti->ti_truncate) {
+		if(ti->ti_truncate && NOT_NULL(filename)) {
 			/* slm only */
 
 			if(strcmp(strrchr(ti->ti_task, '\0') - 3, _SLM_THR) == 0)
