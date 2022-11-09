@@ -33,10 +33,12 @@
 /* subtract from avail for extra space, reduce flapping */
 #define	PADDING			(float)0.09
 
+/* test LIMIT to see if it improves performance on big directory trees */
 static char *sql_selectfiles = "SELECT db_dir, db_file\n \
 	FROM  %s_dir, %s_file\n \
 	WHERE db_dirid = db_id\n \
-	ORDER BY db_time;";
+	ORDER BY db_time\n \
+    LIMIT 1000000;";
 
 static char mountdir[PATH_MAX];						/* mountpoint */
 
