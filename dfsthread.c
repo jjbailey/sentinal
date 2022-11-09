@@ -204,13 +204,25 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 			break;
 		}
 
+		/* check if usage dropped before we got here */
+
+		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == FALSE)
+			break;
+
+		/*
+		 * subtract padding from available space to
+		 * provide a bit more space than the configured value
+		 */
+
+		if(!LOW_RES(ti->ti_diskfree, pc_bfree - PADDING) &&
+		   !LOW_RES(ti->ti_inofree, pc_ffree - PADDING))
+			break;
+
 		if(sqlite3_step(pstmt) != SQLITE_ROW)
 			break;
 
 		db_dir = (char *)sqlite3_column_text(pstmt, 0);
 		db_file = (char *)sqlite3_column_text(pstmt, 1);
-
-		/* assemble filename: ti_dirname + / + db_dir + / + db_file */
 
 		if(NOT_NULL(db_dir))
 			snprintf(filename, PATH_MAX, "%s/%s/%s", ti->ti_dirname, db_dir, db_file);
@@ -221,18 +233,6 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 			removed++;
 			filecount--;
 		}
-
-		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == FALSE)
-			break;
-
-		/*
-		 * subtract padding from available space
-		 * provide a bit more space than the configured value
-		 */
-
-		if(!LOW_RES(ti->ti_diskfree, pc_bfree - PADDING) &&
-		   !LOW_RES(ti->ti_inofree, pc_ffree - PADDING))
-			break;
 	}
 
 	sqlite3_finalize(pstmt);
