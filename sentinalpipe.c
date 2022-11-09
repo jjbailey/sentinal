@@ -137,6 +137,7 @@ int main(int argc, char *argv[])
 		sleep(ONE_MINUTE);
 	}
 
+	/* notreached */
 	exit(EXIT_SUCCESS);
 }
 
@@ -184,7 +185,7 @@ static void sigcatch(int sig)
 	/*
 	 * keep pipes open for application restarts, e.g., if someone runs:
 	 * systemctl restart sentinal sentinalpipe
-	 * give the application time to restart
+	 * give sentinal time to restart
 	 */
 
 	signal(sig, sigcatch);
@@ -192,7 +193,7 @@ static void sigcatch(int sig)
 	if(sig == SIGHUP || sig == SIGTERM) {			/* systemd reload/restart */
 		signal(sig, SIG_IGN);
 		fprintf(stderr, "exiting in 10s...\n");
-		sleep(10);									/* give sentinal 10s to restart */
+		sleep(10);									/* give sentinal 10s */
 		exit(EXIT_SUCCESS);
 	}
 }
