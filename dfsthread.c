@@ -38,7 +38,7 @@ static char *sql_selectfiles = "SELECT db_dir, db_file\n \
 	FROM  %s_dir, %s_file\n \
 	WHERE db_dirid = db_id\n \
 	ORDER BY db_time\n \
-    LIMIT 1000000;";
+	LIMIT 1000000;";
 
 static char mountdir[PATH_MAX];						/* mountpoint */
 
