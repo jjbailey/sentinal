@@ -281,11 +281,15 @@ int main(int argc, char *argv[])
 			ti->ti_pipename = strdup(tbuf);
 		}
 
-		ti->ti_template = strdup(base(my_ini(inidata, ti->ti_section, "template")));
+		ti->ti_template = malloc(BUFSIZ);			/* more than PATH_MAX */
+		strlcpy(ti->ti_template,
+				base(my_ini(inidata, ti->ti_section, "template")), PATH_MAX);
+
 		ti->ti_pcrestr = my_ini(inidata, ti->ti_section, "pcrestr");
 		pcrecompile(ti);
-		ti->ti_filename = malloc(PATH_MAX);
-		memset(ti->ti_filename, '\0', PATH_MAX);
+
+		ti->ti_filename = malloc(BUFSIZ);			/* more than PATH_MAX */
+		memset(ti->ti_filename, '\0', BUFSIZ);
 
 		ti->ti_pid = (pid_t) 0;						/* only workers use this */
 		ti->ti_wfd = 0;								/* only workers use this */
