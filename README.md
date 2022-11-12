@@ -108,10 +108,25 @@ Precedence of Keys:
  - `retmin`, `retmax` take precedence over `dirlimit`, `diskfree`, `inofree`, `expire`.
  - `dirlimit`, `diskfree`, `inofree` take precedence over `expire`.
 
-### Disk Space Example
+### Free Disk Space
 
-To monitor console logs in /opt/sentinal/log for 20% free disk space,
-and to retain at least 3 logs and at most 50 logs:
+sentinal can remove files when the filesystem they occupy falls below the free space constraint.
+
+```mermaid
+flowchart TB
+    s1[ read diskfree ]
+    s2[ check diskfree ]
+    d1{ low free space }
+    a1[ yes ]
+    a2[ no ]
+    s3[ remove ]
+    s9[ return to check diskfree ]
+    s1 --> s2 --> d1
+    d1 --> a1 --> s3 --> s9
+    d1 --> a2 --> s9
+```
+
+Example: to monitor console logs in /opt/sentinal/log for 20% free disk space:
 
     [global]
     pidfile   = /run/diskfree.pid
@@ -121,8 +136,6 @@ and to retain at least 3 logs and at most 50 logs:
     dirname   = /opt/sentinal/log
     pcrestr   = console
     diskfree  = 20
-    retmin    = 3
-    retmax    = 50
 
 ### File Expiration
 
