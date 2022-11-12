@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
 
 	/* INI global settings */
 
-	pidfile = strdup(my_ini(inidata, "global", "pidfile"));
+	pidfile = strndup(my_ini(inidata, "global", "pidfile"), PATH_MAX);
 
 	if(IS_NULL(pidfile) || *pidfile != '/') {
 		fprintf(stderr, "%s: pidfile is null or path not absolute\n", argv[0]);
@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
 
 		ti->ti_section = sections[i];
 
-		ti->ti_command = strdup(my_ini(inidata, ti->ti_section, "command"));
+		ti->ti_command = strndup(my_ini(inidata, ti->ti_section, "command"), PATH_MAX);
 		ti->ti_argc = parsecmd(ti->ti_command, ti->ti_argv);
 
 		if(NOT_NULL(ti->ti_command) && ti->ti_argc) {
@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		ti->ti_path = strdup(ti->ti_argc ? rbuf : "");
+		ti->ti_path = strndup(ti->ti_argc ? rbuf : "", PATH_MAX);
 
 		/* get real path of directory */
 
@@ -226,7 +226,7 @@ int main(int argc, char *argv[])
 		if(realpath(ti->ti_dirname, rbuf) == NULL)
 			*rbuf = '\0';
 
-		ti->ti_dirname = strdup(rbuf);
+		ti->ti_dirname = strndup(rbuf, PATH_MAX);
 
 		if(IS_NULL(ti->ti_dirname) || strcmp(ti->ti_dirname, "/") == 0) {
 			fprintf(stderr, "%s: missing or bad dirname\n", ti->ti_section);
@@ -278,7 +278,7 @@ int main(int argc, char *argv[])
 			}
 
 			fullpath(rbuf, base(ti->ti_pipename), tbuf);
-			ti->ti_pipename = strdup(tbuf);
+			ti->ti_pipename = strndup(tbuf, PATH_MAX);
 		}
 
 		ti->ti_template = malloc(BUFSIZ);			/* more than PATH_MAX */

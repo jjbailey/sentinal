@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 		}
 
 		fullpath(rbuf, base(p2), filename);
-		pipelist[i].pi_pipename = strdup(filename);
+		pipelist[i].pi_pipename = strndup(filename, PATH_MAX);
 		pipelist[i].pi_fd = EOF;
 
 		fprintf(stderr, "monitor %s\n", pipelist[i].pi_pipename);
