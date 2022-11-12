@@ -189,6 +189,24 @@ sentinal, using inotify, can monitor and process logs when they reach a specifie
 A sentinal section for SLM must not set `command`;
 `template`, `postcmd`, and `rotatesiz` must be set.
 
+```mermaid
+flowchart TB
+    s1[ read rotatesiz ]
+    s2[ check size ]
+    d1{ size reached }
+    a1[ yes ]
+    a2[ no ]
+    s3[ run postcmd ]
+    s4[ return to check size ]
+    s1 --> s2
+    s2 --> d1
+    d1 --> a1
+    d1 --> a2
+    a1 --> s3
+    s3 --> s4
+    a2 --> s4
+```
+
 In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 50MiB in size:
 
     [global]
@@ -231,11 +249,11 @@ sequenceDiagram
     participant FIFO
     participant Sentinal
     participant Logfile
-    Application->>FIFO: Application writes to FIFO
-    FIFO->>Sentinal: Sentinal reads from FIFO
-    Sentinal->>Logfile: Sentinal creates logfile
-    Sentinal->>Sentinal: Sentinal auto-rotates logfile
-    Sentinal->Logfile: Optionally post-process logfile
+    Application ->> FIFO: Application writes to FIFO
+    FIFO ->> Sentinal: Sentinal reads from FIFO
+    Sentinal ->> Logfile: Sentinal creates logfile
+    Sentinal ->> Sentinal: Sentinal auto-rotates logfile
+    Sentinal -> Logfile: Optionally post-process logfile
 ```
 
 For example, this configuration connects the dd program to example.log for log ingestion,
