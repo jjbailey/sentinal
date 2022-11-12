@@ -119,7 +119,7 @@ flowchart TB
     d1{ low free space }
     a1[ yes ]
     a2[ no ]
-    s3[ remove ]
+    s3[ remove oldest files ]
     s9[ return to check diskfree ]
     s1 --> s2 --> d1
     d1 --> a1 --> s3 --> s9
@@ -164,7 +164,7 @@ flowchart TB
     a6[ no ]
     a7[ yes ]
     a8[ no ]
-    s3[ remove ]
+    s3[ remove oldest or expired files ]
     s9[ return to check vars ]
     s1 --> s2
     s2 --> d1 --> a1 --> s9
@@ -229,12 +229,12 @@ space or the number of logs exceeds 21:
 ### Simple Log Monitor
 
 sentinal, using inotify, can monitor and process logs when they reach a specified size.
-A sentinal section for SLM must not set `command`;
-`template`, `postcmd`, and `rotatesiz` must be set.
+A sentinal section for SLM must not set `command`.
+The keys `template`, `postcmd`, and `rotatesiz` must be set.
 
 ```mermaid
 flowchart TB
-    s1[ read rotatesiz ]
+    s1[ read rotatesiz, postcmd ]
     s2[ check size ]
     d1{ size reached }
     a1[ yes ]
