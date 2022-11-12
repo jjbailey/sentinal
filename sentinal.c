@@ -72,6 +72,7 @@ void    print_section(ini_t *, char *);
 int main(int argc, char *argv[])
 {
 	DIR    *dirp;
+	char	*myname;
 	char    database[PATH_MAX];
 	char    inifile[PATH_MAX], rpinifile[PATH_MAX];
 	char    rbuf[PATH_MAX];
@@ -85,7 +86,10 @@ int main(int argc, char *argv[])
 	int     i;
 	int     index = 0;
 	int     nsect;
+	struct stat stbuf;								/* file status */
 	struct thread_info *ti;							/* thread settings */
+
+	myname = base(argv[0]);
 
 	umask(umask(0) | 022);							/* don't set less restrictive */
 	*inifile = '\0';
@@ -107,7 +111,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'V':									/* print version */
-			fprintf(stdout, "%s: version %s\n", base(argv[0]), VERSION_STRING);
+			fprintf(stdout, "%s: version %s\n", myname, VERSION_STRING);
 			exit(EXIT_SUCCESS);
 
 		case 'v':									/* verbose debug */
@@ -120,13 +124,13 @@ int main(int argc, char *argv[])
 
 		case 'h':									/* print usage */
 		case '?':
-			help(argv[0]);
+			help(myname);
 			exit(EXIT_SUCCESS);
 		}
 	}
 
 	if(IS_NULL(inifile)) {
-		help(argv[0]);
+		help(myname);
 		exit(EXIT_FAILURE);
 	}
 
@@ -139,14 +143,22 @@ int main(int argc, char *argv[])
 	/* configure the threads */
 
 	if((inidata = ini_load(inifile)) == NULL) {
-		fprintf(stderr, "%s: can't load %s\n", argv[0], inifile);
+		fprintf(stderr, "%s: can't load %s\n", myname, inifile);
 		exit(EXIT_FAILURE);
 	}
 
 	if((nsect = get_sections(inidata, MAXSECT, sections)) == 0) {
-		fprintf(stderr, "%s: nothing to do\n", argv[0]);
+		fprintf(stderr, "%s: nothing to do\n", myname);
 		exit(EXIT_FAILURE);
 	}
+
+	/* protect the INI file */
+
+	if(stat(inifile, &stbuf) == 0)
+		if(stbuf.st_mode & S_IWGRP || stbuf.st_mode & S_IWOTH) {
+			chmod(inifile, stbuf.st_mode & ~(S_IWGRP | S_IXGRP | S_IWOTH | S_IXOTH));
+			fprintf(stderr, "%s: %s was writable by group or other\n", myname, inifile);
+		}
 
 	uname(&utsbuf);									/* for debug/token expansion */
 
@@ -165,7 +177,7 @@ int main(int argc, char *argv[])
 	pidfile = strndup(my_ini(inidata, "global", "pidfile"), PATH_MAX);
 
 	if(IS_NULL(pidfile) || *pidfile != '/') {
-		fprintf(stderr, "%s: pidfile is null or path not absolute\n", argv[0]);
+		fprintf(stderr, "%s: pidfile is null or path not absolute\n", myname);
 		exit(EXIT_FAILURE);
 	}
 
@@ -320,7 +332,7 @@ int main(int argc, char *argv[])
 	/* for systemd */
 
 	if(create_pid_file(pidfile) == FALSE) {
-		fprintf(stderr, "%s: can't create pidfile or pidfile is in use\n", argv[0]);
+		fprintf(stderr, "%s: can't create pidfile or pidfile is in use\n", myname);
 		exit(EXIT_FAILURE);
 	}
 
@@ -329,7 +341,7 @@ int main(int argc, char *argv[])
 
 	/* version banner */
 
-	fprintf(stderr, "%s: version %s %s\n", base(argv[0]), VERSION_STRING,
+	fprintf(stderr, "%s: version %s %s\n", myname, VERSION_STRING,
 			dryrun ? "(DRY RUN)" : "");
 
 	/* create the database -- no point in keeping the old one */
