@@ -1,8 +1,8 @@
 /*
  * sentinalpipe.c
- * sentinalpipe: The purpose of this program is to prevent SIGPIPE from being
- * sent to processes writing to pipes.  Keep pipes given in the INI file, if
- * they exist, always open for reading.
+ * The purpose of this program is to prevent SIGPIPE from being sent
+ * to processes writing to pipes.  Keep pipes given in the INI file,
+ * if they exist, always open for reading.
  *
  * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
@@ -158,7 +158,7 @@ static void pipeopen(int i)
 
 		pipelist[i].pi_fd = EOF;
 	} else {										/* open a second fd */
-		pipelist[i].pi_fd = open(pipelist[i].pi_pipename, O_RDONLY | O_NONBLOCK);
+		pipelist[i].pi_fd = open(pipelist[i].pi_pipename, O_RDONLY);
 
 		if(savefd != EOF)							/* close saved fd */
 			close(savefd);
