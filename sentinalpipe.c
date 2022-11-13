@@ -158,7 +158,7 @@ static void pipeopen(int i)
 
 		pipelist[i].pi_fd = EOF;
 	} else {										/* open a second fd */
-		pipelist[i].pi_fd = open(pipelist[i].pi_pipename, O_RDONLY);
+		pipelist[i].pi_fd = open(pipelist[i].pi_pipename, O_RDONLY | O_NONBLOCK);
 
 		if(savefd != EOF)							/* close saved fd */
 			close(savefd);
