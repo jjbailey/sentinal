@@ -294,6 +294,7 @@ int main(int argc, char *argv[])
 		}
 
 		ti->ti_template = malloc(BUFSIZ);			/* more than PATH_MAX */
+		memset(ti->ti_template, '\0', BUFSIZ);
 		strlcpy(ti->ti_template,
 				base(my_ini(inidata, ti->ti_section, "template")), PATH_MAX);
 
@@ -316,6 +317,7 @@ int main(int argc, char *argv[])
 		ti->ti_expire = logretention(my_ini(inidata, ti->ti_section, "expire"));
 		ti->ti_retmin = logsize(my_ini(inidata, ti->ti_section, "retmin"));
 		ti->ti_retmax = logsize(my_ini(inidata, ti->ti_section, "retmax"));
+
 		ti->ti_postcmd = malloc(BUFSIZ);
 		memset(ti->ti_postcmd, '\0', BUFSIZ);
 		strlcpy(ti->ti_postcmd, my_ini(inidata, ti->ti_section, "postcmd"), BUFSIZ);
