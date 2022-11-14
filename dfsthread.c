@@ -64,6 +64,9 @@ void   *dfsthread(void *arg)
 	 *  - at least one of:
 	 *    - ti_diskfree
 	 *    - ti_inofree
+	 *
+	 * optional:
+	 *  - ti_retmin
 	 */
 
 	pthread_setname_np(pthread_self(), threadname(ti, _DFS_THR));

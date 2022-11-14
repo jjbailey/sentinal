@@ -8,9 +8,9 @@ an adjunct or an alternative to logrotate.
 
 Monitoring and management capabilities:
 
- - available disk space by percentage
- - available inode usage by percentage or count
- - files by size, age, or retention settings
+ - available filesystem disk space by percentage
+ - available filesystem inode usage by percentage or count
+ - expire files by size, age, or retention settings
  - inodes by age or retention settings
  - log ingestion, processing, and rotation
  - monitor and process log files when they reach a given size

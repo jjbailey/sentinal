@@ -72,7 +72,7 @@ void    print_section(ini_t *, char *);
 int main(int argc, char *argv[])
 {
 	DIR    *dirp;
-	char	*myname;
+	char   *myname;
 	char    database[PATH_MAX];
 	char    inifile[PATH_MAX], rpinifile[PATH_MAX];
 	char    rbuf[PATH_MAX];
