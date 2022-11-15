@@ -112,6 +112,10 @@ void   *dfsthread(void *arg)
 		return ((void *)0);
 	}
 
+	if(ti->ti_retmin)
+		fprintf(stderr, "%s: monitor file: %s for retmin %d\n",
+				ti->ti_section, ti->ti_pcrestr, ti->ti_retmin);
+
 	/* monitor filesystem usage */
 
 	for(;;) {
