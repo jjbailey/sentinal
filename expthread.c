@@ -23,10 +23,12 @@
 #define	SCANRATE		(ONE_MINUTE * 10)
 #define	DRYSCAN			30							/* scanrate for dryrun */
 
+/* test LIMIT to see if it improves performance on big directory trees */
 static char *sql_selectfiles = "SELECT db_dir, db_file, db_size\n \
 	FROM  %s_dir, %s_file\n \
 	WHERE db_dirid = db_id\n \
-	ORDER BY db_time;";
+	ORDER BY db_time\n \
+	LIMIT 1000000;";
 
 static char *sql_selectbytes = "SELECT SUM(db_size)\n \
 	FROM  %s_file;";
