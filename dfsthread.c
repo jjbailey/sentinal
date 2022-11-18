@@ -33,10 +33,12 @@
 /* subtract from avail for extra space, reduce flapping */
 #define	PADDING			(float)0.09
 
+/* test LIMIT to see if it improves performance on big directory trees */
 static char *sql_selectfiles = "SELECT db_dir, db_file\n \
 	FROM  %s_dir, %s_file\n \
 	WHERE db_dirid = db_id\n \
-	ORDER BY db_time;";
+	ORDER BY db_time\n \
+	LIMIT 1000000;";
 
 static char mountdir[PATH_MAX];						/* mountpoint */
 
@@ -62,6 +64,9 @@ void   *dfsthread(void *arg)
 	 *  - at least one of:
 	 *    - ti_diskfree
 	 *    - ti_inofree
+	 *
+	 * optional:
+	 *  - ti_retmin
 	 */
 
 	pthread_setname_np(pthread_self(), threadname(ti, _DFS_THR));
@@ -106,6 +111,10 @@ void   *dfsthread(void *arg)
 		/* nothing to do here */
 		return ((void *)0);
 	}
+
+	if(ti->ti_retmin)
+		fprintf(stderr, "%s: monitor file: %s for retmin %d\n",
+				ti->ti_section, ti->ti_pcrestr, ti->ti_retmin);
 
 	/* monitor filesystem usage */
 
@@ -204,13 +213,25 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 			break;
 		}
 
+		/* check if usage dropped before we got here */
+
+		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == FALSE)
+			break;
+
+		/*
+		 * subtract padding from available space to
+		 * provide a bit more space than the configured value
+		 */
+
+		if(!LOW_RES(ti->ti_diskfree, pc_bfree - PADDING) &&
+		   !LOW_RES(ti->ti_inofree, pc_ffree - PADDING))
+			break;
+
 		if(sqlite3_step(pstmt) != SQLITE_ROW)
 			break;
 
 		db_dir = (char *)sqlite3_column_text(pstmt, 0);
 		db_file = (char *)sqlite3_column_text(pstmt, 1);
-
-		/* assemble filename: ti_dirname + / + db_dir + / + db_file */
 
 		if(NOT_NULL(db_dir))
 			snprintf(filename, PATH_MAX, "%s/%s/%s", ti->ti_dirname, db_dir, db_file);
@@ -221,18 +242,6 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 			removed++;
 			filecount--;
 		}
-
-		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == FALSE)
-			break;
-
-		/*
-		 * subtract padding from available space
-		 * provide a bit more space than the configured value
-		 */
-
-		if(!LOW_RES(ti->ti_diskfree, pc_bfree - PADDING) &&
-		   !LOW_RES(ti->ti_inofree, pc_ffree - PADDING))
-			break;
 	}
 
 	sqlite3_finalize(pstmt);

@@ -22,6 +22,10 @@
 # define	FALSE		(short)0
 #endif
 
+#ifndef PATH_MAX
+# define	PATH_MAX	255
+#endif
+
 #ifndef	NOT_NULL
 # define	NOT_NULL(s)	((s) && *(s))
 #endif
@@ -33,7 +37,7 @@
 static short duplicate(int, char *, char **);
 short   validdbname(char *);
 
-char   *EmptyStr = "";								/* empty string for strdup, etc */
+char   *EmptyStr = "";								/* empty string for strndup, etc */
 
 char   *my_ini(ini_t *ini, char *section, char *key)
 {
@@ -77,7 +81,7 @@ int get_sections(ini_t *inidata, int maxsect, char *sections[])
 			if(validdbname(p + 1) == FALSE)
 				continue;
 
-			sections[i++] = strdup(p + 1);
+			sections[i++] = strndup(p + 1, PATH_MAX);
 
 			if(i == maxsect)
 				break;

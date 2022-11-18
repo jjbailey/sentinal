@@ -72,6 +72,7 @@ void    print_section(ini_t *, char *);
 int main(int argc, char *argv[])
 {
 	DIR    *dirp;
+	char   *myname;
 	char    database[PATH_MAX];
 	char    inifile[PATH_MAX], rpinifile[PATH_MAX];
 	char    rbuf[PATH_MAX];
@@ -85,7 +86,10 @@ int main(int argc, char *argv[])
 	int     i;
 	int     index = 0;
 	int     nsect;
+	struct stat stbuf;								/* file status */
 	struct thread_info *ti;							/* thread settings */
+
+	myname = base(argv[0]);
 
 	umask(umask(0) | 022);							/* don't set less restrictive */
 	*inifile = '\0';
@@ -107,7 +111,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'V':									/* print version */
-			fprintf(stdout, "%s: version %s\n", base(argv[0]), VERSION_STRING);
+			fprintf(stdout, "%s: version %s\n", myname, VERSION_STRING);
 			exit(EXIT_SUCCESS);
 
 		case 'v':									/* verbose debug */
@@ -120,13 +124,13 @@ int main(int argc, char *argv[])
 
 		case 'h':									/* print usage */
 		case '?':
-			help(argv[0]);
+			help(myname);
 			exit(EXIT_SUCCESS);
 		}
 	}
 
 	if(IS_NULL(inifile)) {
-		help(argv[0]);
+		help(myname);
 		exit(EXIT_FAILURE);
 	}
 
@@ -139,14 +143,22 @@ int main(int argc, char *argv[])
 	/* configure the threads */
 
 	if((inidata = ini_load(inifile)) == NULL) {
-		fprintf(stderr, "%s: can't load %s\n", argv[0], inifile);
+		fprintf(stderr, "%s: can't load %s\n", myname, inifile);
 		exit(EXIT_FAILURE);
 	}
 
 	if((nsect = get_sections(inidata, MAXSECT, sections)) == 0) {
-		fprintf(stderr, "%s: nothing to do\n", argv[0]);
+		fprintf(stderr, "%s: nothing to do\n", myname);
 		exit(EXIT_FAILURE);
 	}
+
+	/* protect the INI file */
+
+	if(stat(inifile, &stbuf) == 0)
+		if(stbuf.st_mode & S_IWGRP || stbuf.st_mode & S_IWOTH) {
+			chmod(inifile, stbuf.st_mode & ~(S_IWGRP | S_IXGRP | S_IWOTH | S_IXOTH));
+			fprintf(stderr, "%s: %s was writable by group or other\n", myname, inifile);
+		}
 
 	uname(&utsbuf);									/* for debug/token expansion */
 
@@ -162,10 +174,10 @@ int main(int argc, char *argv[])
 
 	/* INI global settings */
 
-	pidfile = strdup(my_ini(inidata, "global", "pidfile"));
+	pidfile = strndup(my_ini(inidata, "global", "pidfile"), PATH_MAX);
 
 	if(IS_NULL(pidfile) || *pidfile != '/') {
-		fprintf(stderr, "%s: pidfile is null or path not absolute\n", argv[0]);
+		fprintf(stderr, "%s: pidfile is null or path not absolute\n", myname);
 		exit(EXIT_FAILURE);
 	}
 
@@ -192,7 +204,7 @@ int main(int argc, char *argv[])
 
 		ti->ti_section = sections[i];
 
-		ti->ti_command = strdup(my_ini(inidata, ti->ti_section, "command"));
+		ti->ti_command = strndup(my_ini(inidata, ti->ti_section, "command"), PATH_MAX);
 		ti->ti_argc = parsecmd(ti->ti_command, ti->ti_argv);
 
 		if(NOT_NULL(ti->ti_command) && ti->ti_argc) {
@@ -212,7 +224,7 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		ti->ti_path = strdup(ti->ti_argc ? rbuf : "");
+		ti->ti_path = strndup(ti->ti_argc ? rbuf : "", PATH_MAX);
 
 		/* get real path of directory */
 
@@ -226,7 +238,7 @@ int main(int argc, char *argv[])
 		if(realpath(ti->ti_dirname, rbuf) == NULL)
 			*rbuf = '\0';
 
-		ti->ti_dirname = strdup(rbuf);
+		ti->ti_dirname = strndup(rbuf, PATH_MAX);
 
 		if(IS_NULL(ti->ti_dirname) || strcmp(ti->ti_dirname, "/") == 0) {
 			fprintf(stderr, "%s: missing or bad dirname\n", ti->ti_section);
@@ -278,14 +290,19 @@ int main(int argc, char *argv[])
 			}
 
 			fullpath(rbuf, base(ti->ti_pipename), tbuf);
-			ti->ti_pipename = strdup(tbuf);
+			ti->ti_pipename = strndup(tbuf, PATH_MAX);
 		}
 
-		ti->ti_template = strdup(base(my_ini(inidata, ti->ti_section, "template")));
+		ti->ti_template = malloc(BUFSIZ);			/* more than PATH_MAX */
+		memset(ti->ti_template, '\0', BUFSIZ);
+		strlcpy(ti->ti_template,
+				base(my_ini(inidata, ti->ti_section, "template")), PATH_MAX);
+
 		ti->ti_pcrestr = my_ini(inidata, ti->ti_section, "pcrestr");
 		pcrecompile(ti);
-		ti->ti_filename = malloc(PATH_MAX);
-		memset(ti->ti_filename, '\0', PATH_MAX);
+
+		ti->ti_filename = malloc(BUFSIZ);			/* more than PATH_MAX */
+		memset(ti->ti_filename, '\0', BUFSIZ);
 
 		ti->ti_pid = (pid_t) 0;						/* only workers use this */
 		ti->ti_wfd = 0;								/* only workers use this */
@@ -300,6 +317,7 @@ int main(int argc, char *argv[])
 		ti->ti_expire = logretention(my_ini(inidata, ti->ti_section, "expire"));
 		ti->ti_retmin = logsize(my_ini(inidata, ti->ti_section, "retmin"));
 		ti->ti_retmax = logsize(my_ini(inidata, ti->ti_section, "retmax"));
+
 		ti->ti_postcmd = malloc(BUFSIZ);
 		memset(ti->ti_postcmd, '\0', BUFSIZ);
 		strlcpy(ti->ti_postcmd, my_ini(inidata, ti->ti_section, "postcmd"), BUFSIZ);
@@ -316,7 +334,7 @@ int main(int argc, char *argv[])
 	/* for systemd */
 
 	if(create_pid_file(pidfile) == FALSE) {
-		fprintf(stderr, "%s: can't create pidfile or pidfile is in use\n", argv[0]);
+		fprintf(stderr, "%s: can't create pidfile or pidfile is in use\n", myname);
 		exit(EXIT_FAILURE);
 	}
 
@@ -325,7 +343,7 @@ int main(int argc, char *argv[])
 
 	/* version banner */
 
-	fprintf(stderr, "%s: version %s %s\n", base(argv[0]), VERSION_STRING,
+	fprintf(stderr, "%s: version %s %s\n", myname, VERSION_STRING,
 			dryrun ? "(DRY RUN)" : "");
 
 	/* create the database -- no point in keeping the old one */

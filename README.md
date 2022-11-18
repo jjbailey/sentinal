@@ -8,9 +8,9 @@ an adjunct or an alternative to logrotate.
 
 Monitoring and management capabilities:
 
- - available disk space by percentage
- - available inode usage by percentage or count
- - files by size, age, or retention settings
+ - available filesystem disk space by percentage
+ - available filesystem inode usage by percentage or count
+ - expire files by size, age, or retention settings
  - inodes by age or retention settings
  - log ingestion, processing, and rotation
  - monitor and process log files when they reach a given size
@@ -103,21 +103,30 @@ Note the following conditions.  If:
  - `retmax` is set, retain a maximum number of `n` files, regardless of expiration.
  - `postcmd` is specified, the value is passed as a command to `bash -c` after the file closes or rotates.  Optional.
 
-The combinations of `expire` and `expiresiz` settings affect expiration behavior.  If:
-
- - `expire` is set and `expiresiz` is unset, remove files older than the expiration time.
- - `expire` and `expiresiz` are set, remove files larger than `expiresiz` at the expiration time.
- - `expiresiz` is set and `expire` is unset, take no action.
-
 Precedence of Keys:
 
  - `retmin`, `retmax` take precedence over `dirlimit`, `diskfree`, `inofree`, `expire`.
  - `dirlimit`, `diskfree`, `inofree` take precedence over `expire`.
 
-### Disk Space Example
+### Free Disk Space
 
-To monitor console logs in /opt/sentinal/log for 20% free disk space,
-and to retain at least 3 logs and at most 50 logs:
+sentinal can remove files when the filesystem they occupy falls below the free space constraint.
+
+```mermaid
+flowchart TB
+    s1[ read diskfree ]
+    s2[ check diskfree ]
+    d1{ low free space }
+    a1[ yes ]
+    a2[ no ]
+    s3[ remove oldest files ]
+    s9[ return to check diskfree ]
+    s1 --> s2 --> d1
+    d1 --> a1 --> s3 --> s9
+    d1 --> a2 --> s9
+```
+
+Example: to monitor console logs in /opt/sentinal/log for 20% free disk space:
 
     [global]
     pidfile   = /run/diskfree.pid
@@ -127,9 +136,45 @@ and to retain at least 3 logs and at most 50 logs:
     dirname   = /opt/sentinal/log
     pcrestr   = console
     diskfree  = 20
-    retmin    = 3
-    retmax    = 50
 
+### File Expiration
+
+sentinal can remove files when they meet one or more of the following constraints:
+retmin, retmax, expire, expiresiz, dirlimit.
+
+The combinations of `expire` and `expiresiz` settings affect expiration behavior.  If:
+
+ - `expire` is set and `expiresiz` is unset, remove files older than the expiration time.
+ - `expire` and `expiresiz` are set, remove files larger than `expiresiz` at the expiration time.
+ - `expiresiz` is set and `expire` is unset, take no action.
+
+```mermaid
+flowchart TB
+    s1[ read<br>retmin, retmax<br>expire, expiresiz<br>dirlimit ]
+    s2[ check vars ]
+    d1{ min retention }
+    d2{ max retention }
+    d3{ dirlimit }
+    d4{ expiration time or size }
+    a1[ yes ]
+    a2[ no ]
+    a3[ yes ]
+    a4[ no ]
+    a5[ yes ]
+    a6[ no ]
+    a7[ yes ]
+    a8[ no ]
+    s3[ remove oldest or expired files ]
+    s9[ return to check vars ]
+    s1 --> s2
+    s2 --> d1 --> a1 --> s9
+    d1 --> a2 --> d2 --> a3 --> s3 --> s9
+    d2 --> a4 --> d3 --> a5 --> s3
+    d3 --> a6 --> d4 --> a7 --> s3
+    d4 --> a8 --> s9
+```
+
+Expiration example:
 This INI configuration removes gzipped files in /var/log and its subdirectories after two weeks:
 
     [global]
@@ -142,23 +187,7 @@ This INI configuration removes gzipped files in /var/log and its subdirectories 
     pcrestr   = \.gz
     expire    = 2w
 
-### Directory Usage Example
-
-Remove myapp logs matching `myapplog-\d{8}$` when they consume more than 500MiB of disk
-space or the number of logs exceeds 21:
-
-    [global]
-    pidfile   = /run/myapplog.pid
-    database  = :memory:
-
-    [myapp]
-    dirname   = /var/log/myapp
-    dirlimit  = 500M
-    pcrestr   = myapplog-\d{8}$
-    retmax    = 21
-
-### Expiration Example
-
+Expiration example:
 This INI uses two threads to remove compressed files in /sandbox.
 sandbox2M removes compressed files aged two months or older.
 sandbox1M removes compressed files aged one month or older if their sizes exceed 10GiB,
@@ -183,11 +212,43 @@ logging the removals.
     expire    = 1M
     terse     = false
 
+Directory usage example:
+Remove myapp logs matching `myapplog-\d{8}$` when they consume more than 500MiB of disk
+space or the number of logs exceeds 21:
+
+    [global]
+    pidfile   = /run/myapplog.pid
+    database  = :memory:
+
+    [myapp]
+    dirname   = /var/log/myapp
+    dirlimit  = 500M
+    pcrestr   = myapplog-\d{8}$
+    retmax    = 21
+
 ### Simple Log Monitor
 
 sentinal, using inotify, can monitor and process logs when they reach a specified size.
-A sentinal section for SLM must not set `command`;
-`template`, `postcmd`, and `rotatesiz` must be set.
+A sentinal section for SLM must not set `command`.
+The keys `template`, `postcmd`, and `rotatesiz` must be set.
+
+```mermaid
+flowchart TB
+    s1[ read rotatesiz, postcmd ]
+    s2[ check size ]
+    d1{ size reached }
+    a1[ yes ]
+    a2[ no ]
+    s3[ run postcmd ]
+    s4[ return to check size ]
+    s1 --> s2
+    s2 --> d1
+    d1 --> a1
+    d1 --> a2
+    a1 --> s3
+    s3 --> s4
+    a2 --> s4
+```
 
 In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 50MiB in size:
 
@@ -231,11 +292,11 @@ sequenceDiagram
     participant FIFO
     participant Sentinal
     participant Logfile
-    Application->>FIFO: Application writes to FIFO
-    FIFO->>Sentinal: Sentinal reads from FIFO
-    Sentinal->>Logfile: Sentinal creates logfile
-    Sentinal->>Sentinal: Sentinal auto-rotates logfile
-    Sentinal->Logfile: Optionally post-process logfile
+    Application ->> FIFO: Application writes to FIFO
+    FIFO ->> Sentinal: Sentinal reads from FIFO
+    Sentinal ->> Logfile: Sentinal creates logfile
+    Sentinal ->> Sentinal: Sentinal auto-rotates logfile
+    Sentinal -> Logfile: Optionally post-process logfile
 ```
 
 For example, this configuration connects the dd program to example.log for log ingestion,

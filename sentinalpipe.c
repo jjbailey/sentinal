@@ -1,8 +1,8 @@
 /*
  * sentinalpipe.c
- * sentinalpipe: The purpose of this program is to prevent SIGPIPE from being
- * sent to processes writing to pipes.  Keep pipes given in the INI file, if
- * they exist, always open for reading.
+ * The purpose of this program is to prevent SIGPIPE from being sent
+ * to processes writing to pipes.  Keep pipes given in the INI file,
+ * if they exist, always open for reading.
  *
  * Copyright (c) 2021, 2022 jjb
  * All rights reserved.
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 		}
 
 		fullpath(rbuf, base(p2), filename);
-		pipelist[i].pi_pipename = strdup(filename);
+		pipelist[i].pi_pipename = strndup(filename, PATH_MAX);
 		pipelist[i].pi_fd = EOF;
 
 		fprintf(stderr, "monitor %s\n", pipelist[i].pi_pipename);
@@ -137,6 +137,7 @@ int main(int argc, char *argv[])
 		sleep(ONE_MINUTE);
 	}
 
+	/* notreached */
 	exit(EXIT_SUCCESS);
 }
 
@@ -184,7 +185,7 @@ static void sigcatch(int sig)
 	/*
 	 * keep pipes open for application restarts, e.g., if someone runs:
 	 * systemctl restart sentinal sentinalpipe
-	 * give the application time to restart
+	 * give sentinal time to restart
 	 */
 
 	signal(sig, sigcatch);
@@ -192,7 +193,7 @@ static void sigcatch(int sig)
 	if(sig == SIGHUP || sig == SIGTERM) {			/* systemd reload/restart */
 		signal(sig, SIG_IGN);
 		fprintf(stderr, "exiting in 10s...\n");
-		sleep(10);									/* give sentinal 10s to restart */
+		sleep(10);									/* give sentinal 10s */
 		exit(EXIT_SUCCESS);
 	}
 }
