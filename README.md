@@ -68,6 +68,8 @@ Diskfree (DFS) Thread
  - one or more of the following
    - diskfree
    - inofree
+ - optional
+   - retmin
 
 Expire (EXP) Thread
  - pcrestr
@@ -75,21 +77,29 @@ Expire (EXP) Thread
    - dirlimit
    - expire
    - retmax
+ - optional
+   - retmin
 
- Simple log Monitor (SLM) Thread
-  - command unset
-  - template
-  - postcmd
-  - rotatesiz
+Simple log Monitor (SLM) Thread
+ - command unset (null)
+ - template
+ - postcmd
+ - rotatesiz
+ - optional, likely required by use case
+   - uid
+   - gid
 
- Work (log ingestion, WRK) Thread
-  - command
-  - pipename
-  - template
-  - optional, but recommended
-    - rotatesiz
-  - optional
-    - postcmd
+Work (log ingestion, WRK) Thread
+ - command
+ - pipename
+ - template
+ - optional, but recommended
+   - rotatesiz
+ - optional
+   - postcmd
+ - optional, likely required by use case
+   - uid
+   - gid
 
 Note the following conditions.  If:
 
