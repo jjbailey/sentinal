@@ -379,18 +379,21 @@ The INI file /opt/sentinal/etc/example.ini is used here as an example.
          Loaded: loaded (/etc/systemd/system/sentinal.service; disabled; vendor preset: enabled)
          Active: active (running) since Wed 2021-11-24 13:01:47 PST; 4s ago
        Main PID: 13580 (sentinal)
-          Tasks: 4 (limit: 76887)
-         Memory: 516.0K
+          Tasks: 4 (limit: 76930)
+         Memory: 852.0K
          CGroup: /system.slice/sentinal.service
                  `-13580 /opt/sentinal/bin/sentinal -f /opt/sentinal/etc/example.ini
 
-    Nov 24 13:01:47 loghost systemd[1]: Started sentinal service for example.ini.
-    Nov 24 13:01:47 loghost sentinal[13580]: test4: command: /usr/bin/zstd -T4
-    Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for size 1024MiB
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: start dfs thread: /opt/sentinal/tests
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor disk: / for 85.00% free
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for retmin 3
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: /opt/sentinal/tests: 87.06% blocks free
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: start exp thread: /opt/sentinal/tests
     Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for retmin 3
     Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for retmax 25
-    Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor disk: / for 85.00% free
-    Nov 24 13:01:47 loghost sentinal[13580]: test4: /opt/sentinal/tests: 87.36% blocks free
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: start wrk thread: /opt/sentinal/tests
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: command: /usr/bin/zstd -T4
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for size 1024MiB
 
     (In this example, /opt is in the / filesystem)
 
