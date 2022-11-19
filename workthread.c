@@ -66,6 +66,10 @@ void   *workthread(void *arg)
 	 *
 	 * optional:
 	 *  - ti_postcmd
+	 *
+	 * optional, likely required by use case:
+	 *  - ti_uid
+	 *  - ti_gid
 	 */
 
 	pthread_setname_np(pthread_self(), threadname(ti, _WRK_THR));

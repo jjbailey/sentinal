@@ -42,6 +42,10 @@ void   *slmthread(void *arg)
 	 *  - ti_template
 	 *  - ti_postcmd
 	 *  - ti_rotatesiz
+	 *
+	 * optional, likely required by use case:
+	 *  - ti_uid
+	 *  - ti_gid
 	 */
 
 	pthread_setname_np(pthread_self(), threadname(ti, _SLM_THR));
