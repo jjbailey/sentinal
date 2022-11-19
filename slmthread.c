@@ -54,8 +54,8 @@ void   *slmthread(void *arg)
 
 	fullpath(ti->ti_dirname, ti->ti_template, filename);
 	fprintf(stderr, "%s: monitor file: %s\n", ti->ti_section, filename);
-	fprintf(stderr, "%s: monitor file size: %ldMiB\n", ti->ti_section,
-			MiB(ti->ti_rotatesiz));
+	fprintf(stderr, "%s: monitor file: %s for size %ldMiB\n",
+			ti->ti_section, filename, MiB(ti->ti_rotatesiz));
 
 	ti->ti_sig = 0;									/* reset */
 
