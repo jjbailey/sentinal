@@ -413,6 +413,8 @@ int main(int argc, char *argv[])
 	/* wait for threads */
 
 	for(i = 0; i < nsect; i++) {
+		ti = &tinfo[i];								/* shorthand */
+
 		if(threadcheck(ti, _DFS_THR))
 			(void)pthread_join(ti->dfs_tid, NULL);
 
