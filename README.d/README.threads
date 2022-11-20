@@ -1,3 +1,9 @@
+This README is an example INI file seeded with example values to show which
+keys are mandatory and which are optional for the supported thread types.
+
+To check an INI file for which threads will run in the stanzas, for example:
+$ /opt/sentinal/bin/sentinal -f example.ini -v
+
 # example.ini
 
 [global]
@@ -8,8 +14,8 @@ database  = :memory:
 # required
 dirname   = /path/to/dir
 pcrestr   = pcre
-diskfree  = 10.00
-inofree   = 10.00
+diskfree  = 10
+inofree   = 10
 # optional
 retmin    = 1024
 
