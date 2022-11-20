@@ -201,6 +201,7 @@ int main(int argc, char *argv[])
 
 	for(i = 0; i < nsect; i++) {
 		ti = &tinfo[i];								/* shorthand */
+		memset(ti, '\0', sizeof(struct thread_info));
 
 		ti->ti_section = sections[i];
 
@@ -408,6 +409,8 @@ int main(int argc, char *argv[])
 			pthread_create(&ti->wrk_tid, NULL, &workthread, ti);
 		}
 	}
+
+	/* wait for threads */
 
 	for(i = 0; i < nsect; i++) {
 		if(threadcheck(ti, _DFS_THR))
