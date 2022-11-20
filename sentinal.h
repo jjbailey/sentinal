@@ -91,6 +91,10 @@ struct thread_info {
 	pthread_t exp_tid;								/* exp thread id */
 	pthread_t slm_tid;								/* slm thread id */
 	pthread_t wrk_tid;								/* wrk thread id */
+	short   dfs_active;								/* pthread_t is opaque */
+	short   exp_active;								/* pthread_t is opaque */
+	short   slm_active;								/* pthread_t is opaque */
+	short   wrk_active;								/* pthread_t is opaque */
 	char    ti_task[TASK_COMM_LEN];					/* pthread_self */
 	char   *ti_section;								/* section name */
 	char   *ti_command;								/* thread command */
