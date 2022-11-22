@@ -23,7 +23,7 @@
 #include "sentinal.h"
 #include "basename.h"
 
-#define	PIPEBUFSIZ	(64 * ONE_KiB)					/* better size for IPC i/o */
+#define	PIPEBUFSIZ	FIFOSIZ							/* better size for IPC I/O */
 
 #define	ROTATE(lim,n,sig)	((lim && n > lim) || sig == SIGHUP)
 #define	STAT(file,buf)		(stat(file, &buf) == -1 ? -1 : buf.st_size)

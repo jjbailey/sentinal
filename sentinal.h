@@ -56,7 +56,7 @@
 #define	KiB(n)		((size_t) (n) >> 10)			/* convert bytes to KiB */
 #define	MiB(n)		((size_t) (n) >> 20)			/* convert bytes to MiB */
 
-#define	FIFOSIZ		(64L * ONE_MiB)					/* tunable, just a guess */
+#define	FIFOSIZ		(64 << 20)						/* 64MiB, better size for I/O */
 
 #define	NOT_NULL(s)	((s) && *(s))
 #define	IS_NULL(s)	!((s) && *(s))
