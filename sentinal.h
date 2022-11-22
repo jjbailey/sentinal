@@ -160,7 +160,6 @@ void   *workthread(void *);
 /* sqlite */
 
 #define	SQLMEMDB	":memory:"						/* pure in-memory database */
-#define	SQLTMPDB	":temp:"						/* temp database, for ini documentation */
 
 short   create_index(struct thread_info *, sqlite3 *);
 short   create_table(struct thread_info *, sqlite3 *);

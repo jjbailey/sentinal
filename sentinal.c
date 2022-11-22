@@ -184,9 +184,7 @@ int main(int argc, char *argv[])
 
 	p = my_ini(inidata, "global", "database");		/* optional */
 
-	/* bug? centos7, sqlite3 3.7.17, temp db runs disk out of space */
-
-	if(IS_NULL(p) || strcmp(p, SQLTMPDB) == 0 || strcmp(p, SQLMEMDB) == 0)
+	if(IS_NULL(p) || strcmp(p, SQLMEMDB) == 0)
 		strlcpy(database, SQLMEMDB, PATH_MAX);
 	else
 		strlcpy(database, p, PATH_MAX);				/* verbatim */
@@ -348,7 +346,7 @@ int main(int argc, char *argv[])
 	fprintf(stderr, "%s: version %s %s\n", myname, VERSION_STRING,
 			dryrun ? "(DRY RUN)" : "");
 
-	/* create the database -- no point in keeping the old one */
+	/* remove and (re)create the database -- no point in keeping the old one */
 
 	if(strcmp(database, SQLMEMDB) != 0)
 		remove(database);
