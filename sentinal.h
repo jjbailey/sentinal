@@ -49,10 +49,6 @@
 #define	ONE_MONTH	(ONE_DAY * 30)					/* M */
 #define	ONE_YEAR	(ONE_DAY * 365)					/* Y or y */
 
-#define	ONE_KiB		1024							/* K or k */
-#define	ONE_MiB		(ONE_KiB << 10)					/* M or m */
-#define	ONE_GiB		(ONE_MiB << 10)					/* G or g */
-
 #define	KiB(n)		((size_t) (n) >> 10)			/* convert bytes to KiB */
 #define	MiB(n)		((size_t) (n) >> 20)			/* convert bytes to MiB */
 
