@@ -12,6 +12,12 @@
 #include <ctype.h>
 #include "sentinal.h"
 
+/* SI prefixes */
+
+#define	ONE_KiB		1024							/* K, k, KiB */
+#define	ONE_MiB		(ONE_KiB << 10)					/* M, m, MiB */
+#define	ONE_GiB		(ONE_MiB << 10)					/* G, G, GiB */
+
 off_t logsize(char *str)
 {
 	char   *p;

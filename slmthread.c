@@ -42,6 +42,10 @@ void   *slmthread(void *arg)
 	 *  - ti_template
 	 *  - ti_postcmd
 	 *  - ti_rotatesiz
+	 *
+	 * optional, likely required by use case:
+	 *  - ti_uid
+	 *  - ti_gid
 	 */
 
 	pthread_setname_np(pthread_self(), threadname(ti, _SLM_THR));
@@ -50,8 +54,8 @@ void   *slmthread(void *arg)
 
 	fullpath(ti->ti_dirname, ti->ti_template, filename);
 	fprintf(stderr, "%s: monitor file: %s\n", ti->ti_section, filename);
-	fprintf(stderr, "%s: monitor file size: %ldMiB\n", ti->ti_section,
-			MiB(ti->ti_rotatesiz));
+	fprintf(stderr, "%s: monitor file: %s for size %ldMiB\n",
+			ti->ti_section, filename, MiB(ti->ti_rotatesiz));
 
 	ti->ti_sig = 0;									/* reset */
 

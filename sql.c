@@ -30,11 +30,11 @@ short sqlexec(struct thread_info *ti, sqlite3 *db, char *desc, char *format, ...
 	for(tries = 0; tries < 3; tries++) {
 		switch (sqlite3_exec(db, stmt, NULL, 0, NULL)) {
 
-		case SQLITE_OK:							/* no error */
+		case SQLITE_OK:								/* no error */
 		case SQLITE_ABORT:							/* ignore */
 			return (TRUE);
 
-		case SQLITE_LOCKED:						/* retry */
+		case SQLITE_LOCKED:							/* retry */
 			usleep((useconds_t) 100000);
 			continue;
 

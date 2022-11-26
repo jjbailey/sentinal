@@ -68,6 +68,8 @@ Diskfree (DFS) Thread
  - one or more of the following
    - diskfree
    - inofree
+ - optional
+   - retmin
 
 Expire (EXP) Thread
  - pcrestr
@@ -75,21 +77,29 @@ Expire (EXP) Thread
    - dirlimit
    - expire
    - retmax
+ - optional
+   - retmin
 
- Simple log Monitor (SLM) Thread
-  - command unset
-  - template
-  - postcmd
-  - rotatesiz
+Simple log Monitor (SLM) Thread
+ - command unset (null)
+ - template
+ - postcmd
+ - rotatesiz
+ - optional, likely required by use case
+   - uid
+   - gid
 
- Work (log ingestion, WRK) Thread
-  - command
-  - pipename
-  - template
-  - optional, but recommended
-    - rotatesiz
-  - optional
-    - postcmd
+Work (log ingestion, WRK) Thread
+ - command
+ - pipename
+ - template
+ - optional, but recommended
+   - rotatesiz
+ - optional
+   - postcmd
+ - optional, likely required by use case
+   - uid
+   - gid
 
 Note the following conditions.  If:
 
@@ -347,7 +357,7 @@ sentinal runs as a systemd service.  The following is an example of a unit file:
     [Install]
     WantedBy=multi-user.target
 
-### User/Group ID Notes:
+### User/Group ID Notes
 
  - User/Group ID applies only to `command` and `postcmd`; otherwise, sentinal runs
 as the calling user.
@@ -360,6 +370,17 @@ monitors several different applications.
 
  - When unspecified, the user and group IDs are set to `nobody` and `nogroup`.
 
+### Exported Environment Variables
+
+sentinal exports the following variables to `command` and `postcmd`:
+
+    HOME       home of uid, default /tmp
+    PATH       /usr/bin:/usr/sbin:/bin
+    SHELL      /bin/bash
+    PWD        dirname value from INI file
+    TEMPLATE   template value from INI file
+    PCRESTR    pcrestr value from INI file
+
 ## Sentinal Status
 
 The INI file /opt/sentinal/etc/example.ini is used here as an example.
@@ -369,18 +390,21 @@ The INI file /opt/sentinal/etc/example.ini is used here as an example.
          Loaded: loaded (/etc/systemd/system/sentinal.service; disabled; vendor preset: enabled)
          Active: active (running) since Wed 2021-11-24 13:01:47 PST; 4s ago
        Main PID: 13580 (sentinal)
-          Tasks: 4 (limit: 76887)
-         Memory: 516.0K
+          Tasks: 4 (limit: 76930)
+         Memory: 852.0K
          CGroup: /system.slice/sentinal.service
                  `-13580 /opt/sentinal/bin/sentinal -f /opt/sentinal/etc/example.ini
 
-    Nov 24 13:01:47 loghost systemd[1]: Started sentinal service for example.ini.
-    Nov 24 13:01:47 loghost sentinal[13580]: test4: command: /usr/bin/zstd -T4
-    Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for size 1024MiB
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: start dfs thread: /opt/sentinal/tests
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor disk: / for 85.00% free
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for retmin 3
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: /opt/sentinal/tests: 87.06% blocks free
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: start exp thread: /opt/sentinal/tests
     Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for retmin 3
     Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for retmax 25
-    Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor disk: / for 85.00% free
-    Nov 24 13:01:47 loghost sentinal[13580]: test4: /opt/sentinal/tests: 87.36% blocks free
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: start wrk thread: /opt/sentinal/tests
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: command: /usr/bin/zstd -T4
+    Nov 24 13:01:47 loghost sentinal[13580]: test4: monitor file: test4- for size 1024MiB
 
     (In this example, /opt is in the / filesystem)
 
@@ -416,12 +440,13 @@ including symlink resolution and relative to full pathname conversion.
 
 Useful commands for monitoring sentinal:
 
-    $ journalctl -f -n 20 -t sentinal
-    $ journalctl -f _SYSTEMD_UNIT=example.service
+    # journalctl -f -n 20 -t sentinal
+    # journalctl -f _SYSTEMD_UNIT=example.service
     $ ps -lT -p $(pidof sentinal)
     $ top -H -S -p $(echo $(pgrep sentinal) | sed 's/ /,/g')
-    $ htop -d 5 -p $(pidof sentinal)
+    $ htop -d 5 -p $(echo $(pgrep sentinal) | sed 's/ /,/g')
     # lslocks -p $(pidof sentinal)
+    # pmap -X $(pidof sentinal)
 
 Examples of on-demand log rotation:
 

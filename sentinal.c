@@ -49,6 +49,7 @@ static short create_pid_file(char *);
 static short setiniflag(ini_t *, char *, char *);
 static void dump_thread_info(struct thread_info *);
 static void help(char *);
+static void threadwait(char *, pthread_t, short *, char *, short);
 
 static int debug = FALSE;
 static int verbose = FALSE;
@@ -183,9 +184,7 @@ int main(int argc, char *argv[])
 
 	p = my_ini(inidata, "global", "database");		/* optional */
 
-	/* bug? centos7, sqlite3 3.7.17, temp db runs disk out of space */
-
-	if(IS_NULL(p) || strcmp(p, SQLTMPDB) == 0 || strcmp(p, SQLMEMDB) == 0)
+	if(IS_NULL(p) || strcmp(p, SQLMEMDB) == 0)
 		strlcpy(database, SQLMEMDB, PATH_MAX);
 	else
 		strlcpy(database, p, PATH_MAX);				/* verbatim */
@@ -201,6 +200,7 @@ int main(int argc, char *argv[])
 
 	for(i = 0; i < nsect; i++) {
 		ti = &tinfo[i];								/* shorthand */
+		memset(ti, '\0', sizeof(struct thread_info));
 
 		ti->ti_section = sections[i];
 
@@ -346,7 +346,7 @@ int main(int argc, char *argv[])
 	fprintf(stderr, "%s: version %s %s\n", myname, VERSION_STRING,
 			dryrun ? "(DRY RUN)" : "");
 
-	/* create the database -- no point in keeping the old one */
+	/* remove and (re)create the database -- no point in keeping the old one */
 
 	if(strcmp(database, SQLMEMDB) != 0)
 		remove(database);
@@ -382,45 +382,61 @@ int main(int argc, char *argv[])
 
 		if(threadcheck(ti, _DFS_THR)) {				/* filesystem free space */
 			usleep((useconds_t) 100000);
+
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _DFS_THR,
 					ti->ti_dirname);
-			pthread_create(&ti->dfs_tid, NULL, &dfsthread, ti);
+
+			ti->dfs_active = pthread_create(&ti->dfs_tid, NULL, &dfsthread, ti) == 0;
 		}
 
 		if(threadcheck(ti, _EXP_THR)) {				/* file expiration, retention, dirlimit */
 			usleep((useconds_t) 100000);
+
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _EXP_THR,
 					ti->ti_dirname);
-			pthread_create(&ti->exp_tid, NULL, &expthread, ti);
+
+			ti->exp_active = pthread_create(&ti->exp_tid, NULL, &expthread, ti) == 0;
 		}
 
 		if(threadcheck(ti, _SLM_THR)) {				/* simple log monitor */
 			usleep((useconds_t) 100000);
+
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _SLM_THR,
 					ti->ti_dirname);
-			pthread_create(&ti->slm_tid, NULL, &slmthread, ti);
+
+			ti->slm_active = pthread_create(&ti->slm_tid, NULL, &slmthread, ti) == 0;
 		}
 
 		if(threadcheck(ti, _WRK_THR)) {				/* worker (log ingestion) thread */
 			usleep((useconds_t) 100000);
+
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _WRK_THR,
 					ti->ti_dirname);
-			pthread_create(&ti->wrk_tid, NULL, &workthread, ti);
+
+			ti->wrk_active = pthread_create(&ti->wrk_tid, NULL, &workthread, ti) == 0;
 		}
 	}
 
+	/* wait for threads that ended early */
+
+	sleep(1);
+
 	for(i = 0; i < nsect; i++) {
-		if(threadcheck(ti, _DFS_THR))
-			(void)pthread_join(ti->dfs_tid, NULL);
+		ti = &tinfo[i];								/* shorthand */
+		threadwait(ti->ti_section, ti->dfs_tid, &ti->dfs_active, _DFS_THR, FALSE);
+		threadwait(ti->ti_section, ti->exp_tid, &ti->exp_active, _EXP_THR, FALSE);
+		threadwait(ti->ti_section, ti->slm_tid, &ti->slm_active, _SLM_THR, FALSE);
+		threadwait(ti->ti_section, ti->wrk_tid, &ti->wrk_active, _WRK_THR, FALSE);
+	}
 
-		if(threadcheck(ti, _EXP_THR))
-			(void)pthread_join(ti->exp_tid, NULL);
+	/* wait for threads */
 
-		if(threadcheck(ti, _SLM_THR))
-			(void)pthread_join(ti->slm_tid, NULL);
-
-		if(threadcheck(ti, _WRK_THR))
-			(void)pthread_join(ti->wrk_tid, NULL);
+	for(i = 0; i < nsect; i++) {
+		ti = &tinfo[i];								/* shorthand */
+		threadwait(ti->ti_section, ti->dfs_tid, &ti->dfs_active, _DFS_THR, TRUE);
+		threadwait(ti->ti_section, ti->exp_tid, &ti->exp_active, _EXP_THR, TRUE);
+		threadwait(ti->ti_section, ti->slm_tid, &ti->slm_active, _SLM_THR, TRUE);
+		threadwait(ti->ti_section, ti->wrk_tid, &ti->wrk_active, _WRK_THR, TRUE);
 	}
 
 	exit(EXIT_SUCCESS);
@@ -558,6 +574,22 @@ static short setiniflag(ini_t *ini, char *section, char *key)
 		return (FALSE);
 
 	return (strcmp(inip, "1") == 0 || strcasecmp(inip, "true") == 0);
+}
+
+static void threadwait(char *section, pthread_t tid,
+					   short *active, char *tname, short block)
+{
+	int     ret;
+
+	if(*active == FALSE)
+		return;
+
+	ret = block ? pthread_join(tid, NULL) : pthread_tryjoin_np(tid, NULL);
+
+	if(ret == 0) {
+		fprintf(stderr, "%s: end %s thread\n", section, tname);
+		*active = FALSE;
+	}
 }
 
 static void help(char *prog)

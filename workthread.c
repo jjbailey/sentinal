@@ -23,7 +23,7 @@
 #include "sentinal.h"
 #include "basename.h"
 
-#define	PIPEBUFSIZ	(64 * ONE_KiB)					/* better size for IPC i/o */
+#define PIPEBUFSIZ  (4 << 20)						/* 4MiB, better size for IPC i/o */
 
 #define	ROTATE(lim,n,sig)	((lim && n > lim) || sig == SIGHUP)
 #define	STAT(file,buf)		(stat(file, &buf) == -1 ? -1 : buf.st_size)
@@ -66,6 +66,10 @@ void   *workthread(void *arg)
 	 *
 	 * optional:
 	 *  - ti_postcmd
+	 *
+	 * optional, likely required by use case:
+	 *  - ti_uid
+	 *  - ti_gid
 	 */
 
 	pthread_setname_np(pthread_self(), threadname(ti, _WRK_THR));

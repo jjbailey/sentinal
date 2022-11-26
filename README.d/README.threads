@@ -1,0 +1,56 @@
+This README is an example INI file seeded with example values to show which
+keys are mandatory and which are optional for the supported thread types.
+
+To check an INI file for which threads will run in the stanzas, for example:
+$ /opt/sentinal/bin/sentinal -f example.ini -v
+
+# example.ini
+
+[global]
+pidfile   = /tmp/example.pid
+database  = :memory:
+
+[dfs_example]
+# required
+dirname   = /path/to/dir
+pcrestr   = pcre
+diskfree  = 10
+inofree   = 10
+# optional
+retmin    = 1024
+
+[exp_example]
+# required
+dirname   = /path/to/dir
+pcrestr   = pcre
+# at least one of the following is required
+dirlimit  = 100M
+expire    = 1W
+retmax    = 1048576
+# optional
+retmin    = 1024
+
+[slm_example]
+# required
+command   = (null)
+dirname   = /path/to/dir
+template  = file
+rotatesiz = 1024M
+postcmd   = command
+# optional, likely required by use case
+uid       = user
+gid       = group
+
+[wrk_example]
+# required
+command   = /path/to/command
+dirname   = /path/to/dir
+pipename  = /path/to/pipe
+template  = template
+# optional, recommended
+rotatesiz = 1024M
+# optional
+postcmd   = command
+# optional, likely required by use case
+uid       = user
+gid       = group

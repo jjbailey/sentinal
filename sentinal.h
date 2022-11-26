@@ -8,7 +8,7 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"2.0.2"
+#define	VERSION_STRING	"2.0.3"
 
 #ifndef _SYS_TYPES_H
 # include <sys/types.h>
@@ -49,14 +49,10 @@
 #define	ONE_MONTH	(ONE_DAY * 30)					/* M */
 #define	ONE_YEAR	(ONE_DAY * 365)					/* Y or y */
 
-#define	ONE_KiB		1024							/* K or k */
-#define	ONE_MiB		(ONE_KiB << 10)					/* M or m */
-#define	ONE_GiB		(ONE_MiB << 10)					/* G or g */
-
 #define	KiB(n)		((size_t) (n) >> 10)			/* convert bytes to KiB */
 #define	MiB(n)		((size_t) (n) >> 20)			/* convert bytes to MiB */
 
-#define	FIFOSIZ		(64L * ONE_MiB)					/* tunable, just a guess */
+#define	FIFOSIZ		(64 << 20)						/* 64MiB, better size for I/O */
 
 #define	NOT_NULL(s)	((s) && *(s))
 #define	IS_NULL(s)	!((s) && *(s))
@@ -91,6 +87,10 @@ struct thread_info {
 	pthread_t exp_tid;								/* exp thread id */
 	pthread_t slm_tid;								/* slm thread id */
 	pthread_t wrk_tid;								/* wrk thread id */
+	short   dfs_active;								/* pthread_t is opaque */
+	short   exp_active;								/* pthread_t is opaque */
+	short   slm_active;								/* pthread_t is opaque */
+	short   wrk_active;								/* pthread_t is opaque */
 	char    ti_task[TASK_COMM_LEN];					/* pthread_self */
 	char   *ti_section;								/* section name */
 	char   *ti_command;								/* thread command */
@@ -156,7 +156,6 @@ void   *workthread(void *);
 /* sqlite */
 
 #define	SQLMEMDB	":memory:"						/* pure in-memory database */
-#define	SQLTMPDB	":temp:"						/* temp database, for ini documentation */
 
 short   create_index(struct thread_info *, sqlite3 *);
 short   create_table(struct thread_info *, sqlite3 *);
