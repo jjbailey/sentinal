@@ -357,7 +357,7 @@ sentinal runs as a systemd service.  The following is an example of a unit file:
     [Install]
     WantedBy=multi-user.target
 
-### User/Group ID Notes:
+### User/Group ID Notes
 
  - User/Group ID applies only to `command` and `postcmd`; otherwise, sentinal runs
 as the calling user.
@@ -369,6 +369,17 @@ setting and using the application's user and group IDs in the unit file.
 monitors several different applications.
 
  - When unspecified, the user and group IDs are set to `nobody` and `nogroup`.
+
+### Exported Environment Variables
+
+sentinal exports the following variables to `command` and `postcmd`:
+
+    HOME       home of uid, default /tmp
+    PATH       /usr/bin:/usr/sbin:/bin
+    SHELL      /bin/bash
+    PWD        dirname value from INI file
+    TEMPLATE   template value from INI file
+    PCRESTR    pcrestr value from INI file
 
 ## Sentinal Status
 
@@ -429,12 +440,13 @@ including symlink resolution and relative to full pathname conversion.
 
 Useful commands for monitoring sentinal:
 
-    $ journalctl -f -n 20 -t sentinal
-    $ journalctl -f _SYSTEMD_UNIT=example.service
+    # journalctl -f -n 20 -t sentinal
+    # journalctl -f _SYSTEMD_UNIT=example.service
     $ ps -lT -p $(pidof sentinal)
     $ top -H -S -p $(echo $(pgrep sentinal) | sed 's/ /,/g')
-    $ htop -d 5 -p $(pidof sentinal)
+    $ htop -d 5 -p $(echo $(pgrep sentinal) | sed 's/ /,/g')
     # lslocks -p $(pidof sentinal)
+    # pmap -X $(pidof sentinal)
 
 Examples of on-demand log rotation:
 
