@@ -8,7 +8,7 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"2.0.3"
+#define	VERSION_STRING	"2.0.4"
 
 #ifndef _SYS_TYPES_H
 # include <sys/types.h>
@@ -49,7 +49,6 @@
 #define	ONE_MONTH	(ONE_DAY * 30)					/* M */
 #define	ONE_YEAR	(ONE_DAY * 365)					/* Y or y */
 
-#define	KiB(n)		((size_t) (n) >> 10)			/* convert bytes to KiB */
 #define	MiB(n)		((size_t) (n) >> 20)			/* convert bytes to MiB */
 
 #define	FIFOSIZ		(64 << 20)						/* 64MiB, better size for I/O */
