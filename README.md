@@ -164,8 +164,8 @@ flowchart TB
     s2[ check vars ]
     d1{ min retention }
     d2{ max retention }
-    d3{ dirlimit }
-    d4{ expiration time or size }
+    d3{ dir size limit }
+    d4{ expiration time<br>or size }
     a1[ yes ]
     a2[ no ]
     a3[ yes ]
@@ -458,7 +458,7 @@ Examples of on-demand log rotation:
 
  - Linux processes writing to pipes block when processes are not reading from them.
 systemd manages sentinal to ensure sentinal is always running.  See README.fifo for additional
-information about pipes.
+information about FIFO behavior.
 
  - The default pipe size in Linux is either 64KB or 1MB. sentinal increases its pipe sizes on
 3.x.x and newer kernels to 64MiB.  Consider this a tuning parameter that can affect performance.
@@ -473,11 +473,12 @@ users' values reported by disk utility programs.
 
  - The `rotatesiz` key represents bytes written to disk.  When `command` is a
 compression program, log rotation occurs after sentinal writes `rotatesiz` bytes
-post-compression.  If unset or zero, the thread requires manual log rotation.
+post-compression.  If `rotatesiz` is unset or zero, the thread requires manual
+or cron-based log rotation.
 
  - sentinal removes empty directories within `dirname` when `rmdir` is true.
 To preserve a single directory, create a file in the directory with a file name
 that does not match `pcrestr`, for example, `.persist`.
 
- - sentinal does not descend into directories on other filesystems, similar to `find dir -xdev`.
+ - sentinal does not descend into directories in other filesystems, similar to `find dir -xdev`.
 
