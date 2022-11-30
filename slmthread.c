@@ -53,7 +53,6 @@ void   *slmthread(void *arg)
 	/* for slm, ti->ti_template is the logname */
 
 	fullpath(ti->ti_dirname, ti->ti_template, filename);
-	fprintf(stderr, "%s: monitor file: %s\n", ti->ti_section, filename);
 	fprintf(stderr, "%s: monitor file: %s for size %ldMiB\n",
 			ti->ti_section, filename, MiB(ti->ti_rotatesiz));
 
