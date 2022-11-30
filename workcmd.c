@@ -16,6 +16,7 @@
 static char *compprogs[] = {
 	"bzip2",
 	"gzip",
+	"lzip",
 	"pbzip2",
 	"pigz",
 	"pzstd",
