@@ -31,7 +31,7 @@
 #define	LOW_RES(target,avail)	(target && avail < target)
 
 /* subtract from avail for extra space, reduce flapping */
-#define	PADDING			(float)0.09
+#define	PADDING			(float)0.195
 
 /* test LIMIT to see if it improves performance on big directory trees */
 static char *sql_selectfiles = "SELECT db_dir, db_file\n \
