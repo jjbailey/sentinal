@@ -198,14 +198,14 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 		}
 	}
 
+	sqlite3_finalize(pstmt);
+
 	/* modified buffer cache pages */
 
 	if((dfd = open(ti->ti_dirname, R_OK)) > 0) {
 		fdatasync(dfd);
 		close(dfd);
 	}
-
-	sqlite3_finalize(pstmt);
 
 	if(removed)
 		fprintf(stderr, "%s: %u %s removed\n", ti->ti_section,
