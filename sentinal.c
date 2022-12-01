@@ -543,7 +543,7 @@ static short create_pid_file(char *pidfile)
 {
 	FILE   *fp;
 
-	if(fp = fopen(pidfile, "r")) {
+	if((fp = fopen(pidfile, "r"))) {
 		int     locked = lockf(fileno(fp), F_TEST, (off_t) 0);
 
 		fclose(fp);
@@ -552,7 +552,7 @@ static short create_pid_file(char *pidfile)
 			return (FALSE);
 	}
 
-	if(fp = fopen(pidfile, "w")) {
+	if((fp = fopen(pidfile, "w"))) {
 		fprintf(fp, "%d\n", getpid());
 		fflush(fp);
 		rewind(fp);

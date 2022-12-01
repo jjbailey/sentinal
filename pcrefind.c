@@ -91,7 +91,7 @@ uint32_t pcrefind(struct thread_info *ti, short top, char *dir)
 
 	/* test the files */
 
-	while(dp = readdir(dirp)) {
+	while((dp = readdir(dirp))) {
 		if(MY_DIR(dp->d_name) || MY_PARENT(dp->d_name))
 			continue;
 

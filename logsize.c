@@ -23,7 +23,7 @@ off_t logsize(char *str)
 	char   *p;
 	off_t   n;
 
-	n = (off_t) abs(atol(str));
+	n = (off_t) labs(atol(str));
 
 	for(p = str; *p; p++)
 		if(isalpha(*p))

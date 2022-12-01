@@ -72,7 +72,7 @@ uint32_t findfile(struct thread_info *ti, short top, uint32_t *nextid,
 	snprintf(stmt, BUFSIZ, sql_insertfile, ti->ti_task);
 	sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
 
-	while(dp = readdir(dirp)) {
+	while((dp = readdir(dirp))) {
 		if(MY_DIR(dp->d_name) || MY_PARENT(dp->d_name))
 			continue;
 
