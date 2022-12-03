@@ -98,7 +98,7 @@ struct thread_info {
 	char   *ti_argv[MAXARGS];						/* args in command */
 	char   *ti_dirname;								/* directory name */
 	dev_t   ti_dev;									/* ID of device containing file */
-	long double ti_dirlimit;						/* directory size limit */
+	off_t   ti_dirlimit;							/* directory size limit */
 	short   ti_subdirs;								/* subdirectory recursion flag */
 	char   *ti_pipename;							/* FIFO name */
 	char   *ti_template;							/* file template */
