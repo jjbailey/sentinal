@@ -352,7 +352,7 @@ int main(int argc, char *argv[])
 		remove(database);
 
 	if(sqlite3_open_v2(database, &db, dbflags, NULL) != SQLITE_OK) {
-		fprintf(stderr, "%s: sqlite3_open_v2 failed\n", ti->ti_section);
+		fprintf(stderr, "%s: sqlite3_open_v2 failed\n", myname);
 		exit(EXIT_FAILURE);
 	}
 
