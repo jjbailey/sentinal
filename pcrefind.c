@@ -24,7 +24,6 @@ uint32_t pcrefind(struct thread_info *, short, char *);
 int main(int argc, char *argv[])
 {
 	char   *myname;
-	extern int errno;
 	int     i;
 	struct thread_info ti;							/* so we can use pcrecompile.c */
 
