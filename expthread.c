@@ -117,7 +117,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	uint32_t db_size;								/* sql data */
 	uint32_t filecount;								/* matching files */
 	uint32_t removed = 0;							/* matching files removed */
-	unsigned long long dirbytes;					/* dirsize in bytes */
+	unsigned long long dirbytes = 0L;				/* dirsize in bytes */
 
 	/* count all files */
 

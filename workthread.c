@@ -45,7 +45,7 @@ void   *workthread(void *arg)
 	char   *home;
 	char   *zargv[MAXARGS];
 	extern int errno;
-	int     holdfd;									/* fd to hold FIFO open */
+	int     holdfd = 0;								/* fd to hold FIFO open */
 	int     i;
 	int     logfd;
 	int     n;
