@@ -377,11 +377,13 @@ int main(int argc, char *argv[])
 				ti->ti_retmax = 0;					/* don't lose anything */
 			}
 
-		/* start threads */
-		/* usleep for systemd journal */
+		/*
+		 * start threads
+		 * give them time to start and print their journal entries
+		 */
 
 		if(threadcheck(ti, _DFS_THR)) {				/* filesystem free space */
-			usleep((useconds_t) 100000);
+			usleep((useconds_t) 500000);
 
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _DFS_THR,
 					ti->ti_dirname);
@@ -390,7 +392,7 @@ int main(int argc, char *argv[])
 		}
 
 		if(threadcheck(ti, _EXP_THR)) {				/* file expiration, retention, dirlimit */
-			usleep((useconds_t) 100000);
+			usleep((useconds_t) 500000);
 
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _EXP_THR,
 					ti->ti_dirname);
@@ -399,7 +401,7 @@ int main(int argc, char *argv[])
 		}
 
 		if(threadcheck(ti, _SLM_THR)) {				/* simple log monitor */
-			usleep((useconds_t) 100000);
+			usleep((useconds_t) 500000);
 
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _SLM_THR,
 					ti->ti_dirname);
@@ -408,7 +410,7 @@ int main(int argc, char *argv[])
 		}
 
 		if(threadcheck(ti, _WRK_THR)) {				/* worker (log ingestion) thread */
-			usleep((useconds_t) 100000);
+			usleep((useconds_t) 500000);
 
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _WRK_THR,
 					ti->ti_dirname);
