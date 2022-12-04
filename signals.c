@@ -39,7 +39,7 @@ void parentsignals(void)
 
 	sareject.sa_handler = sigreject;
 	sigemptyset(&sareject.sa_mask);
-	sareject.sa_flags = SA_RESETHAND;
+	sareject.sa_flags = (int)SA_RESETHAND;
 
 	sigaction(SIGSEGV, NULL, &sasigsegv);
 	sigaction(SIGTSTP, NULL, &sasigstp);
