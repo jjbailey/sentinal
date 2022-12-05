@@ -384,7 +384,7 @@ int main(int argc, char *argv[])
 		if(threadcheck(ti, _EXP_THR)) {				/* file expiration, retention, dirlimit */
 			if(ti->ti_expiresiz && !ti->ti_expire)
 				fprintf(stderr,
-						"%s: warning: expire size = %ldMiB, expire time = 0 (off)\n",
+						"%s: warning: expire size = %ldMiB, expire time = 0 (off) -- this is a noop\n",
 						ti->ti_section, MiB(ti->ti_expiresiz));
 
 			if(ti->ti_retmax && ti->ti_retmax < ti->ti_retmin) {
