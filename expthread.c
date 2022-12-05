@@ -20,7 +20,7 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-#define	SCANRATE		(ONE_MINUTE * 10)
+#define	SCANRATE		(ONE_MINUTE * 30)			/* faster seems too often */
 #define	DRYSCAN			30							/* scanrate for dryrun */
 
 /* test LIMIT to see if it improves performance on big directory trees */
