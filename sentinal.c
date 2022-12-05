@@ -362,9 +362,26 @@ int main(int argc, char *argv[])
 	for(i = 0; i < nsect; i++) {
 		ti = &tinfo[i];								/* shorthand */
 
-		/* print warnings if any */
+		/*
+		 * start threads
+		 * give them time to start and print their journal entries
+		 */
 
-		if(threadcheck(ti, _EXP_THR)) {
+		if(threadcheck(ti, _DFS_THR)) {				/* filesystem free space */
+			if(!ti->ti_retmin)
+				fprintf(stderr,
+						"%s: notice: recommend setting retmin in dfs threads\n",
+						ti->ti_section);
+
+			usleep((useconds_t) 500000);
+
+			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _DFS_THR,
+					ti->ti_dirname);
+
+			ti->dfs_active = pthread_create(&ti->dfs_tid, NULL, &dfsthread, ti) == 0;
+		}
+
+		if(threadcheck(ti, _EXP_THR)) {				/* file expiration, retention, dirlimit */
 			if(ti->ti_expiresiz && !ti->ti_expire)
 				fprintf(stderr,
 						"%s: warning: expire size = %ldMiB, expire time = 0 (off)\n",
@@ -377,23 +394,7 @@ int main(int argc, char *argv[])
 
 				ti->ti_retmax = 0;					/* don't lose anything */
 			}
-		}
 
-		/*
-		 * start threads
-		 * give them time to start and print their journal entries
-		 */
-
-		if(threadcheck(ti, _DFS_THR)) {				/* filesystem free space */
-			usleep((useconds_t) 500000);
-
-			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _DFS_THR,
-					ti->ti_dirname);
-
-			ti->dfs_active = pthread_create(&ti->dfs_tid, NULL, &dfsthread, ti) == 0;
-		}
-
-		if(threadcheck(ti, _EXP_THR)) {				/* file expiration, retention, dirlimit */
 			usleep((useconds_t) 500000);
 
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _EXP_THR,
