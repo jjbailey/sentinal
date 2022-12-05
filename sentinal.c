@@ -364,11 +364,12 @@ int main(int argc, char *argv[])
 
 		/* print warnings if any */
 
-		if(ti->ti_expiresiz && !ti->ti_expire)
-			fprintf(stderr, "%s: warning: expire size = %ldMiB, expire time = 0 (off)\n",
-					ti->ti_section, MiB(ti->ti_expiresiz));
+		if(threadcheck(ti, _EXP_THR)) {
+			if(ti->ti_expiresiz && !ti->ti_expire)
+				fprintf(stderr,
+						"%s: warning: expire size = %ldMiB, expire time = 0 (off)\n",
+						ti->ti_section, MiB(ti->ti_expiresiz));
 
-		if(threadcheck(ti, _DFS_THR) || threadcheck(ti, _EXP_THR))
 			if(ti->ti_retmax && ti->ti_retmax < ti->ti_retmin) {
 				fprintf(stderr,
 						"%s: warning: retmax is less than retmin -- setting retmax = 0\n",
@@ -376,6 +377,7 @@ int main(int argc, char *argv[])
 
 				ti->ti_retmax = 0;					/* don't lose anything */
 			}
+		}
 
 		/*
 		 * start threads
