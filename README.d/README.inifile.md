@@ -170,3 +170,32 @@ sentinal accepts two options for debugging.
     truncate  = 0
     # threads   dfs: true   exp: true   slm: false   wrk: true
 
+## Key Usage
+
+The following table lists the possible INI file keys and the threads
+in which they can be used.
+
+| Key | Pertains to |
+|:---:|:---:|
+| command | wrk |
+| dirlimit | exp |
+| dirname | dfs exp slm wrk |
+| diskfree | dfs |
+| expire | exp |
+| expiresiz | exp |
+| gid | slm wrk |
+| inofree | dfs |
+| pcrestr | dfs exp wrk |
+| pipename | wrk |
+| postcmd | slm wrk |
+| retmax | exp |
+| retmin | dfs exp |
+| rmdir | dfs exp |
+| rotatesiz | slm wrk |
+| subdirs | dfs exp |
+| symlinks | dfs exp |
+| template | slm wrk |
+| terse | dfs exp |
+| truncate | slm |
+| uid | slm wrk |
+

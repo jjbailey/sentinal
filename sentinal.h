@@ -8,7 +8,7 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"2.0.3"
+#define	VERSION_STRING	"2.0.4"
 
 #ifndef _SYS_TYPES_H
 # include <sys/types.h>
@@ -49,7 +49,6 @@
 #define	ONE_MONTH	(ONE_DAY * 30)					/* M */
 #define	ONE_YEAR	(ONE_DAY * 365)					/* Y or y */
 
-#define	KiB(n)		((size_t) (n) >> 10)			/* convert bytes to KiB */
 #define	MiB(n)		((size_t) (n) >> 20)			/* convert bytes to MiB */
 
 #define	FIFOSIZ		(64 << 20)						/* 64MiB, better size for I/O */
@@ -91,7 +90,7 @@ struct thread_info {
 	short   exp_active;								/* pthread_t is opaque */
 	short   slm_active;								/* pthread_t is opaque */
 	short   wrk_active;								/* pthread_t is opaque */
-	char    ti_task[TASK_COMM_LEN];					/* pthread_self */
+	char   *ti_task;								/* pthread_self */
 	char   *ti_section;								/* section name */
 	char   *ti_command;								/* thread command */
 	int     ti_argc;								/* number of args in command */
@@ -99,7 +98,7 @@ struct thread_info {
 	char   *ti_argv[MAXARGS];						/* args in command */
 	char   *ti_dirname;								/* directory name */
 	dev_t   ti_dev;									/* ID of device containing file */
-	long double ti_dirlimit;						/* directory size limit */
+	off_t   ti_dirlimit;							/* directory size limit */
 	short   ti_subdirs;								/* subdirectory recursion flag */
 	char   *ti_pipename;							/* FIFO name */
 	char   *ti_template;							/* file template */

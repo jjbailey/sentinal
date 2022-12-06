@@ -174,7 +174,7 @@ static void systemd_signals(void)
 
 	sacatch.sa_handler = sigcatch;
 	sigemptyset(&sacatch.sa_mask);
-	sacatch.sa_flags = SA_RESETHAND;
+	sacatch.sa_flags = (int)SA_RESETHAND;
 
 	for(i = 1; i < NSIG; i++)
 		sigaction(i, &sacatch, NULL);

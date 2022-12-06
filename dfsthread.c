@@ -28,10 +28,10 @@
 #define	SCANRATE        (ONE_MINUTE)
 #define	DRYSCAN         30							/* scanrate for dryrun */
 
-#define	LOW_RES(target,avail)	(target && avail < target)
+#define	LOW_RES(target,avail)	(target > 0 && avail < target)
 
 /* subtract from avail for extra space, reduce flapping */
-#define	PADDING			(float)0.09
+#define	PADDING			(float)0.195
 
 /* test LIMIT to see if it improves performance on big directory trees */
 static char *sql_selectfiles = "SELECT db_dir, db_file\n \
@@ -79,7 +79,7 @@ void   *dfsthread(void *arg)
 		return ((void *)0);
 	}
 
-	if(ti->ti_diskfree) {
+	if(ti->ti_diskfree > 0) {
 		fprintf(stderr, "%s: monitor disk: %s for %.2Lf%% free\n",
 				ti->ti_section, mountdir, ti->ti_diskfree);
 
@@ -93,7 +93,7 @@ void   *dfsthread(void *arg)
 		}
 	}
 
-	if(ti->ti_inofree) {
+	if(ti->ti_inofree > 0) {
 		fprintf(stderr, "%s: monitor inode: %s for %.2Lf%% free\n",
 				ti->ti_section, mountdir, ti->ti_inofree);
 
@@ -157,11 +157,11 @@ static void resreport(struct thread_info *ti, short lowres,
 					  long double blk, long double ino)
 {
 	if(lowres == FALSE) {							/* initial/recovery report */
-		if(ti->ti_diskfree)
+		if(ti->ti_diskfree > 0)
 			fprintf(stderr, "%s: %s: %.2Lf%% blocks free\n",
 					ti->ti_section, ti->ti_dirname, blk);
 
-		if(ti->ti_inofree)
+		if(ti->ti_inofree > 0)
 			fprintf(stderr, "%s: %s: %.2Lf%% inodes free\n",
 					ti->ti_section, ti->ti_dirname, ino);
 	} else {										/* low resource report */
@@ -267,10 +267,10 @@ static short getvfsstats(struct thread_info *ti, long double *blk, long double *
 		return (FALSE);
 	}
 
-	if(ti->ti_diskfree)
+	if(ti->ti_diskfree > 0)
 		*blk = PERCENT(svbuf.f_bavail, svbuf.f_blocks);
 
-	if(ti->ti_inofree)
+	if(ti->ti_inofree > 0)
 		*ino = PERCENT(svbuf.f_favail, svbuf.f_files);
 
 	return (TRUE);

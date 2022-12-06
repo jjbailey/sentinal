@@ -20,7 +20,7 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-#define	SCANRATE		(ONE_MINUTE * 10)
+#define	SCANRATE		(ONE_MINUTE * 30)			/* faster seems too often */
 #define	DRYSCAN			30							/* scanrate for dryrun */
 
 /* test LIMIT to see if it improves performance on big directory trees */
@@ -117,7 +117,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	uint32_t db_size;								/* sql data */
 	uint32_t filecount;								/* matching files */
 	uint32_t removed = 0;							/* matching files removed */
-	unsigned long long dirbytes;					/* dirsize in bytes */
+	unsigned long long dirbytes = 0L;				/* dirsize in bytes */
 
 	/* count all files */
 
@@ -198,14 +198,14 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 		}
 	}
 
+	sqlite3_finalize(pstmt);
+
 	/* modified buffer cache pages */
 
 	if((dfd = open(ti->ti_dirname, R_OK)) > 0) {
 		fdatasync(dfd);
 		close(dfd);
 	}
-
-	sqlite3_finalize(pstmt);
 
 	if(removed)
 		fprintf(stderr, "%s: %u %s removed\n", ti->ti_section,

@@ -42,7 +42,7 @@ uid_t verifyuid(char *id)
 
 	setpwent();
 
-	if(p = getpwnam(id))
+	if((p = getpwnam(id)))
 		uid = p->pw_uid;
 
 	endpwent();
@@ -72,7 +72,7 @@ gid_t verifygid(char *id)
 
 	setgrent();
 
-	if(p = getgrnam(id))
+	if((p = getgrnam(id)))
 		gid = p->gr_gid;
 
 	endgrent();

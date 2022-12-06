@@ -352,7 +352,7 @@ int main(int argc, char *argv[])
 		remove(database);
 
 	if(sqlite3_open_v2(database, &db, dbflags, NULL) != SQLITE_OK) {
-		fprintf(stderr, "%s: sqlite3_open_v2 failed\n", ti->ti_section);
+		fprintf(stderr, "%s: sqlite3_open_v2 failed\n", myname);
 		exit(EXIT_FAILURE);
 	}
 
@@ -362,26 +362,18 @@ int main(int argc, char *argv[])
 	for(i = 0; i < nsect; i++) {
 		ti = &tinfo[i];								/* shorthand */
 
-		/* print warnings if any */
-
-		if(ti->ti_expiresiz && !ti->ti_expire)
-			fprintf(stderr, "%s: warning: expire size = %ldMiB, expire time = 0 (off)\n",
-					ti->ti_section, MiB(ti->ti_expiresiz));
-
-		if(threadcheck(ti, _DFS_THR) || threadcheck(ti, _EXP_THR))
-			if(ti->ti_retmax && ti->ti_retmax < ti->ti_retmin) {
-				fprintf(stderr,
-						"%s: warning: retmax is less than retmin -- setting retmax = 0\n",
-						ti->ti_section);
-
-				ti->ti_retmax = 0;					/* don't lose anything */
-			}
-
-		/* start threads */
-		/* usleep for systemd journal */
+		/*
+		 * start threads
+		 * give them time to start and print their journal entries
+		 */
 
 		if(threadcheck(ti, _DFS_THR)) {				/* filesystem free space */
-			usleep((useconds_t) 100000);
+			if(!ti->ti_retmin)
+				fprintf(stderr,
+						"%s: notice: recommend setting retmin in dfs threads\n",
+						ti->ti_section);
+
+			usleep((useconds_t) 500000);
 
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _DFS_THR,
 					ti->ti_dirname);
@@ -390,7 +382,20 @@ int main(int argc, char *argv[])
 		}
 
 		if(threadcheck(ti, _EXP_THR)) {				/* file expiration, retention, dirlimit */
-			usleep((useconds_t) 100000);
+			if(ti->ti_expiresiz && !ti->ti_expire)
+				fprintf(stderr,
+						"%s: warning: expire size = %ldMiB, expire time = 0 (off) -- this is a noop\n",
+						ti->ti_section, MiB(ti->ti_expiresiz));
+
+			if(ti->ti_retmax && ti->ti_retmax < ti->ti_retmin) {
+				fprintf(stderr,
+						"%s: warning: retmax is less than retmin -- setting retmax = 0\n",
+						ti->ti_section);
+
+				ti->ti_retmax = 0;					/* don't lose anything */
+			}
+
+			usleep((useconds_t) 500000);
 
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _EXP_THR,
 					ti->ti_dirname);
@@ -399,7 +404,7 @@ int main(int argc, char *argv[])
 		}
 
 		if(threadcheck(ti, _SLM_THR)) {				/* simple log monitor */
-			usleep((useconds_t) 100000);
+			usleep((useconds_t) 500000);
 
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _SLM_THR,
 					ti->ti_dirname);
@@ -408,7 +413,7 @@ int main(int argc, char *argv[])
 		}
 
 		if(threadcheck(ti, _WRK_THR)) {				/* worker (log ingestion) thread */
-			usleep((useconds_t) 100000);
+			usleep((useconds_t) 500000);
 
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _WRK_THR,
 					ti->ti_dirname);
@@ -543,7 +548,7 @@ static short create_pid_file(char *pidfile)
 {
 	FILE   *fp;
 
-	if(fp = fopen(pidfile, "r")) {
+	if((fp = fopen(pidfile, "r"))) {
 		int     locked = lockf(fileno(fp), F_TEST, (off_t) 0);
 
 		fclose(fp);
@@ -552,7 +557,7 @@ static short create_pid_file(char *pidfile)
 			return (FALSE);
 	}
 
-	if(fp = fopen(pidfile, "w")) {
+	if((fp = fopen(pidfile, "w"))) {
 		fprintf(fp, "%d\n", getpid());
 		fflush(fp);
 		rewind(fp);

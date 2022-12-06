@@ -24,7 +24,6 @@ uint32_t pcrefind(struct thread_info *, short, char *);
 int main(int argc, char *argv[])
 {
 	char   *myname;
-	extern int errno;
 	int     i;
 	struct thread_info ti;							/* so we can use pcrecompile.c */
 
@@ -91,7 +90,7 @@ uint32_t pcrefind(struct thread_info *ti, short top, char *dir)
 
 	/* test the files */
 
-	while(dp = readdir(dirp)) {
+	while((dp = readdir(dirp))) {
 		if(MY_DIR(dp->d_name) || MY_PARENT(dp->d_name))
 			continue;
 

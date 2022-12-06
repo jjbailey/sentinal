@@ -44,13 +44,12 @@ void   *workthread(void *arg)
 	char   *envp[MAXARGS];
 	char   *home;
 	char   *zargv[MAXARGS];
-	extern int errno;
-	int     holdfd;									/* fd to hold FIFO open */
+	int     holdfd = 0;								/* fd to hold FIFO open */
 	int     i;
 	int     logfd;
-	int     n;
 	int     pipefd[2];
 	int     status;
+	ssize_t n;
 	struct passwd *p;
 	struct stat stbuf;
 	struct thread_info *ti = arg;					/* thread settings */
@@ -196,7 +195,7 @@ void   *workthread(void *arg)
 				if((n = read(logfd, pipebuf, PIPEBUFSIZ)) <= 0)
 					break;
 
-				if(write(ti->ti_wfd, pipebuf, n) == -1) {
+				if(write(ti->ti_wfd, pipebuf, (size_t)n) == -1) {
 					fprintf(stderr, "%s: write failed %s\n", ti->ti_section,
 							ti->ti_filename);
 

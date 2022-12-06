@@ -10,12 +10,10 @@
  */
 
 #include <stdio.h>
-#include <errno.h>
 #include "sentinal.h"
 
 short rmfile(struct thread_info *ti, char *obj, char *remark)
 {
-	extern int errno;
 	extern short dryrun;
 
 	if(!dryrun)

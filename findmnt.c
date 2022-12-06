@@ -30,7 +30,7 @@ char   *findmnt(char *dir, char *mountdir)
 	mp = mountdir;
 
 	while(strlen(mp) > 1) {
-		while(fs = getmntent(fp))
+		while((fs = getmntent(fp)))
 			if(strcmp(fs->mnt_dir, mp) == 0) {
 				endmntent(fp);
 				return (mp);

@@ -16,14 +16,14 @@
 
 #define	ONE_KiB		1024							/* K, k, KiB */
 #define	ONE_MiB		(ONE_KiB << 10)					/* M, m, MiB */
-#define	ONE_GiB		(ONE_MiB << 10)					/* G, G, GiB */
+#define	ONE_GiB		(ONE_MiB << 10)					/* G, g, GiB */
 
 off_t logsize(char *str)
 {
 	char   *p;
 	off_t   n;
 
-	n = (off_t) abs(atol(str));
+	n = (off_t) labs(atol(str));
 
 	for(p = str; *p; p++)
 		if(isalpha(*p))
