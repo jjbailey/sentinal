@@ -40,6 +40,8 @@
 
 /* externals */
 int     dryrun = FALSE;								/* dry run bool */
+pthread_mutex_t dfslock;							/* thread lock */
+pthread_mutex_t explock;							/* thread lock */
 sqlite3 *db;										/* db handle */
 struct thread_info tinfo[MAXSECT];					/* our threads */
 struct utsname utsbuf;								/* for host info */
@@ -359,13 +361,18 @@ int main(int argc, char *argv[])
 	if(strcmp(database, SQLMEMDB) != 0)
 		chmod(database, 0600);
 
+	/* initialize thread locks */
+
+	pthread_mutex_init(&dfslock, NULL);
+	pthread_mutex_init(&explock, NULL);
+
+	/*
+	 * start threads
+	 * give them time to start and print their journal entries
+	 */
+
 	for(i = 0; i < nsect; i++) {
 		ti = &tinfo[i];								/* shorthand */
-
-		/*
-		 * start threads
-		 * give them time to start and print their journal entries
-		 */
 
 		if(threadcheck(ti, _DFS_THR)) {				/* filesystem free space */
 			if(!ti->ti_retmin)
@@ -373,7 +380,7 @@ int main(int argc, char *argv[])
 						"%s: notice: recommend setting retmin in dfs threads\n",
 						ti->ti_section);
 
-			usleep((useconds_t) 500000);
+			usleep((useconds_t) 400000);
 
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _DFS_THR,
 					ti->ti_dirname);
@@ -395,7 +402,7 @@ int main(int argc, char *argv[])
 				ti->ti_retmax = 0;					/* don't lose anything */
 			}
 
-			usleep((useconds_t) 500000);
+			usleep((useconds_t) 400000);
 
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _EXP_THR,
 					ti->ti_dirname);
@@ -404,7 +411,7 @@ int main(int argc, char *argv[])
 		}
 
 		if(threadcheck(ti, _SLM_THR)) {				/* simple log monitor */
-			usleep((useconds_t) 500000);
+			usleep((useconds_t) 400000);
 
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _SLM_THR,
 					ti->ti_dirname);
@@ -413,7 +420,7 @@ int main(int argc, char *argv[])
 		}
 
 		if(threadcheck(ti, _WRK_THR)) {				/* worker (log ingestion) thread */
-			usleep((useconds_t) 500000);
+			usleep((useconds_t) 400000);
 
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _WRK_THR,
 					ti->ti_dirname);

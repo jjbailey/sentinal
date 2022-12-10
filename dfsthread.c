@@ -33,6 +33,9 @@
 /* subtract from avail for extra space, reduce flapping */
 #define	PADDING			(float)0.195
 
+/* externals */
+extern pthread_mutex_t dfslock;						/* thread lock */
+
 /* test LIMIT to see if it improves performance on big directory trees */
 static char *sql_selectfiles = "SELECT db_dir, db_file\n \
 	FROM  %s_dir, %s_file\n \
@@ -87,9 +90,6 @@ void   *dfsthread(void *arg)
 			/* test for zero blocks reported */
 			fprintf(stderr, "%s: no block support: %s\n", ti->ti_section, mountdir);
 			ti->ti_diskfree = 0;
-		} else {
-			/* supported */
-			pc_bfree = PERCENT(svbuf.f_bavail, svbuf.f_blocks);
 		}
 	}
 
@@ -101,9 +101,6 @@ void   *dfsthread(void *arg)
 			/* test for zero inodes reported (e.g. AWS EFS) */
 			fprintf(stderr, "%s: no inode support: %s\n", ti->ti_section, mountdir);
 			ti->ti_inofree = 0;
-		} else {
-			/* supported */
-			pc_ffree = PERCENT(svbuf.f_favail, svbuf.f_files);
 		}
 	}
 
@@ -117,8 +114,14 @@ void   *dfsthread(void *arg)
 				ti->ti_section, ti->ti_pcrestr, ti->ti_retmin);
 
 	/* monitor filesystem usage */
+	/* let's not start all the same thread types at once */
+
+	srand((uint64_t) (ti->ti_section));
+	usleep((useconds_t) rand() & 0xffff);
 
 	for(;;) {
+		pthread_mutex_lock(&dfslock);
+
 		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == FALSE)
 			return ((void *)0);
 
@@ -139,14 +142,12 @@ void   *dfsthread(void *arg)
 				/* process matching files */
 
 				process_files(ti, db);
-
-				if(dryrun)
-					sleep(DRYSCAN);
-
 				runreport = TRUE;
 			}
-		} else
-			sleep(dryrun ? DRYSCAN : SCANRATE);
+		}
+
+		pthread_mutex_unlock(&dfslock);
+		sleep(dryrun ? DRYSCAN : SCANRATE);
 	}
 
 	/* notreached */
