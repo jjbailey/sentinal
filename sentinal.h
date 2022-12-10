@@ -97,6 +97,7 @@ struct thread_info {
 	char   *ti_path;								/* path to command */
 	char   *ti_argv[MAXARGS];						/* args in command */
 	char   *ti_dirname;								/* directory name */
+	char   *ti_mountdir;							/* mountpoint */
 	dev_t   ti_dev;									/* ID of device containing file */
 	off_t   ti_dirlimit;							/* directory size limit */
 	short   ti_subdirs;								/* subdirectory recursion flag */

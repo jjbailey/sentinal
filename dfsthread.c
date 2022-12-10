@@ -43,8 +43,6 @@ static char *sql_selectfiles = "SELECT db_dir, db_file\n \
 	ORDER BY db_time\n \
 	LIMIT 1000000;";
 
-static char mountdir[PATH_MAX];						/* mountpoint */
-
 static short getvfsstats(struct thread_info *, long double *, long double *);
 static void process_files(struct thread_info *, sqlite3 *);
 static void resreport(struct thread_info *, short, long double, long double);
@@ -74,32 +72,34 @@ void   *dfsthread(void *arg)
 
 	pthread_setname_np(pthread_self(), threadname(ti, _DFS_THR));
 
-	findmnt(ti->ti_dirname, mountdir);				/* actual mountpoint */
+	findmnt(ti->ti_dirname, ti->ti_mountdir);		/* actual mountpoint */
 	memset(&svbuf, '\0', sizeof(svbuf));
 
-	if(statvfs(mountdir, &svbuf) == -1) {
-		fprintf(stderr, "%s: cannot stat: %s\n", ti->ti_section, mountdir);
+	if(statvfs(ti->ti_mountdir, &svbuf) == -1) {
+		fprintf(stderr, "%s: cannot stat: %s\n", ti->ti_section, ti->ti_mountdir);
 		return ((void *)0);
 	}
 
 	if(ti->ti_diskfree > 0) {
 		fprintf(stderr, "%s: monitor disk: %s for %.2Lf%% free\n",
-				ti->ti_section, mountdir, ti->ti_diskfree);
+				ti->ti_section, ti->ti_mountdir, ti->ti_diskfree);
 
 		if(svbuf.f_blocks == 0) {
 			/* test for zero blocks reported */
-			fprintf(stderr, "%s: no block support: %s\n", ti->ti_section, mountdir);
+			fprintf(stderr, "%s: no block support: %s\n", ti->ti_section,
+					ti->ti_mountdir);
 			ti->ti_diskfree = 0;
 		}
 	}
 
 	if(ti->ti_inofree > 0) {
 		fprintf(stderr, "%s: monitor inode: %s for %.2Lf%% free\n",
-				ti->ti_section, mountdir, ti->ti_inofree);
+				ti->ti_section, ti->ti_mountdir, ti->ti_inofree);
 
 		if(svbuf.f_files == 0) {
 			/* test for zero inodes reported (e.g. AWS EFS) */
-			fprintf(stderr, "%s: no inode support: %s\n", ti->ti_section, mountdir);
+			fprintf(stderr, "%s: no inode support: %s\n", ti->ti_section,
+					ti->ti_mountdir);
 			ti->ti_inofree = 0;
 		}
 	}
@@ -263,8 +263,8 @@ static short getvfsstats(struct thread_info *ti, long double *blk, long double *
 {
 	struct statvfs svbuf;							/* filesystem status */
 
-	if(statvfs(mountdir, &svbuf) == -1) {
-		fprintf(stderr, "%s: cannot stat: %s\n", ti->ti_section, mountdir);
+	if(statvfs(ti->ti_mountdir, &svbuf) == -1) {
+		fprintf(stderr, "%s: cannot stat: %s\n", ti->ti_section, ti->ti_mountdir);
 		return (FALSE);
 	}
 

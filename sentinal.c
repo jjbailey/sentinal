@@ -241,6 +241,7 @@ int main(int argc, char *argv[])
 			*rbuf = '\0';
 
 		ti->ti_dirname = strndup(rbuf, PATH_MAX);
+		ti->ti_mountdir = malloc(PATH_MAX);			/* for findmnt() */
 
 		if(IS_NULL(ti->ti_dirname) || strcmp(ti->ti_dirname, "/") == 0) {
 			fprintf(stderr, "%s: missing or bad dirname\n", ti->ti_section);
