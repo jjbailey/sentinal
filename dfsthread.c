@@ -116,7 +116,7 @@ void   *dfsthread(void *arg)
 	/* monitor filesystem usage */
 	/* let's not start all the same thread types at once */
 
-	srand((uint64_t) (ti->ti_section));
+	srand(pthread_self());
 	usleep((useconds_t) rand() & 0xffff);
 
 	for(;;) {
