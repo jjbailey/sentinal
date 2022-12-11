@@ -120,8 +120,6 @@ void   *dfsthread(void *arg)
 	usleep((useconds_t) rand() & 0xffff);
 
 	for(;;) {
-		pthread_mutex_lock(&dfslock);
-
 		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == FALSE)
 			return ((void *)0);
 
@@ -133,6 +131,8 @@ void   *dfsthread(void *arg)
 		}
 
 		if(lowres) {
+			pthread_mutex_lock(&dfslock);
+
 			if(findfile(ti, TRUE, &nextid, ti->ti_dirname, db) > 0) {
 				/* process directories emptied by previous run */
 
@@ -144,9 +144,11 @@ void   *dfsthread(void *arg)
 				process_files(ti, db);
 				runreport = TRUE;
 			}
+
+			pthread_mutex_unlock(&dfslock);
+			continue;
 		}
 
-		pthread_mutex_unlock(&dfslock);
 		sleep(dryrun ? DRYSCAN : SCANRATE);
 	}
 
