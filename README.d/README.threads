@@ -17,7 +17,7 @@ pcrestr   = pcre
 diskfree  = 10
 inofree   = 10
 # optional
-retmin    = 1024
+retmin    = 1K
 
 [exp_example]
 # required
@@ -26,13 +26,12 @@ pcrestr   = pcre
 # at least one of the following is required
 dirlimit  = 100M
 expire    = 1W
-retmax    = 1048576
+retmax    = 1M
 # optional
-retmin    = 1024
+retmin    = 1K
 
 [slm_example]
-# required
-command   = (null)
+# command must be unset
 dirname   = /path/to/dir
 template  = file
 rotatesiz = 1024M
