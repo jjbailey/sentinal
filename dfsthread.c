@@ -33,14 +33,15 @@
 /* subtract from avail for extra space, reduce flapping */
 #define	PADDING			(float)0.195
 
+/* externals */
+extern pthread_mutex_t dfslock;						/* thread lock */
+
 /* test LIMIT to see if it improves performance on big directory trees */
 static char *sql_selectfiles = "SELECT db_dir, db_file\n \
 	FROM  %s_dir, %s_file\n \
 	WHERE db_dirid = db_id\n \
 	ORDER BY db_time\n \
 	LIMIT 1000000;";
-
-static char mountdir[PATH_MAX];						/* mountpoint */
 
 static short getvfsstats(struct thread_info *, long double *, long double *);
 static void process_files(struct thread_info *, sqlite3 *);
@@ -71,39 +72,35 @@ void   *dfsthread(void *arg)
 
 	pthread_setname_np(pthread_self(), threadname(ti, _DFS_THR));
 
-	findmnt(ti->ti_dirname, mountdir);				/* actual mountpoint */
+	findmnt(ti->ti_dirname, ti->ti_mountdir);		/* actual mountpoint */
 	memset(&svbuf, '\0', sizeof(svbuf));
 
-	if(statvfs(mountdir, &svbuf) == -1) {
-		fprintf(stderr, "%s: cannot stat: %s\n", ti->ti_section, mountdir);
+	if(statvfs(ti->ti_mountdir, &svbuf) == -1) {
+		fprintf(stderr, "%s: cannot stat: %s\n", ti->ti_section, ti->ti_mountdir);
 		return ((void *)0);
 	}
 
 	if(ti->ti_diskfree > 0) {
 		fprintf(stderr, "%s: monitor disk: %s for %.2Lf%% free\n",
-				ti->ti_section, mountdir, ti->ti_diskfree);
+				ti->ti_section, ti->ti_mountdir, ti->ti_diskfree);
 
 		if(svbuf.f_blocks == 0) {
 			/* test for zero blocks reported */
-			fprintf(stderr, "%s: no block support: %s\n", ti->ti_section, mountdir);
+			fprintf(stderr, "%s: no block support: %s\n", ti->ti_section,
+					ti->ti_mountdir);
 			ti->ti_diskfree = 0;
-		} else {
-			/* supported */
-			pc_bfree = PERCENT(svbuf.f_bavail, svbuf.f_blocks);
 		}
 	}
 
 	if(ti->ti_inofree > 0) {
 		fprintf(stderr, "%s: monitor inode: %s for %.2Lf%% free\n",
-				ti->ti_section, mountdir, ti->ti_inofree);
+				ti->ti_section, ti->ti_mountdir, ti->ti_inofree);
 
 		if(svbuf.f_files == 0) {
 			/* test for zero inodes reported (e.g. AWS EFS) */
-			fprintf(stderr, "%s: no inode support: %s\n", ti->ti_section, mountdir);
+			fprintf(stderr, "%s: no inode support: %s\n", ti->ti_section,
+					ti->ti_mountdir);
 			ti->ti_inofree = 0;
-		} else {
-			/* supported */
-			pc_ffree = PERCENT(svbuf.f_favail, svbuf.f_files);
 		}
 	}
 
@@ -117,6 +114,10 @@ void   *dfsthread(void *arg)
 				ti->ti_section, ti->ti_pcrestr, ti->ti_retmin);
 
 	/* monitor filesystem usage */
+	/* let's not start all the same thread types at once */
+
+	srand(pthread_self());
+	usleep((useconds_t) rand() & 0xffff);
 
 	for(;;) {
 		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == FALSE)
@@ -130,6 +131,8 @@ void   *dfsthread(void *arg)
 		}
 
 		if(lowres) {
+			pthread_mutex_lock(&dfslock);
+
 			if(findfile(ti, TRUE, &nextid, ti->ti_dirname, db) > 0) {
 				/* process directories emptied by previous run */
 
@@ -139,14 +142,14 @@ void   *dfsthread(void *arg)
 				/* process matching files */
 
 				process_files(ti, db);
-
-				if(dryrun)
-					sleep(DRYSCAN);
-
 				runreport = TRUE;
 			}
-		} else
-			sleep(dryrun ? DRYSCAN : SCANRATE);
+
+			pthread_mutex_unlock(&dfslock);
+			continue;
+		}
+
+		sleep(dryrun ? DRYSCAN : SCANRATE);
 	}
 
 	/* notreached */
@@ -262,8 +265,8 @@ static short getvfsstats(struct thread_info *ti, long double *blk, long double *
 {
 	struct statvfs svbuf;							/* filesystem status */
 
-	if(statvfs(mountdir, &svbuf) == -1) {
-		fprintf(stderr, "%s: cannot stat: %s\n", ti->ti_section, mountdir);
+	if(statvfs(ti->ti_mountdir, &svbuf) == -1) {
+		fprintf(stderr, "%s: cannot stat: %s\n", ti->ti_section, ti->ti_mountdir);
 		return (FALSE);
 	}
 

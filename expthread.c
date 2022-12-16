@@ -23,6 +23,9 @@
 #define	SCANRATE		(ONE_MINUTE * 30)			/* faster seems too often */
 #define	DRYSCAN			30							/* scanrate for dryrun */
 
+/* externals */
+extern pthread_mutex_t explock;						/* thread lock */
+
 /* test LIMIT to see if it improves performance on big directory trees */
 static char *sql_selectfiles = "SELECT db_dir, db_file, db_size\n \
 	FROM  %s_dir, %s_file\n \
@@ -74,12 +77,13 @@ void   *expthread(void *arg)
 				ti->ti_section, ti->ti_pcrestr, ti->ti_retmax);
 
 	/* monitor expiration times */
-	/* force a quick initial scan */
+	/* let's not start all the same thread types at once */
 
-	sleep(dryrun);
+	srand(pthread_self());
+	usleep((useconds_t) rand() & 0xffff);
 
 	for(;;) {
-		/* find files in dirname */
+		pthread_mutex_lock(&explock);
 
 		if(findfile(ti, TRUE, &nextid, ti->ti_dirname, db) > 0) {
 			/* process directories emptied by previous run */
@@ -92,6 +96,7 @@ void   *expthread(void *arg)
 			process_files(ti, db);
 		}
 
+		pthread_mutex_unlock(&explock);
 		sleep(dryrun ? DRYSCAN : SCANRATE);
 	}
 
