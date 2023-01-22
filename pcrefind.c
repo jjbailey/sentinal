@@ -2,7 +2,7 @@
  * pcrefind.c
  * Program to find files matching Perl-compatible regular expressions.
  *
- * Copyright (c) 2021, 2022 jjb
+ * Copyright (c) 2021-2023 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -74,12 +74,15 @@ uint32_t pcrefind(struct thread_info *ti, short top, char *dir)
 		ti->ti_dev = stbuf.st_dev;					/* save mountpoint device */
 	}
 
+#if 0
+	/* TODO: add command line options for dirs and files */
 	/* test the directory itself */
 
 	if(pcrematch(ti, dir)) {
 		fprintf(stdout, "%s\n", dir);
 		entries++;
 	}
+#endif
 
 	if((dirp = opendir(dir)) == NULL) {
 		if(errno == EACCES)
@@ -105,14 +108,16 @@ uint32_t pcrefind(struct thread_info *ti, short top, char *dir)
 		if(stat(filename, &stbuf) == -1)
 			continue;
 
-		if(S_ISDIR(stbuf.st_mode) && ti->ti_subdirs) {
+		if(S_ISDIR(stbuf.st_mode)) {
 			if(ti->ti_subdirs && stbuf.st_dev == ti->ti_dev)
 				entries += pcrefind(ti, FALSE, filename);
-		} else {
-			if(pcrematch(ti, filename)) {
-				fprintf(stdout, "%s\n", filename);
-				entries++;
-			}
+
+			continue;
+		}
+
+		if(pcrematch(ti, filename)) {
+			fprintf(stdout, "%s\n", filename);
+			entries++;
 		}
 	}
 
