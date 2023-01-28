@@ -102,7 +102,7 @@ The `postcmd` key can contain the current directory, file, hostname, and section
 ## Threads
 
 Thread names have a kernel-imposed length limit of 16 characters (15 + nul).
-Thread names are assigned `<sectionname>_<taskname>`.  Task names and purposes:
+Thread names are assigned `<sectionname>_<taskname>`. Task names and purposes:
 
     dfs:  filesystem free space monitor thread
     exp:  file expire monitor thread
@@ -122,7 +122,7 @@ sentinal accepts two options for debugging.
     [test4]
     command   = /usr/bin/zstd -T4
     dirname   = /opt/sentinal/tests
-    dirlimit  = 
+    dirlimit  =
     subdirs   = true
     pipename  = test4.fifo
     template  = test4-%Y-%m-%d_%H-%M-%S.log.zst
@@ -130,17 +130,17 @@ sentinal accepts two options for debugging.
     uid       = sentinal
     gid       = sentinal
     rotatesiz = 1G
-    expiresiz = 
+    expiresiz =
     diskfree  = 85
-    inofree   = 
-    expire    = 
+    inofree   =
+    expire    =
     retmin    = 3
     retmax    = 25
-    terse     = 
-    rmdir     = 
-    symlinks  = 
-    postcmd   = 
-    truncate  = 
+    terse     =
+    rmdir     =
+    symlinks  =
+    postcmd   =
+    truncate  =
 
     $ /opt/sentinal/bin/sentinal -f /opt/sentinal/tests/test4.ini -v
 
@@ -166,7 +166,7 @@ sentinal accepts two options for debugging.
     terse     = 0
     rmdir     = 0
     symlinks  = 0
-    postcmd   = 
+    postcmd   =
     truncate  = 0
     # threads   dfs: true   exp: true   slm: false   wrk: true
 
@@ -175,27 +175,26 @@ sentinal accepts two options for debugging.
 The following table lists the possible INI file keys and the threads
 in which they can be used.
 
-| Key | Pertains to |
-|:---:|:---:|
-| command | wrk |
-| dirlimit | exp |
-| dirname | dfs exp slm wrk |
-| diskfree | dfs |
-| expire | exp |
-| expiresiz | exp |
-| gid | slm wrk |
-| inofree | dfs |
-| pcrestr | dfs exp wrk |
-| pipename | wrk |
-| postcmd | slm wrk |
-| retmax | exp |
-| retmin | dfs exp |
-| rmdir | dfs exp |
-| rotatesiz | slm wrk |
-| subdirs | dfs exp |
-| symlinks | dfs exp |
-| template | slm wrk |
-| terse | dfs exp |
-| truncate | slm |
-| uid | slm wrk |
-
+|    Key    |   Pertains to   |
+| :-------: | :-------------: |
+|  command  |       wrk       |
+| dirlimit  |       exp       |
+|  dirname  | dfs exp slm wrk |
+| diskfree  |       dfs       |
+|  expire   |       exp       |
+| expiresiz |       exp       |
+|    gid    |     slm wrk     |
+|  inofree  |       dfs       |
+|  pcrestr  |   dfs exp wrk   |
+| pipename  |       wrk       |
+|  postcmd  |     slm wrk     |
+|  retmax   |       exp       |
+|  retmin   |     dfs exp     |
+|   rmdir   |     dfs exp     |
+| rotatesiz |     slm wrk     |
+|  subdirs  |     dfs exp     |
+| symlinks  |     dfs exp     |
+| template  |     slm wrk     |
+|   terse   |     dfs exp     |
+| truncate  |       slm       |
+|    uid    |     slm wrk     |
