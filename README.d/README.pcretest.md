@@ -25,4 +25,3 @@
     no match: testdir/ddrescue-1.25.tar.lz
     match:    testdir/nxserver.log
     no match: testdir/syslog.2.gz
-

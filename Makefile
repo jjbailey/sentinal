@@ -1,6 +1,6 @@
 # Makefile
 #
-# Copyright (c) 2021, 2022 jjb
+# Copyright (c) 2021-2023 jjb
 # All rights reserved.
 #
 # This source code is licensed under the MIT license found
@@ -65,7 +65,6 @@ SEN_HOME=	/opt/sentinal
 SEN_BIN=	$(SEN_HOME)/bin
 SEN_ETC=	$(SEN_HOME)/etc
 SEN_DOC=	$(SEN_HOME)/doc
-SEN_TEST=	$(SEN_HOME)/tests
 PCRE_DIR=	/usr/lib/sqlite3
 
 CC=			gcc
@@ -104,16 +103,10 @@ install:	all
 			install -o root -g root -m 755 sentinalpipe -t $(SEN_BIN)
 			install -o root -g root -m 755 pcrefind -t $(SEN_BIN)
 			install -o root -g root -m 755 pcretest -t $(SEN_BIN)
-			install -o root -g root -m 644 tests/test4.ini -T $(SEN_ETC)/example.ini
+			install -o root -g root -m 644 example.ini -T $(SEN_ETC)/example.ini
 			# install -o root -g root -m 755 pcre2.so $(PCRE_DIR)/pcre2.so
 			cp -p README.md README.d/README.* $(SEN_DOC)
 			chown -R root:root $(SEN_DOC)
-
-tests:		all
-			mkdir -p $(SEN_TEST)
-			cp -p tests/test?.* $(SEN_TEST)
-			cp -p tests/testmultilog.ini tests/testmultipipe.ini $(SEN_TEST)
-			chown -R root:root $(SEN_TEST)
 
 systemd:
 			sed "s,INI_FILE,$(SEN_ETC),"	\

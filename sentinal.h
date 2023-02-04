@@ -1,14 +1,14 @@
 /*
  * sentinal.h
  *
- * Copyright (c) 2021, 2022 jjb
+ * Copyright (c) 2021-2023 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"2.0.5"
+#define	VERSION_STRING	"2.0.6"
 
 #ifndef _SYS_TYPES_H
 # include <sys/types.h>
