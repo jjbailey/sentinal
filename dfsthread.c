@@ -206,16 +206,6 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
 
 	for(;;) {
-		if(ti->ti_retmin && filecount <= ti->ti_retmin)
-			break;
-
-		if(dryrun && drcount++ == 10) {				/* dryrun doesn't remove anything */
-			if(!ti->ti_terse)
-				fprintf(stderr, "%s: ...\n", ti->ti_section);
-
-			break;
-		}
-
 		/* check if usage dropped before we got here */
 
 		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == FALSE)
@@ -229,6 +219,21 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 		if(!LOW_RES(ti->ti_diskfree, pc_bfree - PADDING) &&
 		   !LOW_RES(ti->ti_inofree, pc_ffree - PADDING))
 			break;
+
+		if(ti->ti_retmin && filecount <= ti->ti_retmin) {
+			fprintf(stderr, "%s: cannot clear space: retmin exceeds filecount\n",
+					ti->ti_section);
+
+			sleep(SCANRATE);
+			break;
+		}
+
+		if(dryrun && drcount++ == 10) {				/* dryrun doesn't remove anything */
+			if(!ti->ti_terse)
+				fprintf(stderr, "%s: ...\n", ti->ti_section);
+
+			break;
+		}
 
 		if(sqlite3_step(pstmt) != SQLITE_ROW)
 			break;
