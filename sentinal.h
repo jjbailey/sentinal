@@ -8,7 +8,7 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"2.0.6"
+#define	VERSION_STRING	"2.0.7"
 
 #ifndef _SYS_TYPES_H
 # include <sys/types.h>
