@@ -156,6 +156,7 @@ void   *workthread(void *);
 /* sqlite */
 
 #define	SQLMEMDB	":memory:"						/* pure in-memory database */
+#define	QUERYLIM	100000							/* max return for dfs and exp */
 
 short   create_index(struct thread_info *, sqlite3 *);
 short   create_table(struct thread_info *, sqlite3 *);

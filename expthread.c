@@ -26,12 +26,11 @@
 /* externals */
 extern pthread_mutex_t explock;						/* thread lock */
 
-/* test LIMIT to see if it improves performance on big directory trees */
 static char *sql_selectfiles = "SELECT db_dir, db_file, db_size\n \
 	FROM  %s_dir, %s_file\n \
 	WHERE db_dirid = db_id\n \
 	ORDER BY db_time\n \
-	LIMIT 100000;";
+	LIMIT %d;";
 
 static char *sql_selectbytes = "SELECT SUM(db_size)\n \
 	FROM  %s_file;";
@@ -139,7 +138,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 
 	/* process expired files */
 
-	snprintf(stmt, BUFSIZ, sql_selectfiles, ti->ti_task, ti->ti_task);
+	snprintf(stmt, BUFSIZ, sql_selectfiles, ti->ti_task, ti->ti_task, QUERYLIM);
 	sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
 	time(&curtime);
 

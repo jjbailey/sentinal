@@ -36,12 +36,11 @@
 /* externals */
 extern pthread_mutex_t dfslock;						/* thread lock */
 
-/* test LIMIT to see if it improves performance on big directory trees */
 static char *sql_selectfiles = "SELECT db_dir, db_file\n \
 	FROM  %s_dir, %s_file\n \
 	WHERE db_dirid = db_id\n \
 	ORDER BY db_time\n \
-	LIMIT 100000;";
+	LIMIT %d;";
 
 static short getvfsstats(struct thread_info *, long double *, long double *);
 static void process_files(struct thread_info *, sqlite3 *);
@@ -202,7 +201,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 
 	/* process all files */
 
-	snprintf(stmt, BUFSIZ, sql_selectfiles, ti->ti_task, ti->ti_task);
+	snprintf(stmt, BUFSIZ, sql_selectfiles, ti->ti_task, ti->ti_task, QUERYLIM);
 	sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
 
 	for(;;) {
