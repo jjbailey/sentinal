@@ -36,12 +36,11 @@
 /* externals */
 extern pthread_mutex_t dfslock;						/* thread lock */
 
-/* test LIMIT to see if it improves performance on big directory trees */
 static char *sql_selectfiles = "SELECT db_dir, db_file\n \
 	FROM  %s_dir, %s_file\n \
 	WHERE db_dirid = db_id\n \
 	ORDER BY db_time\n \
-	LIMIT 100000;";
+	LIMIT %d;";
 
 static short getvfsstats(struct thread_info *, long double *, long double *);
 static void process_files(struct thread_info *, sqlite3 *);
@@ -202,20 +201,10 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 
 	/* process all files */
 
-	snprintf(stmt, BUFSIZ, sql_selectfiles, ti->ti_task, ti->ti_task);
+	snprintf(stmt, BUFSIZ, sql_selectfiles, ti->ti_task, ti->ti_task, QUERYLIM);
 	sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
 
 	for(;;) {
-		if(ti->ti_retmin && filecount <= ti->ti_retmin)
-			break;
-
-		if(dryrun && drcount++ == 10) {				/* dryrun doesn't remove anything */
-			if(!ti->ti_terse)
-				fprintf(stderr, "%s: ...\n", ti->ti_section);
-
-			break;
-		}
-
 		/* check if usage dropped before we got here */
 
 		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == FALSE)
@@ -229,6 +218,21 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 		if(!LOW_RES(ti->ti_diskfree, pc_bfree - PADDING) &&
 		   !LOW_RES(ti->ti_inofree, pc_ffree - PADDING))
 			break;
+
+		if(ti->ti_retmin && filecount <= ti->ti_retmin) {
+			fprintf(stderr, "%s: cannot clear space: retmin exceeds filecount\n",
+					ti->ti_section);
+
+			sleep(SCANRATE);
+			break;
+		}
+
+		if(dryrun && drcount++ == 10) {				/* dryrun doesn't remove anything */
+			if(!ti->ti_terse)
+				fprintf(stderr, "%s: ...\n", ti->ti_section);
+
+			break;
+		}
 
 		if(sqlite3_step(pstmt) != SQLITE_ROW)
 			break;
