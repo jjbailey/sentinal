@@ -31,6 +31,10 @@ Section names can be up to 11 characters in length (kernel max), and the
 characters must be alpha-numeric or underscore (valid sqlite3 table name).
 Section names must be unique in the INI file.
 
+Sizes in bytes or files may be given in SI units {K,M,G,T}i{B,F}, non-SI units {K,M,G,T}{B,F},
+or no units (literal value).  Examples,
+1KB = 1000 bytes, 1K or 1KiB = 1024 bytes.  1MF = 1000000 files, 1M or 1MiF = 1048576 files.
+
     [global]
     pidfile:   sentinal process id and lock file, for manual logrotate
     database:  name of the sqlite3 database
@@ -38,20 +42,20 @@ Section names must be unique in the INI file.
     [section]
     command:   command to run
     dirname:   thread and postcmd working directory, file location
-    dirlimit:  maximum total size of matching files in a directory
+    dirlimit:  maximum total size of matching files in a directory, SI or non-SI units, 0 = no max (off)
     subdirs:   option to search subdirectories for matching files (false)
     pipename:  named pipe/fifo fifo location
     template:  output file name, date(1) sequences %F %Y %m %d %H %M %S %s
     pcrestr:   perl-compatible regex naming files to manage
-    uid:       username or uid for command/postcmd; default = nobody
-    gid:       groupname or gid for command/postcmd; default = nogroup
-    rotatesiz: rotate size, M = MiB, G = GiB; 0 = no rotate (unlimited)
-    expiresiz: expire size, M = MiB, G = GiB; 0 = no expiration by size
-    diskfree:  percent blocks free; 0 = no monitor (off)
-    inofree:   percent inodes free; 0 = no monitor (off)
-    expire:    file retention time, units = m, H, D, W, M, Y; 0 = no expiration (off)
-    retmin:    minimum number of files to retain; 0 = none (off)
-    retmax:    maximum number of files to retain; 0 = no max (off)
+    uid:       username or uid for command/postcmd, default = nobody
+    gid:       groupname or gid for command/postcmd, default = nogroup
+    rotatesiz: size in SI or non-SI units, 0 = no rotate
+    expiresiz: size in SI or non-SI units, 0 = no expiration by size
+    diskfree:  percent blocks free, 0 = no monitor (off)
+    inofree:   percent inodes free, 0 = no monitor (off)
+    expire:    file retention time, units = m, H, D, W, M, Y, 0 = no expiration (off)
+    retmin:    minimum number of files to retain, SI or non-SI units, 0 = none (off)
+    retmax:    maximum number of files to retain, SI or non-SI units, 0 = no max (off)
     terse:     option to record or suppress file removal notices (false)
     rmdir:     option to remove empty directories (false)
     symlinks:  option to follow symlinks (false)

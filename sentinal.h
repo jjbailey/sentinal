@@ -8,7 +8,7 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"2.0.7"
+#define	VERSION_STRING	"2.0.8"
 
 #ifndef _SYS_TYPES_H
 # include <sys/types.h>
@@ -49,14 +49,12 @@
 #define	ONE_MONTH	(ONE_DAY * 30)					/* M */
 #define	ONE_YEAR	(ONE_DAY * 365)					/* Y or y */
 
-#define	MiB(n)		((size_t) (n) >> 20)			/* convert bytes to MiB */
-
 #define	FIFOSIZ		(64 << 20)						/* 64MiB, better size for I/O */
 
 #define	NOT_NULL(s)	((s) && *(s))
 #define	IS_NULL(s)	!((s) && *(s))
 
-/* alternative to often-used strcmp() */
+/* alternatives to often-used strcmp() */
 
 #define	MY_DIR(d)		(*d == '.' && *(d + 1) == '\0')
 #define	MY_PARENT(d)	(*d == '.' && *(d + 1) == '.' && *(d + 2) == '\0')
@@ -99,6 +97,7 @@ struct thread_info {
 	char   *ti_dirname;								/* directory name */
 	char   *ti_mountdir;							/* mountpoint */
 	dev_t   ti_dev;									/* ID of device containing file */
+	char   *ti_dirlimstr;							/* directory size limit string */
 	off_t   ti_dirlimit;							/* directory size limit */
 	short   ti_subdirs;								/* subdirectory recursion flag */
 	char   *ti_pipename;							/* FIFO name */
@@ -111,12 +110,16 @@ struct thread_info {
 	gid_t   ti_gid;									/* thread gid */
 	int     ti_wfd;									/* worker stdin or EOF */
 	int     ti_sig;									/* signal number received */
+	char   *ti_rotatestr;							/* logfile rotate size string */
 	off_t   ti_rotatesiz;							/* logfile rotate size */
+	char   *ti_expirestr;							/* logfile expire size string */
 	off_t   ti_expiresiz;							/* logfile expire size */
 	long double ti_diskfree;						/* desired percent blocks free */
 	long double ti_inofree;							/* desired percent inodes free */
 	int     ti_expire;								/* file expiration */
+	char   *ti_retminstr;							/* file retention minimum string */
 	int     ti_retmin;								/* file retention minimum */
+	char   *ti_retmaxstr;							/* file retention maximum string */
 	int     ti_retmax;								/* file retention maximum */
 	short   ti_terse;								/* notify file removal flag */
 	short   ti_rmdir;								/* remove empty dirs */
