@@ -2,7 +2,7 @@
  * slmthread.c
  * Simple log monitor thread.
  *
- * Copyright (c) 2021, 2022 jjb
+ * Copyright (c) 2021-2023 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -53,8 +53,10 @@ void   *slmthread(void *arg)
 	/* for slm, ti->ti_template is the logname */
 
 	fullpath(ti->ti_dirname, ti->ti_template, filename);
-	fprintf(stderr, "%s: monitor file: %s for size %ldMiB\n",
-			ti->ti_section, filename, MiB(ti->ti_rotatesiz));
+
+	if(ti->ti_rotatesiz)							/* mandatory, check anyway */
+		fprintf(stderr, "%s: monitor file: %s for size %s\n",
+				ti->ti_section, filename, ti->ti_rotatestr);
 
 	ti->ti_sig = 0;									/* reset */
 

@@ -2,7 +2,7 @@
  * workthread.c
  * Execute command, read input from a FIFO, write output to a logfile.
  *
- * Copyright (c) 2021, 2022 jjb
+ * Copyright (c) 2021-2023 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -76,8 +76,8 @@ void   *workthread(void *arg)
 	fprintf(stderr, "%s: command: %s\n", ti->ti_section, ti->ti_command);
 
 	if(ti->ti_rotatesiz)
-		fprintf(stderr, "%s: monitor file: %s for size %ldMiB\n",
-				ti->ti_section, ti->ti_pcrestr, MiB(ti->ti_rotatesiz));
+		fprintf(stderr, "%s: monitor file: %s for size %s\n",
+				ti->ti_section, ti->ti_pcrestr, ti->ti_rotatestr);
 
 	for(;;) {
 		/* set up pipes */

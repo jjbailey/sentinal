@@ -60,8 +60,8 @@ void   *expthread(void *arg)
 	pthread_setname_np(pthread_self(), threadname(ti, _EXP_THR));
 
 	if(ti->ti_dirlimit)
-		fprintf(stderr, "%s: monitor directory: %s for dirlimit %ldMiB\n",
-				ti->ti_section, ti->ti_dirname, MiB(ti->ti_dirlimit));
+		fprintf(stderr, "%s: monitor directory: %s for dirlimit %s\n",
+				ti->ti_section, ti->ti_dirname, ti->ti_dirlimstr);
 
 	if(ti->ti_expire)
 		fprintf(stderr, "%s: monitor file: %s for expiration %s\n",

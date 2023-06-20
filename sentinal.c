@@ -2,7 +2,7 @@
  * sentinal.c
  * sentinal: Manage directory contents according to an INI file
  *
- * Copyright (c) 2021, 2022 jjb
+ * Copyright (c) 2021-2023 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -312,14 +312,25 @@ int main(int argc, char *argv[])
 
 		ti->ti_uid = verifyuid(my_ini(inidata, ti->ti_section, "uid"));
 		ti->ti_gid = verifygid(my_ini(inidata, ti->ti_section, "gid"));
-		ti->ti_dirlimit = logsize(my_ini(inidata, ti->ti_section, "dirlimit"));
-		ti->ti_rotatesiz = logsize(my_ini(inidata, ti->ti_section, "rotatesiz"));
-		ti->ti_expiresiz = logsize(my_ini(inidata, ti->ti_section, "expiresiz"));
+
+		ti->ti_dirlimstr = my_ini(inidata, ti->ti_section, "dirlimit");
+		ti->ti_dirlimit = logsize(ti->ti_dirlimstr);
+
+		ti->ti_rotatestr = my_ini(inidata, ti->ti_section, "rotatesiz");
+		ti->ti_rotatesiz = logsize(ti->ti_rotatestr);
+
+		ti->ti_expirestr = my_ini(inidata, ti->ti_section, "expiresiz");
+		ti->ti_expiresiz = logsize(ti->ti_expirestr);
+
 		ti->ti_diskfree = fabs(atof(my_ini(inidata, ti->ti_section, "diskfree")));
 		ti->ti_inofree = fabs(atof(my_ini(inidata, ti->ti_section, "inofree")));
 		ti->ti_expire = logretention(my_ini(inidata, ti->ti_section, "expire"));
-		ti->ti_retmin = logsize(my_ini(inidata, ti->ti_section, "retmin"));
-		ti->ti_retmax = logsize(my_ini(inidata, ti->ti_section, "retmax"));
+
+		ti->ti_retminstr = my_ini(inidata, ti->ti_section, "retmin");
+		ti->ti_retmin = logsize(ti->ti_retminstr);
+
+		ti->ti_retmaxstr = my_ini(inidata, ti->ti_section, "retmax");
+		ti->ti_retmax = logsize(ti->ti_retmaxstr);
 
 		ti->ti_postcmd = malloc(BUFSIZ);
 		memset(ti->ti_postcmd, '\0', BUFSIZ);
@@ -392,8 +403,8 @@ int main(int argc, char *argv[])
 		if(threadcheck(ti, _EXP_THR)) {				/* file expiration, retention, dirlimit */
 			if(ti->ti_expiresiz && !ti->ti_expire)
 				fprintf(stderr,
-						"%s: warning: expire size = %ldMiB, expire time = 0 (off) -- this is a noop\n",
-						ti->ti_section, MiB(ti->ti_expiresiz));
+						"%s: warning: expire size = %s, expire time = 0 (off) -- this is a noop\n",
+						ti->ti_section, ti->ti_expirestr);
 
 			if(ti->ti_retmax && ti->ti_retmax < ti->ti_retmin) {
 				fprintf(stderr,
@@ -514,7 +525,7 @@ static void dump_thread_info(struct thread_info *ti)
 	}
 
 	fprintf(stdout, "dirname   = %s\n", ti->ti_dirname);
-	fprintf(stdout, "dirlimit  = %ldMiB\n", MiB(ti->ti_dirlimit));
+	fprintf(stdout, "dirlimit  = %s\n", ti->ti_dirlimstr);
 	fprintf(stdout, "subdirs   = %d\n", ti->ti_subdirs);
 	fprintf(stdout, "pipename  = %s\n", ti->ti_pipename);
 	fprintf(stdout, "template  = %s\n", ti->ti_template);
@@ -526,8 +537,8 @@ static void dump_thread_info(struct thread_info *ti)
 	fprintf(stdout, "uid       = %d\n", ti->ti_uid);
 	fprintf(stdout, "gid       = %d\n", ti->ti_gid);
 
-	fprintf(stdout, "rotatesiz = %ldMiB\n", MiB(ti->ti_rotatesiz));
-	fprintf(stdout, "expiresiz = %ldMiB\n", MiB(ti->ti_expiresiz));
+	fprintf(stdout, "rotatesiz = %s\n", ti->ti_rotatestr);
+	fprintf(stdout, "expiresiz = %s\n", ti->ti_expirestr);
 	fprintf(stdout, "diskfree  = %.2Lf\n", ti->ti_diskfree);
 	fprintf(stdout, "inofree   = %.2Lf\n", ti->ti_inofree);
 	fprintf(stdout, "expire    = %s\n", convexpire(ti->ti_expire, ebuf));
