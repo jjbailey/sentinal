@@ -2,7 +2,7 @@
  * signals.c
  * Set signals for handling events.
  *
- * Copyright (c) 2021, 2022 jjb
+ * Copyright (c) 2021-2023 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -65,7 +65,7 @@ static void sigparent(int sig)
 	signal(sig, sigparent);							/* reset */
 
 	if(sig == SIGINT || sig == SIGTERM)
-		exit(EXIT_SUCCESS);
+		_exit(EXIT_SUCCESS);
 
 	if(sig == SIGCHLD) {
 		while(waitpid(-1, &status, WNOHANG) > 0)
