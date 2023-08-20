@@ -34,22 +34,22 @@ static void fifosize(struct thread_info *, int);
 
 void   *workthread(void *arg)
 {
-	char    filename[PATH_MAX];
-	char    homebuf[BUFSIZ];
-	char    pathbuf[BUFSIZ];
-	char    pcrebuf[BUFSIZ];
-	char    pipebuf[PIPEBUFSIZ];
-	char    shellbuf[BUFSIZ];
-	char    tmplbuf[BUFSIZ];
-	char   *envp[MAXARGS];
-	char   *home;
-	char   *zargv[MAXARGS];
+	char    filename[PATH_MAX];						/* full pathname */
+	char    homebuf[BUFSIZ];						/* hone env var */
+	char    pathbuf[BUFSIZ];						/* path env var */
+	char    pcrebuf[BUFSIZ];						/* env convenience */
+	char    pipebuf[PIPEBUFSIZ];					/* pipe read buffer */
+	char    shellbuf[BUFSIZ];						/* shell env var */
+	char    tmplbuf[BUFSIZ];						/* env convenience */
+	char   *envp[MAXARGS];							/* for children, execve */
+	char   *home;									/* from passwd file entry */
+	char   *zargv[MAXARGS];							/* arglist for fifo reader */
 	int     holdfd = 0;								/* fd to hold FIFO open */
 	int     i;
-	int     logfd;
-	int     pipefd[2];
-	int     status;
-	ssize_t n;
+	int     logfd;									/* primary FIFO fd */
+	int     pipefd[2];								/* pipe readers and writers */
+	int     status;									/* child status codes */
+	ssize_t n;										/* FIFO read */
 	struct passwd *p;
 	struct stat stbuf;
 	struct thread_info *ti = arg;					/* thread settings */
