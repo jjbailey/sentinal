@@ -179,6 +179,7 @@ static void help(char *prog)
 	char   *p = base(prog);
 
 	fprintf(stderr, "\nUsage:\n");
+	fprintf(stderr, "%s <pcre> <dir> [ <dir> ... ]\n", p);
 	fprintf(stderr, "%s [ -d|--dirs ] <pcre> <dir> [ <dir> ... ]\n", p);
 	fprintf(stderr, "%s [ -f|--files ] <pcre> <dir> [ <dir> ... ]\n\n", p);
 	fprintf(stderr, "Print the program version, exit:\n");
