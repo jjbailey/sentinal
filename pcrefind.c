@@ -115,6 +115,12 @@ uint32_t pcrefind(struct thread_info *ti, short top, char *dir)
 	struct stat stbuf;								/* file status */
 	uint32_t entries = 0;							/* file entries */
 
+	if(IS_NULL(dir))
+		return (0);
+
+	if(*dir == '/' && *(dir + 1) == '/')			/* find started at / */
+		dir++;
+
 	if(top) {										/* reset */
 		if(stat(dir, &stbuf) == -1) {
 			fprintf(stderr, "%s: cannot stat: %s\n", ti->ti_section, dir);
