@@ -126,8 +126,8 @@ uint32_t pcrefind(struct thread_info *ti, short top, char *dir)
 
 	/* test the directory itself */
 
-	if(pcrematch(ti, dir))
-		if(list_dirs) {
+	if(list_dirs)
+		if(pcrematch(ti, dir)) {
 			fprintf(stdout, "%s\n", dir);
 			entries++;
 		}
@@ -163,8 +163,8 @@ uint32_t pcrefind(struct thread_info *ti, short top, char *dir)
 			continue;
 		}
 
-		if(pcrematch(ti, filename))
-			if(list_files) {
+		if(list_files)
+			if(pcrematch(ti, filename)) {
 				fprintf(stdout, "%s\n", filename);
 				entries++;
 			}
