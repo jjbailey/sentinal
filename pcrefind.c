@@ -22,13 +22,17 @@
 static struct option long_options[] = {
 	{ "dirs", no_argument, NULL, 'd' },
 	{ "files", no_argument, NULL, 'f' },
+	{ "name", no_argument, NULL, 'n' },
+	{ "xdev", no_argument, NULL, 'x' },
 	{ "version", no_argument, NULL, 'V' },
 	{ "help", no_argument, NULL, 'h' },
 	{ 0, 0, 0, 0 }
 };
 
-static short list_dirs = FALSE;
-static short list_files = FALSE;
+static short opt_dirs = FALSE;
+static short opt_files = FALSE;
+static short opt_names = FALSE;
+static short opt_xdev = TRUE;
 
 static void help(char *);
 short   pcrematch(struct thread_info *, char *);
@@ -44,7 +48,7 @@ int main(int argc, char *argv[])
 	myname = base(argv[0]);
 
 	while(1) {
-		c = getopt_long(argc, argv, "dfVh?", long_options, &index);
+		c = getopt_long(argc, argv, "dfnxVh?", long_options, &index);
 
 		if(c == -1)									/* end of options */
 			break;
@@ -52,11 +56,19 @@ int main(int argc, char *argv[])
 		switch (c) {
 
 		case 'd':									/* list directorries */
-			list_dirs = TRUE;
+			opt_dirs = TRUE;
 			break;
 
 		case 'f':									/* list files */
-			list_files = TRUE;
+			opt_files = TRUE;
+			break;
+
+		case 'n':									/* check basename, not full path */
+			opt_names = TRUE;
+			break;
+
+		case 'x':									/* don't descend directories on other filesystems */
+			opt_xdev = FALSE;
 			break;
 
 		case 'V':									/* print version */
@@ -91,11 +103,11 @@ int main(int argc, char *argv[])
 	}
 
 	/* find everything if not given specifics */
-	if(!(list_dirs || list_files))
-		list_dirs = list_files = TRUE;
 
-	/* we could just skip these tests in pcrefind() */
-	ti.ti_subdirs = TRUE;
+	if(!(opt_dirs || opt_files))
+		opt_dirs = opt_files = TRUE;
+
+	/* TODO: consider adding this as an option */
 	ti.ti_symlinks = FALSE;
 
 	if(pcrecompile(&ti) == FALSE)
@@ -132,8 +144,8 @@ uint32_t pcrefind(struct thread_info *ti, short top, char *dir)
 
 	/* test the directory itself */
 
-	if(list_dirs)
-		if(pcrematch(ti, dir)) {
+	if(opt_dirs)
+		if(pcrematch(ti, opt_names ? base(dir) : dir)) {
 			fprintf(stdout, "%s\n", dir);
 			entries++;
 		}
@@ -163,14 +175,14 @@ uint32_t pcrefind(struct thread_info *ti, short top, char *dir)
 			continue;
 
 		if(S_ISDIR(stbuf.st_mode)) {
-			if(ti->ti_subdirs && stbuf.st_dev == ti->ti_dev)
+			if(stbuf.st_dev == ti->ti_dev || opt_xdev)
 				entries += pcrefind(ti, FALSE, filename);
 
 			continue;
 		}
 
-		if(list_files)
-			if(pcrematch(ti, filename)) {
+		if(opt_files)
+			if(pcrematch(ti, opt_names ? base(filename) : filename)) {
 				fprintf(stdout, "%s\n", filename);
 				entries++;
 			}
@@ -184,12 +196,24 @@ static void help(char *prog)
 {
 	char   *p = base(prog);
 
-	fprintf(stderr, "\nUsage:\n");
+	fprintf(stderr, "\nUsage:\n\n");
+	fprintf(stderr, "Find files and directories matching pcre:\n");
 	fprintf(stderr, "%s <pcre> <dir> [ <dir> ... ]\n", p);
+	fprintf(stderr, "\n");
+	fprintf(stderr, "Find files or directories matching pcre:\n");
+	fprintf(stderr, "%s [ -f|--files ] <pcre> <dir> [ <dir> ... ]\n", p);
 	fprintf(stderr, "%s [ -d|--dirs ] <pcre> <dir> [ <dir> ... ]\n", p);
-	fprintf(stderr, "%s [ -f|--files ] <pcre> <dir> [ <dir> ... ]\n\n", p);
+	fprintf(stderr, "\n");
+	fprintf(stderr, "Find files by name only (ala find dir -name):\n");
+	fprintf(stderr, "%s [ -n|--name ] <pcre> <dir> [ <dir> ... ]\n", p);
+	fprintf(stderr, "\n");
+	fprintf(stderr, "Do not cross filesystems (ala find dir -xdev):\n");
+	fprintf(stderr, "%s [ -x|--xdev ] <pcre> <dir> [ <dir> ... ]\n", p);
+	fprintf(stderr, "\n");
 	fprintf(stderr, "Print the program version, exit:\n");
-	fprintf(stderr, "%s -V|--version\n\n", p);
+	fprintf(stderr, "%s -V|--version\n", p);
+	fprintf(stderr, "\n");
+	fprintf(stderr, "%s does not follow symlinks\n\n", p);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
