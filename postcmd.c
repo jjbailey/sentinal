@@ -2,7 +2,7 @@
  * postcmd.c
  * Run command after the log closes or rotates.
  *
- * Copyright (c) 2021, 2022 jjb
+ * Copyright (c) 2021-2023 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -23,13 +23,13 @@ extern struct utsname utsbuf;
 
 int postcmd(struct thread_info *ti, char *filename)
 {
-	char    cmdbuf[BUFSIZ];
-	char    homebuf[BUFSIZ];
-	char    pathbuf[BUFSIZ];
-	char    pcrebuf[BUFSIZ];
-	char    shellbuf[BUFSIZ];
-	char    tmplbuf[BUFSIZ];
-	char   *home;
+	char    cmdbuf[BUFSIZ];							/* command var */
+	char    homebuf[BUFSIZ];						/* hone env var */
+	char    pathbuf[BUFSIZ];						/* path env var */
+	char    pcrebuf[BUFSIZ];						/* env convenience */
+	char    shellbuf[BUFSIZ];						/* shell env var */
+	char    tmplbuf[BUFSIZ];						/* env convenience */
+	char   *home;									/* from passwd file entry */
 	extern short dryrun;							/* dry run bool */
 	int     i;
 	int     status;									/* postcmd child exit */
