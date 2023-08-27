@@ -67,6 +67,8 @@ SEN_ETC=	$(SEN_HOME)/etc
 SEN_DOC=	$(SEN_HOME)/doc
 PCRE_DIR=	/usr/lib/sqlite3
 
+# CC=			clang-15
+
 CC=			gcc
 WARNINGS=	-Wno-unused-result -Wunused-variable -Wunused-but-set-variable
 CFLAGS=		-O2 -fstack-protector-strong -pthread $(WARNINGS)

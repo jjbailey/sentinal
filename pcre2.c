@@ -9,6 +9,11 @@
  * https://github.com/christian-proust/sqlite3-pcre2
  *
  * gcc -shared -o pcre2.so -fPIC -W -Werror pcre2.c -lpcre2-8
+ *
+ * Sat Aug 26 07:12:34 PM PDT 2023
+ * edits to fix clang warnings
+ *
+ * clang-15 -shared -o pcre2.so -fPIC -W -Werror pcre2.c -lpcre2-8
  */
 
 #define PCRE2_CODE_UNIT_WIDTH 8
@@ -32,7 +37,8 @@ typedef struct {
 
 static
 void regexp(sqlite3_context *ctx, int argc, sqlite3_value **argv) {
-    const char *pattern_str, *subject_str;
+    char *pattern_str;
+    const char *subject_str;
     int pattern_len, subject_len;
     pcre2_code *pattern_code;
 
@@ -42,7 +48,7 @@ void regexp(sqlite3_context *ctx, int argc, sqlite3_value **argv) {
         return;
     }
 
-    pattern_str = (const char *) sqlite3_value_text(argv[0]);
+    pattern_str = (char *) sqlite3_value_text(argv[0]);
     if (!pattern_str) {
         sqlite3_result_error(ctx, "no pattern", -1);
         return;
@@ -84,7 +90,7 @@ void regexp(sqlite3_context *ctx, int argc, sqlite3_value **argv) {
             int error_code;
             PCRE2_SIZE error_position;
             c.pattern_code = pcre2_compile(
-                pattern_str,           /* the pattern */
+                (const unsigned char *) pattern_str,           /* the pattern */
                 pattern_len,           /* the length of the pattern */
                 0,                     /* default options */
                 &error_code,           /* for error number */
@@ -128,7 +134,7 @@ void regexp(sqlite3_context *ctx, int argc, sqlite3_value **argv) {
         match_data = pcre2_match_data_create_from_pattern(pattern_code, NULL);
         rc = pcre2_match(
           pattern_code,         /* the compiled pattern */
-          subject_str,          /* the subject string */
+          (const unsigned char *) subject_str,          /* the subject string */
           subject_len,          /* the length of the subject */
           0,                    /* start at offset 0 in the subject */
           0,                    /* default options */
@@ -144,7 +150,7 @@ void regexp(sqlite3_context *ctx, int argc, sqlite3_value **argv) {
         } else { // (rc < 0 and the code is not one of the above)
             PCRE2_UCHAR error_buffer[256];
             pcre2_get_error_message(rc, error_buffer, sizeof(error_buffer));
-            sqlite3_result_error(ctx, error_buffer, -1);
+            sqlite3_result_error(ctx, (const char *) error_buffer, -1);
             return;
         }
         pcre2_match_data_free(match_data);
