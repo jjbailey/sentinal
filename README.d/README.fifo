@@ -1,0 +1,35 @@
+Description of FIFO Behavior
+
+Quoting from the fifo(7) man page:
+
+DESCRIPTION
+
+    A FIFO special file (a named pipe) is similar to a pipe, except that it is accessed as
+    part of the filesystem.  It can be opened by multiple processes for reading or writing.
+    When processes are exchanging data via the FIFO, the kernel passes all data internally
+    without writing it to the filesystem.  Thus, the FIFO special file has no contents on
+    the filesystem; the filesystem entry merely serves as a reference point so that pro-
+    cesses can access the pipe using a name in the filesystem.
+
+    The kernel maintains exactly one pipe object for each FIFO special file that is opened
+    by at least one process.  The FIFO must be opened on both ends (reading and writing)
+    before data can be passed.  Normally, opening the FIFO blocks until the other end is
+    opened also.
+
+NOTES
+
+    When a process tries to write to a FIFO that is not opened for read on the other side,
+    the process is sent a SIGPIPE signal.
+
+
+Example of Logging Dataflow:
+
+    application -> FIFO -> sentinal -> IPC pipe -> zstd -> logfile
+    (writer)               (reader)
+
+
+This project provides sentinalpipe, a program that opens pipes set in an INI file.
+With pipes open for reading, the operating system requirement for writing to pipes
+remains satisfied when sentinal restarts.  In other words, processes writing to
+pipes will not receive SIGPIPE because sentinalpipe guarantees a reader.
+
