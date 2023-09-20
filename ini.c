@@ -18,6 +18,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *
+ * Wed Sep 20 02:39:25 PM PDT 2023
+ * remove unused ini_sget()
  */
 
 #include <stdio.h>
@@ -267,6 +270,7 @@ char   *ini_get(ini_t *ini, char *section, char *key)
 	return NULL;
 }
 
+#if 0												/* jjb */
 int ini_sget(ini_t *ini, char *section, char *key, char *scanfmt, void *dst)
 {
 	char   *val = ini_get(ini, section, key);
@@ -280,5 +284,6 @@ int ini_sget(ini_t *ini, char *section, char *key, char *scanfmt, void *dst)
 	}
 	return 1;
 }
+#endif
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
