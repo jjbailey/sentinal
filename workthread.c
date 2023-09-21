@@ -232,7 +232,7 @@ void   *workthread(void *arg)
 						sleep(5);					/* be nice */
 					}
 			} else {								/* fail */
-				remove(filename);					/* exists? */
+				remove(filename);					/* exists, CWE-367 N/A */
 				sleep(5);							/* be nice */
 			}
 
