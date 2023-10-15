@@ -78,19 +78,20 @@ int main(int argc, char *argv[])
 	DIR    *dirp;
 	char   *myname;
 	char    database[PATH_MAX];
-	char    inifile[PATH_MAX], rpinifile[PATH_MAX];
+	char    inifile[PATH_MAX];						/* ini file name */
 	char    rbuf[PATH_MAX];
+	char    rpinifile[PATH_MAX];					/* real path to ini file */
 	char    tbuf[PATH_MAX];
 	char   *p;
 	char   *pidfile;
-	char   *sections[MAXSECT];
-	ini_t  *inidata;
+	char   *sections[MAXSECT];						/* section names */
+	ini_t  *inidata;								/* loaded ini data */
 	int     c;
 	int     dbflags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX;
 	int     i;
 	int     index = 0;
 	int     inifd;									/* for fstat() */
-	int     nsect;
+	int     nsect;									/* number of sections found */
 	struct stat stbuf;								/* file status */
 	struct thread_info *ti;							/* thread settings */
 
