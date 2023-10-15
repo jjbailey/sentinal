@@ -85,7 +85,6 @@ void regexp(sqlite3_context *ctx, int argc, sqlite3_value **argv) {
             }
         } else {
             cache_entry c;
-            const char *err;
             int error_code;
             PCRE2_SIZE error_position;
             c.pattern_code = pcre2_compile(
