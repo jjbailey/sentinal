@@ -49,8 +49,8 @@ int postcmd(struct thread_info *ti, char *filename)
 
 	case 0:
 		if(geteuid() == (uid_t) 0) {
-			setgid(ti->ti_gid);
-			setuid(ti->ti_uid);
+			(void)setgid(ti->ti_gid);
+			(void)setuid(ti->ti_uid);
 		}
 
 		if(access(ti->ti_dirname, R_OK | W_OK | X_OK) == -1) {

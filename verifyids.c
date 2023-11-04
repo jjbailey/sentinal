@@ -2,7 +2,7 @@
  * verifyids.c
  * Verify user and group ids.
  *
- * Copyright (c) 2021, 2022 jjb
+ * Copyright (c) 2021-2023 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -31,11 +31,9 @@ uid_t verifyuid(char *id)
 	if(IS_NULL(id))
 		return (NOBODY);
 
-	if(isdigit(*id)) {
-		if((uid = (uid_t) atoi(id)) == 0)
-			return (NOBODY);
-
-		return (uid);
+	if(isdigit(*id)) {								/* uid cannot be 0 */
+		uid = (uid_t) atoi(id);
+		return (uid == 0 ? NOBODY : uid);
 	}
 
 	/* "root" ok past this point */
@@ -61,11 +59,9 @@ gid_t verifygid(char *id)
 	if(IS_NULL(id))
 		return (NOGROUP);
 
-	if(isdigit(*id)) {
-		if((gid = (gid_t) atoi(id)) == 0)
-			return (NOGROUP);
-
-		return (gid);
+	if(isdigit(*id)) {								/* gid cannot be 0 */
+		gid = (gid_t) atoi(id);
+		return (gid == 0 ? NOBODY : gid);
 	}
 
 	/* "root" ok past this point */

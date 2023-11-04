@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <dirent.h>
+#include <fcntl.h>
 #include <getopt.h>
 #include <libgen.h>
 #include <limits.h>
@@ -77,18 +78,20 @@ int main(int argc, char *argv[])
 	DIR    *dirp;
 	char   *myname;
 	char    database[PATH_MAX];
-	char    inifile[PATH_MAX], rpinifile[PATH_MAX];
+	char    inifile[PATH_MAX];						/* ini file name */
 	char    rbuf[PATH_MAX];
+	char    rpinifile[PATH_MAX];					/* real path to ini file */
 	char    tbuf[PATH_MAX];
 	char   *p;
 	char   *pidfile;
-	char   *sections[MAXSECT];
-	ini_t  *inidata;
+	char   *sections[MAXSECT];						/* section names */
+	ini_t  *inidata;								/* loaded ini data */
 	int     c;
 	int     dbflags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX;
 	int     i;
 	int     index = 0;
-	int     nsect;
+	int     inifd;									/* for fstat() */
+	int     nsect;									/* number of sections found */
 	struct stat stbuf;								/* file status */
 	struct thread_info *ti;							/* thread settings */
 
@@ -143,6 +146,19 @@ int main(int argc, char *argv[])
 	dryrun = dryrun ? TRUE : FALSE;
 	verbose = verbose ? TRUE : FALSE;
 
+	/* protect the INI file */
+
+	if((inifd = open(inifile, O_RDONLY)) > 0) {
+		if(fstat(inifd, &stbuf) == 0)
+			if(stbuf.st_mode & S_IWGRP || stbuf.st_mode & S_IWOTH) {
+				fchmod(inifd, stbuf.st_mode & ~(S_IWGRP | S_IXGRP | S_IWOTH | S_IXOTH));
+				fprintf(stderr, "%s: %s was writable by group or other\n", myname,
+						inifile);
+			}
+
+		close(inifd);
+	}
+
 	/* configure the threads */
 
 	if((inidata = ini_load(inifile)) == NULL) {
@@ -154,14 +170,6 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "%s: nothing to do\n", myname);
 		exit(EXIT_FAILURE);
 	}
-
-	/* protect the INI file */
-
-	if(stat(inifile, &stbuf) == 0)
-		if(stbuf.st_mode & S_IWGRP || stbuf.st_mode & S_IWOTH) {
-			chmod(inifile, stbuf.st_mode & ~(S_IWGRP | S_IXGRP | S_IWOTH | S_IXOTH));
-			fprintf(stderr, "%s: %s was writable by group or other\n", myname, inifile);
-		}
 
 	uname(&utsbuf);									/* for debug/token expansion */
 

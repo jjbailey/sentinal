@@ -4,7 +4,7 @@
  * to processes writing to pipes.  Keep pipes given in the INI file,
  * if they exist, always open for reading.
  *
- * Copyright (c) 2021, 2022 jjb
+ * Copyright (c) 2021-2023 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -47,17 +47,20 @@ int     get_sections(ini_t *, int, char **);
 
 int main(int argc, char *argv[])
 {
-	char    filename[PATH_MAX];
-	char    inifile[PATH_MAX];
-	char    rbuf[PATH_MAX];
-	char    tbuf[PATH_MAX];
+	char    filename[PATH_MAX];						/* full pathname */
+	char    inifile[PATH_MAX];						/* ini file name */
+	char   *myname;
 	char   *p1, *p2;
-	char   *sections[MAXSECT];
-	ini_t  *inidata;
+	char    rbuf[PATH_MAX];
+	char   *sections[MAXSECT];						/* section names */
+	char    tbuf[PATH_MAX];
+	ini_t  *inidata;								/* loaded ini data */
 	int     c;
 	int     i;
 	int     index = 0;
-	int     nsect;
+	int     nsect;									/* number of sections found */
+
+	myname = base(argv[0]);
 
 	*inifile = '\0';
 
@@ -70,7 +73,7 @@ int main(int argc, char *argv[])
 		switch (c) {
 
 		case 'V':									/* print version */
-			fprintf(stdout, "%s: version %s\n", base(argv[0]), VERSION_STRING);
+			fprintf(stdout, "%s: version %s\n", myname, VERSION_STRING);
 			exit(EXIT_SUCCESS);
 
 		case 'f':									/* INI file name */
@@ -79,23 +82,23 @@ int main(int argc, char *argv[])
 
 		case 'h':									/* print usage */
 		case '?':
-			help(argv[0]);
+			help(myname);
 			exit(EXIT_SUCCESS);
 		}
 	}
 
 	if(IS_NULL(inifile)) {
-		help(argv[0]);
+		help(myname);
 		exit(EXIT_FAILURE);
 	}
 
 	if((inidata = ini_load(inifile)) == NULL) {
-		fprintf(stderr, "%s: can't load %s\n", argv[0], inifile);
+		fprintf(stderr, "%s: can't load %s\n", myname, inifile);
 		exit(EXIT_FAILURE);
 	}
 
 	if((nsect = get_sections(inidata, MAXSECT, sections)) == 0) {
-		fprintf(stderr, "%s: nothing to do\n", argv[0]);
+		fprintf(stderr, "%s: nothing to do\n", myname);
 		exit(EXIT_FAILURE);
 	}
 

@@ -118,8 +118,8 @@ void   *workthread(void *arg)
 			 */
 
 			if(geteuid() == (uid_t) 0) {
-				setgid(ti->ti_gid);
-				setuid(ti->ti_uid);
+				(void)setgid(ti->ti_gid);
+				(void)setuid(ti->ti_uid);
 			}
 
 			if(access(ti->ti_dirname, R_OK | W_OK | X_OK) == -1) {
@@ -232,7 +232,7 @@ void   *workthread(void *arg)
 						sleep(5);					/* be nice */
 					}
 			} else {								/* fail */
-				remove(filename);					/* exists? */
+				remove(filename);					/* exists, CWE-367 N/A */
 				sleep(5);							/* be nice */
 			}
 
@@ -251,13 +251,12 @@ static void fifosize(struct thread_info *ti, int size)
 
 #ifdef	F_SETPIPE_SZ								/* undefined in < 2.6.35 kernels */
 
-	int     cursize;
 	int     fd;
 
 	if((fd = open(ti->ti_pipename, O_RDONLY | O_NONBLOCK)) == -1)
 		return;
 
-	if((cursize = fcntl(fd, F_GETPIPE_SZ)) != size)
+	if(fcntl(fd, F_GETPIPE_SZ) != size)
 		fcntl(fd, F_SETPIPE_SZ, size);
 
 	close(fd);
@@ -290,8 +289,8 @@ static int fifoopen(struct thread_info *ti)
 
 		if((pid = fork()) == 0) {
 			if(geteuid() == (uid_t) 0) {
-				setgid(ti->ti_gid);
-				setuid(ti->ti_uid);
+				(void)setgid(ti->ti_gid);
+				(void)setuid(ti->ti_uid);
 			}
 
 			if(mkfifo(ti->ti_pipename, 0600) == -1) {
