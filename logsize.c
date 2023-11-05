@@ -49,16 +49,16 @@ off_t logsize(char *str)
 		return (n);
 
 	case 'K':
-		return (n * (off_t) IS_NSI(p) ? ONE_KB : ONE_KiB);
+		return (n * ((off_t) IS_NSI(p) ? ONE_KB : ONE_KiB));
 
 	case 'M':
-		return (n * (off_t) IS_NSI(p) ? ONE_MB : ONE_MiB);
+		return (n * ((off_t) IS_NSI(p) ? ONE_MB : ONE_MiB));
 
 	case 'G':
-		return (n * (off_t) IS_NSI(p) ? ONE_GB : ONE_GiB);
+		return (n * ((off_t) IS_NSI(p) ? ONE_GB : ONE_GiB));
 
 	case 'T':
-		return (n * (off_t) IS_NSI(p) ? ONE_TB : ONE_TiB);
+		return (n * ((off_t) IS_NSI(p) ? ONE_TB : ONE_TiB));
 	}
 
 	return (n);
