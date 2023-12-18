@@ -51,7 +51,7 @@ void   *workthread(void *arg)
 	int     status;									/* child status codes */
 	ssize_t n;										/* FIFO read */
 	struct passwd *p;
-	struct stat stbuf;
+	struct stat stbuf;								/* file status */
 	struct thread_info *ti = arg;					/* thread settings */
 
 	/*
@@ -270,7 +270,7 @@ static int fifoopen(struct thread_info *ti)
 	int     status;
 	pid_t   pid;
 	short   pflag = FALSE;
-	struct stat stbuf;
+	struct stat stbuf;								/* file status */
 
 	/* create a FIFO. note: this permits symlinks to FIFOs */
 
