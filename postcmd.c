@@ -2,7 +2,7 @@
  * postcmd.c
  * Run command after the log closes or rotates.
  *
- * Copyright (c) 2021-2023 jjb
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -104,7 +104,7 @@ int postcmd(struct thread_info *ti, char *filename)
 
 		umask(umask(0) | 022);						/* don't set less restrictive */
 		nice(1);
-		execl(ENV, "-S", "-", BASH, "--noprofile", "--norc", "-c", cmdbuf, (char *)NULL);
+		execl(ENV, "-S", "-", BASH, "--noprofile", "--norc", "-c", cmdbuf, NULL);
 		exit(EXIT_FAILURE);
 
 	default:

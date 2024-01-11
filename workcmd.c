@@ -2,7 +2,7 @@
  * workcmd.c
  * Create a command in zargv[] for execv().
  *
- * Copyright (c) 2021, 2022 jjb
+ * Copyright (c) 2021-2024 jjb 
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -47,7 +47,7 @@ int workcmd(int argc, char *argv[], char *zargv[])
 		if(n < (MAXARGS - 1))
 			zargv[n++] = argv[i];
 
-	zargv[n] = (char *)NULL;
+	zargv[n] = NULL;
 	return (n);
 }
 
