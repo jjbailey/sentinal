@@ -205,7 +205,11 @@ ini_t  *ini_load(char *filename)
 
 	/* Get file size */
 	fseek(fp, 0, SEEK_END);
-	sz = ftell(fp);
+
+	/* CWE-125 */
+	if((sz = ftell(fp)) < 0)
+		sz = 0;
+
 	rewind(fp);
 
 	/* Load file content into memory, null terminate, init end var */

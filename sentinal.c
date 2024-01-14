@@ -2,7 +2,7 @@
  * sentinal.c
  * sentinal: Manage directory contents according to an INI file
  *
- * Copyright (c) 2021-2023 jjb
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -500,7 +500,7 @@ static int parsecmd(char *cmd, char *argv[])
 		p = strtok(NULL, " ");
 	}
 
-	argv[i] = (char *)NULL;
+	argv[i] = NULL;
 	return (i);
 }
 

@@ -2,7 +2,7 @@
  * postcmd.c
  * Run command after the log closes or rotates.
  *
- * Copyright (c) 2021-2023 jjb
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -87,20 +87,24 @@ int postcmd(struct thread_info *ti, char *filename)
 		/* execution environment */
 
 		home = (p = getpwuid(ti->ti_uid)) ? p->pw_dir : "/tmp";
-		snprintf(homebuf, BUFSIZ, "HOME=%s", home);
-		snprintf(pathbuf, BUFSIZ, "PATH=%s", PATH);
-		snprintf(shellbuf, BUFSIZ, "SHELL=%s", BASH);
-		snprintf(tmplbuf, BUFSIZ, "TEMPLATE=%s", ti->ti_template);
-		snprintf(pcrebuf, BUFSIZ, "PCRESTR=%s", ti->ti_pcrestr);
+		if(snprintf(homebuf, BUFSIZ, "HOME=%s", home) < BUFSIZ)
+			putenv(homebuf);
+
+		if(snprintf(pathbuf, BUFSIZ, "PATH=%s", PATH) < BUFSIZ)
+			putenv(pathbuf);
+
+		if(snprintf(shellbuf, BUFSIZ, "SHELL=%s", BASH) < BUFSIZ)
+			putenv(shellbuf);
+
+		if(snprintf(tmplbuf, BUFSIZ, "TEMPLATE=%s", ti->ti_template) < BUFSIZ)
+			putenv(tmplbuf);
+
+		if(snprintf(pcrebuf, BUFSIZ, "PCRESTR=%s", ti->ti_pcrestr) < BUFSIZ)
+			putenv(pcrebuf);
 
 		umask(umask(0) | 022);						/* don't set less restrictive */
 		nice(1);
-
-		execl(ENV, "-S", "-",
-			  homebuf, pathbuf, shellbuf,
-			  tmplbuf, pcrebuf,
-			  BASH, "--noprofile", "--norc", "-c", cmdbuf, (char *)NULL);
-
+		execl(ENV, "-S", "-", BASH, "--noprofile", "--norc", "-c", cmdbuf, NULL);
 		exit(EXIT_FAILURE);
 
 	default:

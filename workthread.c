@@ -41,7 +41,6 @@ void   *workthread(void *arg)
 	char    pipebuf[PIPEBUFSIZ];					/* pipe read buffer */
 	char    shellbuf[BUFSIZ];						/* shell env var */
 	char    tmplbuf[BUFSIZ];						/* env convenience */
-	char   *envp[MAXARGS];							/* for children, execve */
 	char   *home;									/* from passwd file entry */
 	char   *zargv[MAXARGS];							/* arglist for fifo reader */
 	int     holdfd = 0;								/* fd to hold FIFO open */
@@ -51,7 +50,7 @@ void   *workthread(void *arg)
 	int     status;									/* child status codes */
 	ssize_t n;										/* FIFO read */
 	struct passwd *p;
-	struct stat stbuf;
+	struct stat stbuf;								/* file status */
 	struct thread_info *ti = arg;					/* thread settings */
 
 	/*
@@ -152,22 +151,24 @@ void   *workthread(void *arg)
 				/* execution environment */
 
 				home = (p = getpwuid(ti->ti_uid)) ? p->pw_dir : "/tmp";
-				snprintf(homebuf, BUFSIZ, "HOME=%s", home);
-				snprintf(pathbuf, BUFSIZ, "PATH=%s", PATH);
-				snprintf(shellbuf, BUFSIZ, "SHELL=%s", BASH);
-				snprintf(tmplbuf, BUFSIZ, "TEMPLATE=%s", ti->ti_template);
-				snprintf(pcrebuf, BUFSIZ, "PCRESTR=%s", ti->ti_pcrestr);
+				if(snprintf(homebuf, BUFSIZ, "HOME=%s", home) < BUFSIZ)
+					putenv(homebuf);
 
-				envp[0] = homebuf;
-				envp[1] = pathbuf;
-				envp[2] = shellbuf;
-				envp[3] = tmplbuf;
-				envp[4] = pcrebuf;
-				envp[5] = (char *)NULL;
+				if(snprintf(pathbuf, BUFSIZ, "PATH=%s", PATH) < BUFSIZ)
+					putenv(pathbuf);
+
+				if(snprintf(shellbuf, BUFSIZ, "SHELL=%s", BASH) < BUFSIZ)
+					putenv(shellbuf);
+
+				if(snprintf(tmplbuf, BUFSIZ, "TEMPLATE=%s", ti->ti_template) < BUFSIZ)
+					putenv(tmplbuf);
+
+				if(snprintf(pcrebuf, BUFSIZ, "PCRESTR=%s", ti->ti_pcrestr) < BUFSIZ)
+					putenv(pcrebuf);
 
 				umask(umask(0) | 022);				/* don't set less restrictive */
 				nice(1);
-				execve(ti->ti_path, zargv, envp);
+				execv(ti->ti_path, zargv);
 				exit(EXIT_FAILURE);
 			}
 
@@ -270,7 +271,7 @@ static int fifoopen(struct thread_info *ti)
 	int     status;
 	pid_t   pid;
 	short   pflag = FALSE;
-	struct stat stbuf;
+	struct stat stbuf;								/* file status */
 
 	/* create a FIFO. note: this permits symlinks to FIFOs */
 
