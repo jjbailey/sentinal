@@ -125,7 +125,10 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'f':									/* INI file name */
-			strlcpy(inifile, optarg, PATH_MAX);
+			if(strcmp(base(optarg), optarg) == 0)
+				snprintf(inifile, PATH_MAX, "/opt/sentinal/etc/%s", optarg);
+			else
+				strlcpy(inifile, optarg, PATH_MAX);
 			break;
 
 		case 'h':									/* print usage */
