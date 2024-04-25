@@ -149,18 +149,21 @@ int main(int argc, char *argv[])
 	dryrun = dryrun ? TRUE : FALSE;
 	verbose = verbose ? TRUE : FALSE;
 
-	/* protect the INI file */
+	/* check the INI file for unsafe permissions */
 
-	if((inifd = open(inifile, O_RDONLY)) > 0) {
-		if(fstat(inifd, &stbuf) == 0)
+	if((inifd = open(inifile, O_RDONLY)) > 0)
+		if(fstat(inifd, &stbuf) == 0) {
 			if(stbuf.st_mode & S_IWGRP || stbuf.st_mode & S_IWOTH) {
-				fchmod(inifd, stbuf.st_mode & ~(S_IWGRP | S_IXGRP | S_IWOTH | S_IXOTH));
-				fprintf(stderr, "%s: %s was writable by group or other\n", myname,
+				fprintf(stderr, "%s: %s is writable by group or other\n", myname,
 						inifile);
+
+				exit(EXIT_FAILURE);
 			}
 
-		close(inifd);
-	}
+			/* tighter */
+			fchmod(inifd, stbuf.st_mode & ~(S_IWGRP | S_IXGRP | S_IWOTH | S_IXOTH));
+			close(inifd);
+		}
 
 	/* configure the threads */
 
