@@ -80,7 +80,6 @@ int main(int argc, char *argv[])
 	char    database[PATH_MAX];
 	char    inifile[PATH_MAX];						/* ini file name */
 	char    rbuf[PATH_MAX];
-	char    rpinifile[PATH_MAX];					/* real path to ini file */
 	char    tbuf[PATH_MAX];
 	char   *p;
 	char   *pidfile;
@@ -125,10 +124,8 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'f':									/* INI file name */
-			if(strcmp(base(optarg), optarg) == 0)
-				snprintf(inifile, PATH_MAX, "/opt/sentinal/etc/%s", optarg);
-			else
-				strlcpy(inifile, optarg, PATH_MAX);
+			fullpath("/opt/sentinal/etc", optarg, tbuf);
+			realpath(tbuf, inifile);
 			break;
 
 		case 'h':									/* print usage */
@@ -180,8 +177,7 @@ int main(int argc, char *argv[])
 	uname(&utsbuf);									/* for debug/token expansion */
 
 	if(debug) {
-		realpath(inifile, rpinifile);
-		print_global(inidata, rpinifile);
+		print_global(inidata, inifile);
 
 		for(i = 0; i < nsect; i++)
 			print_section(inidata, sections[i]);
@@ -208,7 +204,7 @@ int main(int argc, char *argv[])
 	/* INI thread settings */
 
 	if(verbose) {
-		fprintf(stdout, "# %s\n\n", realpath(inifile, rbuf));
+		fprintf(stdout, "# %s\n\n", inifile);
 		fprintf(stdout, "[global]\n");
 		fprintf(stdout, "pidfile   = %s\n", pidfile);
 		fprintf(stdout, "database  = %s\n", database);
