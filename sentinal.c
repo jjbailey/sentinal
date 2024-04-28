@@ -80,7 +80,6 @@ int main(int argc, char *argv[])
 	char    database[PATH_MAX];
 	char    inifile[PATH_MAX];						/* ini file name */
 	char    rbuf[PATH_MAX];
-	char    rpinifile[PATH_MAX];					/* real path to ini file */
 	char    tbuf[PATH_MAX];
 	char   *p;
 	char   *pidfile;
@@ -125,7 +124,8 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'f':									/* INI file name */
-			strlcpy(inifile, optarg, PATH_MAX);
+			fullpath("/opt/sentinal/etc", optarg, tbuf);
+			realpath(tbuf, inifile);
 			break;
 
 		case 'h':									/* print usage */
@@ -146,18 +146,21 @@ int main(int argc, char *argv[])
 	dryrun = dryrun ? TRUE : FALSE;
 	verbose = verbose ? TRUE : FALSE;
 
-	/* protect the INI file */
+	/* check the INI file for unsafe permissions */
 
-	if((inifd = open(inifile, O_RDONLY)) > 0) {
-		if(fstat(inifd, &stbuf) == 0)
+	if((inifd = open(inifile, O_RDONLY)) > 0)
+		if(fstat(inifd, &stbuf) == 0) {
 			if(stbuf.st_mode & S_IWGRP || stbuf.st_mode & S_IWOTH) {
-				fchmod(inifd, stbuf.st_mode & ~(S_IWGRP | S_IXGRP | S_IWOTH | S_IXOTH));
-				fprintf(stderr, "%s: %s was writable by group or other\n", myname,
+				fprintf(stderr, "%s: %s is writable by group or other\n", myname,
 						inifile);
+
+				exit(EXIT_FAILURE);
 			}
 
-		close(inifd);
-	}
+			/* tighter */
+			fchmod(inifd, stbuf.st_mode & ~(S_IWGRP | S_IXGRP | S_IWOTH | S_IXOTH));
+			close(inifd);
+		}
 
 	/* configure the threads */
 
@@ -174,8 +177,7 @@ int main(int argc, char *argv[])
 	uname(&utsbuf);									/* for debug/token expansion */
 
 	if(debug) {
-		realpath(inifile, rpinifile);
-		print_global(inidata, rpinifile);
+		print_global(inidata, inifile);
 
 		for(i = 0; i < nsect; i++)
 			print_section(inidata, sections[i]);
@@ -202,7 +204,7 @@ int main(int argc, char *argv[])
 	/* INI thread settings */
 
 	if(verbose) {
-		fprintf(stdout, "# %s\n\n", realpath(inifile, rbuf));
+		fprintf(stdout, "# %s\n\n", inifile);
 		fprintf(stdout, "[global]\n");
 		fprintf(stdout, "pidfile   = %s\n", pidfile);
 		fprintf(stdout, "database  = %s\n", database);
@@ -626,18 +628,13 @@ static void threadwait(char *section, pthread_t tid,
 
 static void help(char *prog)
 {
-	char   *p = base(prog);
-
-	fprintf(stderr, "\nUsage:\n");
-	fprintf(stderr, "%s -f|--ini-file ini-file\n\n", p);
-	fprintf(stderr, "Print the INI file as parsed, exit:\n");
-	fprintf(stderr, "%s -f|--ini-file ini-file -d|--debug\n\n", p);
-	fprintf(stderr, "Print the INI file as interpreted, exit:\n");
-	fprintf(stderr, "%s -f|--ini-file ini-file -v|--verbose\n\n", p);
-	fprintf(stderr, "Dry run mode:\n");
-	fprintf(stderr, "%s -f|--ini-file ini-file -D|--dry-run\n\n", p);
-	fprintf(stderr, "Print the program version, exit:\n");
-	fprintf(stderr, "%s -V|--version\n\n", p);
+	fprintf(stderr, "Usage: %s -f ini-file [-dDvV]\n", base(prog));
+	fprintf(stderr, " -f, --ini-file     INI file, full path or relative to /opt/sentinal/etc\n");
+	fprintf(stderr, " -d, --debug        print the INI file as parsed, exit\n");
+	fprintf(stderr, " -D, --dry-run      don't remove anything\n");
+	fprintf(stderr, " -v, --verbose      print the INI file as interpreted, exit\n");
+	fprintf(stderr, " -V, --version      print version number, exit\n");
+	fprintf(stderr, " -?, --help         this message\n");
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

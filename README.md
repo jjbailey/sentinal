@@ -15,6 +15,16 @@ Monitoring and management capabilities:
  - log ingestion, processing, and rotation
  - monitor and process log files when they reach a given size
 
+## Usage
+
+    Usage: sentinal -f ini-file [-dDvV]
+     -f, --ini-file     INI file, full path or relative to /opt/sentinal/etc
+     -d, --debug        print the INI file as parsed, exit
+     -D, --dry-run      don't remove anything
+     -v, --verbose      print the INI file as interpreted, exit
+     -V, --version      print version number, exit
+     -?, --help         this message
+
 ## Configuration
 
 sentinal uses INI files for its runtime configuration.  Each section in the
