@@ -8,7 +8,7 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"2.0.14"
+#define	VERSION_STRING	"2.1.0"
 
 #ifndef _SYS_TYPES_H
 # include <sys/types.h>
@@ -53,6 +53,7 @@
 
 #define	NOT_NULL(s)	((s) && *(s))
 #define	IS_NULL(s)	!((s) && *(s))
+#define	SLOWEXIT(code)		{ sleep(5); exit(code); }
 
 /* alternatives to often-used strcmp() */
 
@@ -141,7 +142,7 @@ off_t   logsize(char *);
 short   namematch(struct thread_info *, char *);
 short   pcrecompile(struct thread_info *);
 short   rmfile(struct thread_info *, char *, char *);
-short   threadcheck(struct thread_info *, char *);
+short   threadtype(struct thread_info *, char *);
 short   validdbname(char *);
 size_t  strlcat(char *, const char *, size_t);
 size_t  strlcpy(char *, const char *, size_t);

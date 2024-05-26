@@ -2,7 +2,7 @@
  * threadname.c
  * Name the thread for monitoring with shell utils.
  *
- * Copyright (c) 2021, 2022 jjb
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found

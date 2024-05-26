@@ -2,7 +2,7 @@
  * slmthread.c
  * Simple log monitor thread.
  *
- * Copyright (c) 2021-2023 jjb
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -21,13 +21,13 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-static short inotify_watch(char *, char *);
-
 #define	SCANRATE		2							/* default monitor rate */
 #define	POLLTIMEOUT		(120 * 1000)				/* 2 minutes in milliseconds */
 
 #define	ROTATE(lim,n,sig)	((lim && n > lim) || sig == SIGHUP)
 #define	STAT(file,buf)		(stat(file, &buf) == -1 ? -1 : buf.st_size)
+
+static short inotify_watch(char *, char *);
 
 void   *slmthread(void *arg)
 {

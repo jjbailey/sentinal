@@ -19,7 +19,7 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-extern struct utsname utsbuf;
+extern struct utsname utsbuf;						/* for host info */
 
 int postcmd(struct thread_info *ti, char *filename)
 {

@@ -1,7 +1,7 @@
 This README is an example INI file seeded with example values to show which
 keys are mandatory and which are optional for the supported thread types.
 
-To check an INI file for which threads will run in the stanzas, for example:
+To check an INI file for which threads will run in the sections, for example:
 $ /opt/sentinal/bin/sentinal -f example.ini -v
 
 # example.ini

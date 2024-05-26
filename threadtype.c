@@ -1,8 +1,8 @@
 /*
- * threadcheck.c
+ * threadtype.c
  * Considering the config data given, test if threads should run.
  *
- * Copyright (c) 2021, 2022 jjb
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -13,9 +13,9 @@
 #include <string.h>
 #include "sentinal.h"
 
-#define	THRCHECK(ti,n)	threadcheck(ti, n) ? "true" : "false"
+#define	THRCHECK(ti,n)	threadtype(ti, n) ? "true" : "false"
 
-short threadcheck(struct thread_info *ti, char *tname)
+short threadtype(struct thread_info *ti, char *tname)
 {
 	short   pass = FALSE;
 
