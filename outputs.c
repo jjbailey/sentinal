@@ -36,6 +36,7 @@ extern struct thread_info tinfo[MAXSECT];			/* our threads */
 extern struct utsname utsbuf;						/* for host info */
 
 char   *my_ini(ini_t *, char *, char *);
+size_t  strdel(char *, char *, char *);
 
 void debug_global(ini_t *inidata, char *inifile)
 {
@@ -141,6 +142,9 @@ void debug_split(struct thread_info *ti, ini_t *inidata)
 {
 	/* print the section split into separate thread sections */
 
+	char    delbuf[BUFSIZ];							/* delete string */
+	char    pstbuf[BUFSIZ];							/* for copy of postcmd */
+	char    secbuf[BUFSIZ];							/* for copy of ti->ti_section */
 	int     tt;
 
 	char   *command = my_ini(inidata, ti->ti_section, "command");
@@ -169,8 +173,26 @@ void debug_split(struct thread_info *ti, ini_t *inidata)
 		if(!threadtype(ti, thread_types[tt]))
 			continue;
 
-		DPRINTSTR(stdout, "\n[%s]\n", ti->ti_section);
-		DPRINTSTR(stdout, "# %s thread\n", thread_types[tt]);
+		/*
+		 * section names must be unique
+		 * remove the thread_type if it's already in the name,
+		 * then add the thread_type to the name
+		 */
+
+		snprintf(delbuf, BUFSIZ, "_%s", thread_types[tt]);
+		strdel(secbuf, ti->ti_section, delbuf);
+		fprintf(stdout, "\n[%.11s_%.3s]\n", secbuf, thread_types[tt]);
+
+		/*
+		 * section name change breaks usage of _SECT_TOK
+		 * strreplace it here with the original section name
+		 * applies only to ti->ti_postcmd
+		 */
+
+		if(NOT_NULL(postcmd)) {
+			strlcpy(pstbuf, postcmd, BUFSIZ);
+			strreplace(pstbuf, _SECT_TOK, ti->ti_section);
+		}
 
 		if(strcmp(thread_types[tt], _DFS_THR) == 0) {	/* filesystem free space */
 			DPRINTSTR(stdout, "dirname   = %s\n", dirname);
@@ -204,7 +226,7 @@ void debug_split(struct thread_info *ti, ini_t *inidata)
 			DPRINTSTR(stdout, "dirname   = %s\n", dirname);
 			DPRINTSTR(stdout, "uid       = %s\n", uid);
 			DPRINTSTR(stdout, "gid       = %s\n", gid);
-			DPRINTSTR(stdout, "postcmd   = %s\n", postcmd);
+			DPRINTSTR(stdout, "postcmd   = %s\n", pstbuf);
 			DPRINTSTR(stdout, "rotatesiz = %s\n", rotatesiz);
 			DPRINTSTR(stdout, "template  = %s\n", template);
 			DPRINTSTR(stdout, "truncate  = %s\n", truncate);
@@ -217,7 +239,7 @@ void debug_split(struct thread_info *ti, ini_t *inidata)
 			DPRINTSTR(stdout, "uid       = %s\n", uid);
 			DPRINTSTR(stdout, "gid       = %s\n", gid);
 			DPRINTSTR(stdout, "pipename  = %s\n", pipename);
-			DPRINTSTR(stdout, "postcmd   = %s\n", postcmd);
+			DPRINTSTR(stdout, "postcmd   = %s\n", pstbuf);
 			DPRINTSTR(stdout, "rotatesiz = %s\n", rotatesiz);
 			DPRINTSTR(stdout, "template  = %s\n", template);
 			continue;
