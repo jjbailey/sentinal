@@ -36,7 +36,6 @@ extern struct thread_info tinfo[MAXSECT];			/* our threads */
 extern struct utsname utsbuf;						/* for host info */
 
 char   *my_ini(ini_t *, char *, char *);
-size_t  strdel(char *, char *, char *);
 
 void debug_global(ini_t *inidata, char *inifile)
 {
@@ -146,6 +145,7 @@ void debug_split(struct thread_info *ti, ini_t *inidata)
 	char    pstbuf[BUFSIZ];							/* for copy of postcmd */
 	char    secbuf[BUFSIZ];							/* for copy of ti->ti_section */
 	int     tt;
+	size_t  strdel(char *, char *, char *);
 
 	char   *command = my_ini(inidata, ti->ti_section, "command");
 	char   *dirlimit = my_ini(inidata, ti->ti_section, "dirlimit");

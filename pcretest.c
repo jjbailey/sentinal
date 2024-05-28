@@ -18,14 +18,13 @@
 #include "sentinal.h"
 #include "basename.h"
 
-short   pcrematch(struct thread_info *, char *);
-
 int main(int argc, char *argv[])
 {
 	char   *myname;
 	int     i;
 	short   match;
 	struct thread_info ti;							/* so we can use pcrecompile.c */
+	short   pcrematch(struct thread_info *, char *);
 
 	myname = base(argv[0]);
 

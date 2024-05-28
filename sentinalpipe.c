@@ -41,9 +41,6 @@ static struct option long_options[] = {
 	{ 0, 0, 0, 0 }
 };
 
-char   *my_ini(ini_t *, char *, char *);
-int     get_sections(ini_t *, int, char **);
-
 int main(int argc, char *argv[])
 {
 	char    filename[PATH_MAX];						/* full pathname */
@@ -58,6 +55,8 @@ int main(int argc, char *argv[])
 	int     i;
 	int     index = 0;
 	int     nsect;									/* number of sections found */
+	char   *my_ini(ini_t *, char *, char *);
+	int     get_sections(ini_t *, int, char **);
 
 	myname = base(argv[0]);
 

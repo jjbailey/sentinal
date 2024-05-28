@@ -36,15 +36,13 @@ static short opt_files = FALSE;
 static short opt_names = FALSE;
 static short opt_xdev = TRUE;
 
-short   pcrematch(struct thread_info *, char *);
-uint32_t pcrefind(struct thread_info *, short, char *);
-
 int main(int argc, char *argv[])
 {
 	char   *myname;
 	int     c;
 	int     index = 0;
 	struct thread_info ti;							/* so we can use pcrecompile.c */
+	uint32_t pcrefind(struct thread_info *, short, char *);
 
 	myname = base(argv[0]);
 
@@ -127,6 +125,7 @@ uint32_t pcrefind(struct thread_info *ti, short top, char *dir)
 	struct dirent *dp;
 	struct stat stbuf;								/* file status */
 	uint32_t entries = 0;							/* file entries */
+	short   pcrematch(struct thread_info *, char *);
 
 	if(IS_NULL(dir))
 		return (0);

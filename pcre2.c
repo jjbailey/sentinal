@@ -33,8 +33,7 @@ SQLITE_EXTENSION_INIT1 typedef struct {
 # define CACHE_SIZE 16
 #endif
 
-static
-void regexp(sqlite3_context * ctx, int argc, sqlite3_value ** argv)
+static void regexp(sqlite3_context * ctx, int argc, sqlite3_value ** argv)
 {
 	const unsigned char *pattern_str, *subject_str;
 	int     pattern_len, subject_len;

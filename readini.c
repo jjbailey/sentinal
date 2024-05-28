@@ -36,7 +36,6 @@ extern struct thread_info tinfo[MAXSECT];			/* our threads */
 extern struct utsname utsbuf;						/* for host info */
 
 char   *my_ini(ini_t *, char *, char *);
-int     get_sections(ini_t *, int, char **);
 
 int readini(char *myname, char *inifile)
 {
@@ -49,6 +48,7 @@ int readini(char *myname, char *inifile)
 	int     nsect;									/* number of sections found */
 	struct stat stbuf;								/* file status */
 	struct thread_info *ti;							/* thread settings */
+	int     get_sections(ini_t *, int, char **);
 
 	if((inifd = open(inifile, O_RDONLY)) > 0)
 		if(fstat(inifd, &stbuf) == 0) {
