@@ -16,8 +16,18 @@ char   *threadname(struct thread_info *ti, char *tname)
 {
 	/* strict format: <section name>_<thread name> */
 
+	char    delbuf[BUFSIZ];							/* delete string */
+	char    secbuf[BUFSIZ];							/* for copy of ti->ti_section */
+	size_t  strdel(char *, char *, char *);
+
+	/* remove the thread_type if it's already in the name */
+	snprintf(delbuf, BUFSIZ, "_%s", tname);
+	strdel(secbuf, ti->ti_section, delbuf);
+
+	/* add tname to the section name and call it the task name */
 	ti->ti_task = malloc(TASK_COMM_LEN);
-	snprintf(ti->ti_task, TASK_COMM_LEN, "%.11s_%.3s", ti->ti_section, tname);
+	snprintf(ti->ti_task, TASK_COMM_LEN, "%.11s_%.3s", secbuf, tname);
+
 	return (ti->ti_task);
 }
 
