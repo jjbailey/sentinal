@@ -34,6 +34,7 @@ SENOBJS=	sentinal.o		\
 			signals.o		\
 			slmthread.o		\
 			sql.o			\
+			strdel.o		\
 			strlcat.o		\
 			strlcpy.o		\
 			strreplace.o	\
