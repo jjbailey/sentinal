@@ -36,7 +36,6 @@
 
 static short duplicate(int, char *, char **);
 
-
 char   *EmptyStr = "";								/* empty string for strndup, etc */
 
 char   *my_ini(ini_t *ini, char *section, char *key)
@@ -76,10 +75,10 @@ int get_sections(ini_t *inidata, int maxsect, char *sections[])
 			if(STREQ(p + 1, "global"))				/* global is not a thread */
 				continue;
 
-			if(duplicate(i, p + 1, sections))
+			if(validdbname(p + 1) == FALSE)			/* for sqlite3 */
 				continue;
 
-			if(validdbname(p + 1) == FALSE)
+			if(duplicate(i, p + 1, sections))		/* section already exists */
 				continue;
 
 			sections[i++] = strndup(p + 1, PATH_MAX);
