@@ -46,6 +46,7 @@ void   *slmthread(void *arg)
 	 * optional, likely required by use case:
 	 *  - ti_uid
 	 *  - ti_gid
+	 *  - ti_truncate
 	 */
 
 	pthread_setname_np(pthread_self(), threadname(ti, _SLM_THR));

@@ -79,6 +79,7 @@ void debug_verbose(struct thread_info *ti)
 {
 	/* print the section with keys evaluated */
 
+	char    dbuf[BUFSIZ];
 	char    ebuf[BUFSIZ];
 	char    fbuf[BUFSIZ];
 	char   *zargv[MAXARGS];
@@ -118,22 +119,24 @@ void debug_verbose(struct thread_info *ti)
 	DPRINTNUM(stdout, "retmin    = %d\n", ti->ti_retmin);
 	DPRINTNUM(stdout, "rmdir     = %d\n", ti->ti_rmdir);
 	DPRINTSTR(stdout, "rotatesiz = %s\n", ti->ti_rotatestr);
-	DPRINTNUM(stdout, "subdirs   = %d\n", ti->ti_subdirs);
+
+	/* always print subdirs */
+	snprintf(dbuf, BUFSIZ, "%d", ti->ti_subdirs);
+	DPRINTSTR(stdout, "subdirs   = %s\n", dbuf);
+
 	DPRINTNUM(stdout, "symlinks  = %d\n", ti->ti_symlinks);
 	DPRINTSTR(stdout, "template  = %s\n", ti->ti_template);
 	DPRINTSTR(stdout, "#           %s\n", base(ti->ti_filename));
 	DPRINTNUM(stdout, "terse     = %d\n", ti->ti_terse);
 
 	/* postcmd tokens */
-
 	DPRINTSTR(stdout, "postcmd   = %s\n", ti->ti_postcmd);
-
 	strreplace(ti->ti_postcmd, _HOST_TOK, utsbuf.nodename);
 	strreplace(ti->ti_postcmd, _PATH_TOK, ti->ti_dirname);
 	strreplace(ti->ti_postcmd, _FILE_TOK, ti->ti_filename);
 	strreplace(ti->ti_postcmd, _SECT_TOK, ti->ti_section);
-
 	DPRINTSTR(stdout, "#           %s\n", ti->ti_postcmd);
+
 	DPRINTNUM(stdout, "truncate  = %d\n", ti->ti_truncate);
 }
 

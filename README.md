@@ -54,7 +54,7 @@ or no units (literal value).  Examples,
     command:   command to run
     dirname:   thread and postcmd working directory, file location
     dirlimit:  maximum total size of matching files in a directory, SI or non-SI units, 0 = no max (off)
-    subdirs:   option to search subdirectories for matching files (false)
+    subdirs:   option to search subdirectories for matching files (true)
     pipename:  named pipe/fifo fifo location
     template:  output file name, date(1) sequences %F %Y %m %d %H %M %S %s
     pcrestr:   perl-compatible regex naming files to manage

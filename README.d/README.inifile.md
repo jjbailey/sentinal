@@ -60,7 +60,7 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
                default off (no rotate)
 
     subdirs:   option to search subdirectories; true, false
-               default 0/false
+               default 1/true
 
     symlinks:  follow symlinks; true, false
                default 0/false

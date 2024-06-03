@@ -54,7 +54,9 @@ void   *expthread(void *arg)
 	 *    - ti_retmax
 	 *
 	 * optional:
+	 *  - ti_expiresiz
 	 *  - ti_retmin
+	 *  - ti_subdirs
 	 */
 
 	pthread_setname_np(pthread_self(), threadname(ti, _EXP_THR));

@@ -67,6 +67,7 @@ void   *dfsthread(void *arg)
 	 *
 	 * optional:
 	 *  - ti_retmin
+	 *  - ti_subdirs
 	 */
 
 	pthread_setname_np(pthread_self(), threadname(ti, _DFS_THR));

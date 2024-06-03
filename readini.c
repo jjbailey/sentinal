@@ -153,8 +153,14 @@ int readini(char *myname, char *inifile)
 
 		closedir(dirp);
 
-		/* directory recursion */
-		ti->ti_subdirs = setiniflag(inidata, ti->ti_section, "subdirs");
+		/* ti_subdirs defaults to true */
+
+		p = my_ini(inidata, ti->ti_section, "subdirs");
+
+		if(IS_NULL(p))
+			ti->ti_subdirs = TRUE;
+		else
+			ti->ti_subdirs = setiniflag(inidata, ti->ti_section, "subdirs");
 
 		/* notify file removal */
 		ti->ti_terse = setiniflag(inidata, ti->ti_section, "terse");
