@@ -91,12 +91,12 @@ uint32_t findfile(struct thread_info *ti, short top, uint32_t *nextid,
 			continue;
 
 		if(S_ISDIR(stbuf.st_mode)) {				/* next db_dirid */
-			(*nextid)++;
-
 			/* this condition was missing prior to 2.1.0, was assumed to be true */
 
-			if(ti->ti_subdirs)
+			if(ti->ti_subdirs) {
+				(*nextid)++;
 				entries += findfile(ti, FALSE, nextid, filename, db);
+			}
 
 			continue;
 		}
