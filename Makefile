@@ -47,8 +47,8 @@ SENOBJS=	sentinal.o		\
 
 SPMOBJS=	sentinalpipe.o	\
 			fullpath.o		\
-			ini.o			\
 			iniget.o		\
+			ini.o			\
 			strlcpy.o		\
 			validdbname.o
 
