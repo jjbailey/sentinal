@@ -58,7 +58,7 @@ void   *workthread(void *arg)
 	 *  - ti_pipename
 	 *  - ti_template
 	 *
-	 * optional, but recommended:
+	 * optional, recommended:
 	 *  - ti_rotatesiz
 	 *
 	 * optional:

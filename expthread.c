@@ -51,12 +51,15 @@ void   *expthread(void *arg)
 	 *  - at least one of:
 	 *    - ti_dirlimit
 	 *    - ti_expire
-	 *    - ti_retmax
+	 *    - ti_expiresiz
 	 *
 	 * optional:
-	 *  - ti_expiresiz
 	 *  - ti_retmin
+	 *  - ti_retmax
+	 *
+	 * find options:
 	 *  - ti_subdirs
+	 *  - ti_symlinks
 	 */
 
 	pthread_setname_np(pthread_self(), threadname(ti, _EXP_THR));
