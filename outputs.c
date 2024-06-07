@@ -148,7 +148,7 @@ void debug_split(struct thread_info *ti, ini_t *inidata)
 	char    pstbuf[BUFSIZ];							/* for copy of postcmd */
 	char    secbuf[BUFSIZ];							/* for copy of ti->ti_section */
 	int     tt;
-	size_t  strdel(char *, char *, char *);
+	size_t  strdel(char *, char *, char *, size_t);
 
 	char   *command = my_ini(inidata, ti->ti_section, "command");
 	char   *dirlimit = my_ini(inidata, ti->ti_section, "dirlimit");
@@ -183,7 +183,7 @@ void debug_split(struct thread_info *ti, ini_t *inidata)
 		 */
 
 		snprintf(delbuf, BUFSIZ, "_%s", thread_types[tt]);
-		strdel(secbuf, ti->ti_section, delbuf);
+		strdel(secbuf, ti->ti_section, delbuf, BUFSIZ);
 		fprintf(stdout, "\n[%.11s_%.3s]\n", secbuf, thread_types[tt]);
 
 		/*

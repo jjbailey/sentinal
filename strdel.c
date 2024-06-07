@@ -13,13 +13,13 @@
 #include <sys/types.h>
 #include <string.h>
 
-size_t strdel(char *dst, char *src, char *del)
+size_t strdel(char *dst, char *src, char *del, size_t dsize)
 {
 	char   *pos;
 	size_t  dlen = strlen(del);
 	size_t  strlcpy(char *, char *, size_t);
 
-	strlcpy(dst, src, BUFSIZ);
+	strlcpy(dst, src, dsize);
 
 	while((pos = strstr(dst, del)) != NULL)
 		memmove(pos, pos + dlen, strlen(pos + dlen) + 1);
