@@ -18,9 +18,13 @@ static inline char *base(char *s)
 {
 	/* assumes no trailing slash */
 
-	char   *p;
+	char   *p = s + strlen(s);
 
-	return ((p = strrchr(s, '/')) ? p + 1 : s);
+	while(p > s)
+		if(*--p == '/')
+			return (p + 1);
+
+	return (s);
 }
 
 #endif												/* _BASE_INLINE */
