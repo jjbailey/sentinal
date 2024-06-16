@@ -4,7 +4,7 @@
  * to processes writing to pipes.  Keep pipes given in the INI file,
  * if they exist, always open for reading.
  *
- * Copyright (c) 2021-2023 jjb
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -35,15 +35,11 @@ static void sigcatch(int);
 static void systemd_signals(void);
 
 static struct option long_options[] = {
-	{ "version", no_argument, NULL, 'V' },
 	{ "ini-file", required_argument, NULL, 'f' },
+	{ "version", no_argument, NULL, 'V' },
 	{ "help", no_argument, NULL, 'h' },
 	{ 0, 0, 0, 0 }
 };
-
-/* iniget.c functions */
-char   *my_ini(ini_t *, char *, char *);
-int     get_sections(ini_t *, int, char **);
 
 int main(int argc, char *argv[])
 {
@@ -59,6 +55,8 @@ int main(int argc, char *argv[])
 	int     i;
 	int     index = 0;
 	int     nsect;									/* number of sections found */
+	char   *my_ini(ini_t *, char *, char *);
+	int     get_sections(ini_t *, int, char **);
 
 	myname = base(argv[0]);
 

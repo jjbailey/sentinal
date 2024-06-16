@@ -2,7 +2,7 @@
  * logretention.c
  * Return the number of seconds represented in the INI file spec.
  *
- * Copyright (c) 2021, 2022 jjb
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found

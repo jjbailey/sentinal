@@ -3,7 +3,7 @@
  * NUL terminate when dsize > 0 and something is copied.
  * dsize needs to include space for NUL.
  *
- * Copyright (c) 2021, 2022 jjb
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found

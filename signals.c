@@ -2,7 +2,7 @@
  * signals.c
  * Set signals for handling events.
  *
- * Copyright (c) 2021-2023 jjb
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -17,10 +17,10 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-extern struct thread_info tinfo[MAXSECT];
-
 static void sigparent(int);
 static void sigreject(int);
+
+extern struct thread_info tinfo[MAXSECT];			/* our threads */
 
 void parentsignals(void)
 {

@@ -3,7 +3,7 @@
  * Check dir and possibly subdirs for files matching pcrestr (pcrecmp).
  * Return the number of files matching pcrestr.
  *
- * Copyright (c) 2021-2023 jjb
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -91,8 +91,13 @@ uint32_t findfile(struct thread_info *ti, short top, uint32_t *nextid,
 			continue;
 
 		if(S_ISDIR(stbuf.st_mode)) {				/* next db_dirid */
-			(*nextid)++;
-			entries += findfile(ti, FALSE, nextid, filename, db);
+			/* this condition was missing prior to 2.1.0, was assumed to be true */
+
+			if(ti->ti_subdirs) {
+				(*nextid)++;
+				entries += findfile(ti, FALSE, nextid, filename, db);
+			}
+
 			continue;
 		}
 

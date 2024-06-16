@@ -2,7 +2,7 @@
  * dfsthread.c
  * Filesystem monitor thread.  Remove files to create the desired free space.
  *
- * Copyright (c) 2021-2023 jjb
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -33,8 +33,9 @@
 /* subtract from avail for extra space, reduce flapping */
 #define	PADDING			(float)0.295
 
-/* externals */
-extern pthread_mutex_t dfslock;						/* thread lock */
+static short getvfsstats(struct thread_info *, long double *, long double *);
+static void process_files(struct thread_info *, sqlite3 *);
+static void resreport(struct thread_info *, short, long double, long double);
 
 static char *sql_selectfiles = "SELECT db_dir, db_file\n \
 	FROM  %s_dir, %s_file\n \
@@ -42,9 +43,8 @@ static char *sql_selectfiles = "SELECT db_dir, db_file\n \
 	ORDER BY db_time\n \
 	LIMIT %d;";
 
-static short getvfsstats(struct thread_info *, long double *, long double *);
-static void process_files(struct thread_info *, sqlite3 *);
-static void resreport(struct thread_info *, short, long double, long double);
+/* externals */
+extern pthread_mutex_t dfslock;						/* thread lock */
 
 void   *dfsthread(void *arg)
 {
@@ -67,6 +67,10 @@ void   *dfsthread(void *arg)
 	 *
 	 * optional:
 	 *  - ti_retmin
+	 *
+	 * find options:
+	 *  - ti_subdirs
+	 *  - ti_symlinks
 	 */
 
 	pthread_setname_np(pthread_self(), threadname(ti, _DFS_THR));

@@ -2,7 +2,7 @@
  * workthread.c
  * Execute command, read input from a FIFO, write output to a logfile.
  *
- * Copyright (c) 2021-2023 jjb
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -27,7 +27,6 @@
 
 #define	ROTATE(lim,n,sig)	((lim && n > lim) || sig == SIGHUP)
 #define	STAT(file,buf)		(stat(file, &buf) == -1 ? -1 : buf.st_size)
-#define	SLOWEXIT(code)		{ sleep(5); exit(code); }
 
 static int fifoopen(struct thread_info *);
 static void fifosize(struct thread_info *, int);
@@ -59,7 +58,7 @@ void   *workthread(void *arg)
 	 *  - ti_pipename
 	 *  - ti_template
 	 *
-	 * optional, but recommended:
+	 * optional, recommended:
 	 *  - ti_rotatesiz
 	 *
 	 * optional:

@@ -2,7 +2,7 @@
  * pcrefind.c
  * Program to find files matching Perl-compatible regular expressions.
  *
- * Copyright (c) 2021-2023 jjb
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -19,6 +19,8 @@
 #include "sentinal.h"
 #include "basename.h"
 
+static void help(char *);
+
 static struct option long_options[] = {
 	{ "dirs", no_argument, NULL, 'd' },
 	{ "files", no_argument, NULL, 'f' },
@@ -34,16 +36,13 @@ static short opt_files = FALSE;
 static short opt_names = FALSE;
 static short opt_xdev = TRUE;
 
-static void help(char *);
-short   pcrematch(struct thread_info *, char *);
-uint32_t pcrefind(struct thread_info *, short, char *);
-
 int main(int argc, char *argv[])
 {
 	char   *myname;
 	int     c;
 	int     index = 0;
 	struct thread_info ti;							/* so we can use pcrecompile.c */
+	uint32_t pcrefind(struct thread_info *, short, char *);
 
 	myname = base(argv[0]);
 
@@ -126,6 +125,7 @@ uint32_t pcrefind(struct thread_info *ti, short top, char *dir)
 	struct dirent *dp;
 	struct stat stbuf;								/* file status */
 	uint32_t entries = 0;							/* file entries */
+	short   pcrematch(struct thread_info *, char *);
 
 	if(IS_NULL(dir))
 		return (0);

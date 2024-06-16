@@ -2,7 +2,7 @@
  * namematch.c
  * Return TRUE if this is a file we're watching.
  *
- * Copyright (c) 2021, 2022 jjb
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found

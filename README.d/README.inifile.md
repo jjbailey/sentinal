@@ -60,7 +60,7 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
                default off (no rotate)
 
     subdirs:   option to search subdirectories; true, false
-               default 0/false
+               default 1/true
 
     symlinks:  follow symlinks; true, false
                default 0/false
@@ -113,61 +113,73 @@ Example: file expire thread name for the section called `console`: `console_exp`
 
 ## Debugging INI Files
 
-sentinal accepts two options for debugging.
-`-d|--debug` prints INI files as parsed.
+sentinal accepts three options for debugging.
+`-d|--debug` print the INI file
+`-s|--split` print the INI file with split sections
 `-v|--verbose` prints INI files as interpreted and the threads that will run.
 
-    $ /opt/sentinal/bin/sentinal -f /opt/sentinal/tests/test4.ini -d
+    $ /opt/sentinal/bin/sentinal -f /opt/sentinal/etc/example2.ini -d
 
-    [test4]
+    [example2]
     command   = /usr/bin/zstd -T4
     dirname   = /opt/sentinal/tests
-    dirlimit  =
+    diskfree  = 85
+    gid       = sentinal
+    pcrestr   = example2-
+    pipename  = example2.fifo
+    retmax    = 25
+    retmin    = 3
+    rotatesiz = 1G
     subdirs   = true
-    pipename  = test4.fifo
-    template  = test4-%Y-%m-%d_%H-%M-%S.log.zst
-    pcrestr   = test4-
+    template  = example2-%Y-%m-%d_%H-%M-%S.log.zst
+    uid       = sentinal
+
+    $ /opt/sentinal/bin/sentinal -f /opt/sentinal/etc/example2.ini -s
+
+    [example2]
+    # dfs thread
+    dirname   = /opt/sentinal/tests
+    diskfree  = 85
+    pcrestr   = example2-
+    retmin    = 3
+    subdirs   = true
+
+    [example2]
+    # exp thread
+    dirname   = /opt/sentinal/tests
+    pcrestr   = example2-
+    retmax    = 25
+    retmin    = 3
+    subdirs   = true
+
+    [example2]
+    # wrk thread
+    dirname   = /opt/sentinal/tests
     uid       = sentinal
     gid       = sentinal
-    rotatesiz = 1G
-    expiresiz =
-    diskfree  = 85
-    inofree   =
-    expire    =
-    retmin    = 3
-    retmax    = 25
-    terse     =
-    rmdir     =
-    symlinks  =
-    postcmd   =
-    truncate  =
-
-    $ /opt/sentinal/bin/sentinal -f /opt/sentinal/tests/test4.ini -v
-
-    [test4]
     command   = /usr/bin/zstd -T4
-    #           zstd -f -T4 > /opt/sentinal/tests/test4-2022-07-03_12-12-23.log.zst
+    pipename  = example2.fifo
+    rotatesiz = 1G
+    template  = example2-%Y-%m-%d_%H-%M-%S.log.zst
+
+    $ /opt/sentinal/bin/sentinal -f /opt/sentinal/etc/example2.ini -v
+
+    [example2]
+    command   = /usr/bin/zstd -T4
+    #           zstd -f -T4 > /opt/sentinal/tests/example2-2024-05-26_11-20-20.log.zst
     dirname   = /opt/sentinal/tests
-    dirlimit  = 0MiB
     subdirs   = 1
-    pipename  = /opt/sentinal/tests/test4.fifo
-    template  = test4-%Y-%m-%d_%H-%M-%S.log.zst
-    #           test4-2022-07-03_12-12-23.log.zst
-    pcrestr   = test4-
-    uid       = 1324
-    gid       = 1324
-    rotatesiz = 1024MiB
-    expiresiz = 0MiB
+    pipename  = /opt/sentinal/tests/example2.fifo
+    template  = example2-%Y-%m-%d_%H-%M-%S.log.zst
+    #           example2-2024-05-26_11-20-20.log.zst
+    pcrestr   = example2-
+    uid       = 59
+    gid       = 100
+    rotatesiz = 1G
     diskfree  = 85.00
-    inofree   = 0.00
     expire    = 0m
     retmin    = 3
     retmax    = 25
-    terse     = 0
-    rmdir     = 0
-    symlinks  = 0
-    postcmd   =
-    truncate  = 0
     # threads   dfs: true   exp: true   slm: false   wrk: true
 
 ## Key Usage

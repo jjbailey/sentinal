@@ -6,7 +6,7 @@
  * If this executable is called "pcretest", be verbose,
  * else terse (just print matches)
  *
- * Copyright (c) 2021, 2022 jjb
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -18,14 +18,13 @@
 #include "sentinal.h"
 #include "basename.h"
 
-short   pcrematch(struct thread_info *, char *);
-
 int main(int argc, char *argv[])
 {
 	char   *myname;
 	int     i;
 	short   match;
 	struct thread_info ti;							/* so we can use pcrecompile.c */
+	short   pcrematch(struct thread_info *, char *);
 
 	myname = base(argv[0]);
 

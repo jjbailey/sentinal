@@ -2,7 +2,7 @@
  * verifyids.c
  * Verify user and group ids.
  *
- * Copyright (c) 2021-2023 jjb
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found

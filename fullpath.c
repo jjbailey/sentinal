@@ -14,14 +14,14 @@
 
 char   *fullpath(char *dir, char *file, char *path)
 {
-	if(IS_NULL(dir) || IS_NULL(file))				/* program error */
-		*path = '\0';
-
 	if(NOT_NULL(dir) && NOT_NULL(file)) {
 		if(*file == '/')
 			strlcpy(path, file, PATH_MAX);
 		else
 			snprintf(path, PATH_MAX, "%s/%s", dir, file);
+	} else {
+		/* program error */
+		*path = '\0';
 	}
 
 	return (path);

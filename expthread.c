@@ -2,7 +2,7 @@
  * expthread.c
  * File expiration thread.  Remove files older than expire time.
  *
- * Copyright (c) 2021-2023 jjb
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -23,8 +23,7 @@
 #define	SCANRATE		(ONE_MINUTE * 30)			/* faster seems too often */
 #define	DRYSCAN			30							/* scanrate for dryrun */
 
-/* externals */
-extern pthread_mutex_t explock;						/* thread lock */
+static void process_files(struct thread_info *, sqlite3 *);
 
 static char *sql_selectfiles = "SELECT db_dir, db_file, db_size\n \
 	FROM  %s_dir, %s_file\n \
@@ -35,7 +34,8 @@ static char *sql_selectfiles = "SELECT db_dir, db_file, db_size\n \
 static char *sql_selectbytes = "SELECT SUM(db_size)\n \
 	FROM  %s_file;";
 
-static void process_files(struct thread_info *, sqlite3 *);
+/* externals */
+extern pthread_mutex_t explock;						/* thread lock */
 
 void   *expthread(void *arg)
 {
@@ -51,10 +51,15 @@ void   *expthread(void *arg)
 	 *  - at least one of:
 	 *    - ti_dirlimit
 	 *    - ti_expire
-	 *    - ti_retmax
+	 *    - ti_expiresiz
 	 *
 	 * optional:
 	 *  - ti_retmin
+	 *  - ti_retmax
+	 *
+	 * find options:
+	 *  - ti_subdirs
+	 *  - ti_symlinks
 	 */
 
 	pthread_setname_np(pthread_self(), threadname(ti, _EXP_THR));

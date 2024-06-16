@@ -1,6 +1,6 @@
 # Makefile
 #
-# Copyright (c) 2021-2023 jjb
+# Copyright (c) 2021-2024 jjb
 # All rights reserved.
 #
 # This source code is licensed under the MIT license found
@@ -19,24 +19,27 @@ SENOBJS=	sentinal.o		\
 			findfile.o		\
 			findmnt.o		\
 			fullpath.o		\
-			ini.o			\
 			iniget.o		\
+			ini.o			\
 			logname.o		\
 			logretention.o	\
 			logsize.o		\
 			namematch.o		\
+			outputs.o		\
 			pcrecompile.o	\
 			postcmd.o		\
+			readini.o		\
 			rlimit.o		\
 			rmfile.o		\
 			signals.o		\
 			slmthread.o		\
 			sql.o			\
+			strdel.o		\
 			strlcat.o		\
 			strlcpy.o		\
 			strreplace.o	\
-			threadcheck.o	\
 			threadname.o	\
+			threadtype.o	\
 			validdbname.o	\
 			verifyids.o		\
 			workcmd.o		\
@@ -44,8 +47,8 @@ SENOBJS=	sentinal.o		\
 
 SPMOBJS=	sentinalpipe.o	\
 			fullpath.o		\
-			ini.o			\
 			iniget.o		\
+			ini.o			\
 			strlcpy.o		\
 			validdbname.o
 
@@ -105,7 +108,8 @@ install:	all
 			install -o root -g root -m 755 sentinalpipe -t $(SEN_BIN)
 			install -o root -g root -m 755 pcrefind -t $(SEN_BIN)
 			install -o root -g root -m 755 pcretest -t $(SEN_BIN)
-			install -o root -g root -m 644 example.ini -T $(SEN_ETC)/example.ini
+			install -o root -g root -m 644 examples/example1.ini -T $(SEN_ETC)/example1.ini
+			install -o root -g root -m 644 examples/example2.ini -T $(SEN_ETC)/example2.ini
 			# install -o root -g root -m 755 pcre2.so $(PCRE_DIR)/pcre2.so
 			cp -p README.md README.d/README.* $(SEN_DOC)
 			chown -R root:root $(SEN_DOC)
