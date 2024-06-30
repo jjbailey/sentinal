@@ -10,15 +10,23 @@
  */
 
 #include <stdio.h>
+#include <errno.h>
+#include <string.h>
+#include <unistd.h>
 #include "sentinal.h"
 
 short rmfile(struct thread_info *ti, char *obj, char *remark)
 {
+	char    buf[BUFSIZ];
 	extern short dryrun;
 
 	if(!dryrun)
 		if(remove(obj) != 0)
-			return (FALSE);
+			if(strerror_r(errno, buf, BUFSIZ) == 0) {
+				fprintf(stderr, "%s: %s %s: %s\n", ti->ti_section, remark, obj, buf);
+				sleep(1);
+				return (FALSE);
+			}
 
 	if(!ti->ti_terse)
 		fprintf(stderr, "%s: %s %s\n", ti->ti_section, remark, obj);
