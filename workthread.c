@@ -315,7 +315,7 @@ static int fifoopen(struct thread_info *ti)
 			fprintf(stderr, "%s: can't open %s: %s\n", ti->ti_section,
 					base(ti->ti_pipename), strerror(errno));
 	} else {
-		/* reenforce in case these were changed externally */
+		/* reinforce in case these were changed externally */
 
 		chown(ti->ti_pipename, ti->ti_uid, ti->ti_gid);
 		chmod(ti->ti_pipename, 0600);

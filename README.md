@@ -39,7 +39,7 @@ a pidfile definition and an optional sqlite3 database definition.  The database
 name can be `:memory:`, or a pathname of a disk file.
 
 Section names can be up to 11 characters in length (kernel max), and the
-characters must be alpha-numeric or underscore (valid sqlite3 table name).
+characters must be alphanumeric or underscore (valid sqlite3 table name).
 Section names must be unique in the INI file.
 
 Sizes in bytes or files may be given in SI units {K,M,G,T}i{B,F}, non-SI units {K,M,G,T}{B,F},
