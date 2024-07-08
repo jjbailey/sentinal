@@ -50,7 +50,7 @@ Description: Software for Logfile and Inode Management
  Copyright (c) 2021-2024 jjb
 EOF
 
-dpkg-deb --build $BUILDIR
+dpkg-deb --build -Z gzip $BUILDIR
 
 [ -f $BUILDIR.deb ] && {
     dpkg -c $CWD/$BUILDIR.deb
