@@ -182,8 +182,8 @@ int main(int argc, char *argv[])
 
 	/* version banner */
 
-	fprintf(stderr, "%s: version %s %s\n", myname, VERSION_STRING,
-			dryrun ? "(DRY RUN)" : "");
+	fprintf(stderr, "%s: version %s %s %s\n", myname,
+			VERSION_STRING, inifile, dryrun ? "(DRY RUN)" : "");
 
 	/* remove and (re)create the database -- no point in keeping the old one */
 
