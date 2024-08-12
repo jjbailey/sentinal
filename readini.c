@@ -44,14 +44,19 @@ int readini(char *myname, char *inifile)
 	char    tbuf[PATH_MAX];
 	DIR    *dirp;
 	int     i;
-	int     inifd;									/* for fstat() */
+	int     inifd;									/* for lstat() */
 	int     nsect;									/* number of sections found */
 	struct stat stbuf;								/* file status */
 	struct thread_info *ti;							/* thread settings */
 	int     get_sections(ini_t *, int, char **);
 
 	if((inifd = open(inifile, O_RDONLY)) > 0)
-		if(fstat(inifd, &stbuf) == 0) {
+		if(lstat(inifile, &stbuf) == 0) {
+			if(S_ISLNK(stbuf.st_mode)) {
+				fprintf(stderr, "%s: %s is a symlink\n", myname, inifile);
+				return (0);
+			}
+
 			if(stbuf.st_mode & S_IWGRP || stbuf.st_mode & S_IWOTH) {
 				fprintf(stderr, "%s: %s is writable by group or other\n", myname,
 						inifile);
