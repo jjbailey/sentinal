@@ -46,6 +46,16 @@ Sizes in bytes or files may be given in SI units {K,M,G,T}i{B,F}, non-SI units {
 or no units (literal value).  Examples,
 1KB = 1000 bytes, 1K or 1KiB = 1024 bytes.  1MF = 1000000 files, 1M or 1MiF = 1048576 files.
 
+| <h4>Unit</h4> | <h4>Time</h4> |
+| :-- | :-- |
+| m | minutes |
+| H | hours |
+| D | days |
+| W | weeks |
+| M | months |
+| Y | years |
+<br>
+
     [global]
     pidfile:   sentinal process id and lock file, for manual logrotate
     database:  name of the sqlite3 database
