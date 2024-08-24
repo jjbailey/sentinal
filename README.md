@@ -81,7 +81,6 @@ or no units (literal value).  Examples,
 | W | weeks   | | | TiB | 2^40 | | | TB | 10^12
 | M | months  | | | PiB | 2^50 | | | PB | 10^15
 | Y | years   | | | EiB | 2^60 | | | EB | 10^18
-<br>
 
 ### Thread Requirements
 
