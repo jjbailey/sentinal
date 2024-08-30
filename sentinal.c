@@ -75,7 +75,6 @@ int main(int argc, char *argv[])
 {
 	char    inifile[PATH_MAX];						/* ini file name */
 	char   *myname;
-	char    tbuf[PATH_MAX];
 	int     c;
 	int     dbflags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX;
 	int     i;
@@ -116,8 +115,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'f':									/* INI file name */
-			fullpath("/opt/sentinal/etc", optarg, tbuf);
-			realpath(tbuf, inifile);
+			fullpath("/opt/sentinal/etc", optarg, inifile);
 			break;
 
 		case 'h':									/* print usage */
@@ -182,8 +180,8 @@ int main(int argc, char *argv[])
 
 	/* version banner */
 
-	fprintf(stderr, "%s: version %s %s\n", myname, VERSION_STRING,
-			dryrun ? "(DRY RUN)" : "");
+	fprintf(stderr, "%s: version %s %s %s\n", myname,
+			VERSION_STRING, inifile, dryrun ? "(DRY RUN)" : "");
 
 	/* remove and (re)create the database -- no point in keeping the old one */
 

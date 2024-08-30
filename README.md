@@ -42,10 +42,6 @@ Section names can be up to 11 characters in length (kernel max), and the
 characters must be alphanumeric or underscore (valid sqlite3 table name).
 Section names must be unique in the INI file.
 
-Sizes in bytes or files may be given in SI units {K,M,G,T}i{B,F}, non-SI units {K,M,G,T}{B,F},
-or no units (literal value).  Examples,
-1KB = 1000 bytes, 1K or 1KiB = 1024 bytes.  1MF = 1000000 files, 1M or 1MiF = 1048576 files.
-
     [global]
     pidfile:   sentinal process id and lock file, for manual logrotate
     database:  name of the sqlite3 database
@@ -72,6 +68,19 @@ or no units (literal value).  Examples,
     symlinks:  option to follow symlinks (false)
     postcmd:   command to run after log closes or rotates, %file = filename
     truncate:  option to truncate slm-managed files (false)
+
+Sizes in bytes or files may be given in SI units {K,M,G,T}i{B,F}, non-SI units {K,M,G,T}{B,F},
+or no units (literal value).  Examples,
+1KB = 1000 bytes, 1K or 1KiB = 1024 bytes.  1MF = 1000000 files, 1M or 1MiF = 1048576 files.
+
+|<h4>Unit</h4>|<h4>Time</h4>|||<h4>Unit</h4>|<h4>Value (Base 2)</h4>|||<h4>Unit</h4>|<h4>Value (Base 10)</h4>|
+|:--|:--|:--|--|:--|:--|:--|:--|:--|:--|
+| m | minutes | | | KiB | 2^10 | | | KB | 10^3
+| H | hours   | | | Mib | 2^20 | | | MB | 10^6
+| D | days    | | | GiB | 2^30 | | | GB | 10^9
+| W | weeks   | | | TiB | 2^40 | | | TB | 10^12
+| M | months  | | | PiB | 2^50 | | | PB | 10^15
+| Y | years   | | | EiB | 2^60 | | | EB | 10^18
 
 ### Thread Requirements
 

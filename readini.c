@@ -40,21 +40,35 @@ char   *my_ini(ini_t *, char *, char *);
 int readini(char *myname, char *inifile)
 {
 	char   *p;
-	char    rbuf[PATH_MAX];
-	char    tbuf[PATH_MAX];
+	char    inipath[PATH_MAX];						/* real path to file */
+	char    rpbuf[PATH_MAX];						/* real path buffer */
+	char    tbuf[PATH_MAX];							/* temp buffer */
 	DIR    *dirp;
 	int     i;
-	int     inifd;									/* for fstat() */
+	int     inifd;									/* for lstat() */
 	int     nsect;									/* number of sections found */
 	struct stat stbuf;								/* file status */
 	struct thread_info *ti;							/* thread settings */
 	int     get_sections(ini_t *, int, char **);
 
-	if((inifd = open(inifile, O_RDONLY)) > 0)
-		if(fstat(inifd, &stbuf) == 0) {
+	if(lstat(inifile, &stbuf) == 0)
+		if(S_ISLNK(stbuf.st_mode)) {
+			fprintf(stderr, "%s: %s is a symlink\n", myname, inifile);
+			return (0);
+		}
+
+	realpath(inifile, inipath);
+
+	if((inifd = open(inipath, O_RDONLY)) > 0)
+		if(lstat(inipath, &stbuf) == 0) {
+			if(S_ISLNK(stbuf.st_mode)) {
+				fprintf(stderr, "%s: %s is a symlink\n", myname, inipath);
+				return (0);
+			}
+
 			if(stbuf.st_mode & S_IWGRP || stbuf.st_mode & S_IWOTH) {
 				fprintf(stderr, "%s: %s is writable by group or other\n", myname,
-						inifile);
+						inipath);
 
 				return (0);
 			}
@@ -66,8 +80,8 @@ int readini(char *myname, char *inifile)
 
 	/* configure the threads */
 
-	if((inidata = ini_load(inifile)) == NULL) {
-		fprintf(stderr, "%s: can't load %s\n", myname, inifile);
+	if((inidata = ini_load(inipath)) == NULL) {
+		fprintf(stderr, "%s: can't load %s\n", myname, inipath);
 		return (0);
 	}
 
@@ -116,13 +130,13 @@ int readini(char *myname, char *inifile)
 				return (0);
 			}
 
-			if(realpath(ti->ti_path, rbuf) == NULL) {
+			if(realpath(ti->ti_path, rpbuf) == NULL) {
 				fprintf(stderr, "%s: missing or bad command path\n", ti->ti_section);
 				return (0);
 			}
 		}
 
-		ti->ti_path = strndup(ti->ti_argc ? rbuf : "", PATH_MAX);
+		ti->ti_path = strndup(ti->ti_argc ? rpbuf : "", PATH_MAX);
 
 		/* get real path of directory */
 
@@ -133,10 +147,10 @@ int readini(char *myname, char *inifile)
 			return (0);
 		}
 
-		if(realpath(ti->ti_dirname, rbuf) == NULL)
-			*rbuf = '\0';
+		if(realpath(ti->ti_dirname, rpbuf) == NULL)
+			*rpbuf = '\0';
 
-		ti->ti_dirname = strndup(rbuf, PATH_MAX);
+		ti->ti_dirname = strndup(rpbuf, PATH_MAX);
 		ti->ti_mountdir = malloc(PATH_MAX);			/* for findmnt() */
 
 		if(IS_NULL(ti->ti_dirname) || strcmp(ti->ti_dirname, "/") == 0) {
@@ -189,12 +203,12 @@ int readini(char *myname, char *inifile)
 
 			fullpath(ti->ti_dirname, ti->ti_pipename, tbuf);
 
-			if(realpath(dirname(tbuf), rbuf) == NULL) {
+			if(realpath(dirname(tbuf), rpbuf) == NULL) {
 				fprintf(stderr, "%s: missing or bad pipedir\n", ti->ti_section);
 				return (0);
 			}
 
-			fullpath(rbuf, base(ti->ti_pipename), tbuf);
+			fullpath(rpbuf, base(ti->ti_pipename), tbuf);
 			ti->ti_pipename = strndup(tbuf, PATH_MAX);
 		}
 
