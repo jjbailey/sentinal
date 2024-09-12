@@ -1,6 +1,7 @@
 /*
  * basename.h
  * replace basename(3) with inline code
+ * assumes no trailing slash
  *
  * Copyright (c) 2021-2024 jjb
  * All rights reserved.
@@ -16,15 +17,8 @@
 
 static inline char *base(char *s)
 {
-	/* assumes no trailing slash */
-
-	char   *p = s + strlen(s);
-
-	while(p > s)
-		if(*--p == '/')
-			return (p + 1);
-
-	return (s);
+	char   *p = strrchr(s, '/');
+	return (p ? p + 1 : s);
 }
 
 #endif												/* _BASE_INLINE */
