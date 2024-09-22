@@ -51,7 +51,10 @@ short sqlexec(struct thread_info *ti, sqlite3 *db, char *desc, char *format, ...
 
 short drop_table(struct thread_info *ti, sqlite3 *db)
 {
+	/* drop the directory table */
 	char   *sql_dir = "DROP TABLE IF EXISTS %s_dir;";
+
+	/* drop the file table */
 	char   *sql_file = "DROP TABLE IF EXISTS %s_file;";
 
 	if(sqlexec(ti, db, "drop table", sql_dir, ti->ti_task) == FALSE)
@@ -89,15 +92,16 @@ short create_table(struct thread_info *ti, sqlite3 *db)
 
 short create_index(struct thread_info *ti, sqlite3 *db)
 {
-	char   *sql_dir = "CREATE INDEX IF NOT EXISTS idx_%s_dir ON %s_dir (%s);";
-	char   *sql_file = "CREATE INDEX IF NOT EXISTS idx_%s_file ON %s_file (%s);";
+	/* create an index on the directory table */
+	char   *sql_dir = "CREATE INDEX IF NOT EXISTS idx_%s_dir ON %s_dir (db_id);";
 
-	if(sqlexec(ti, db, "create index", sql_dir,
-			   ti->ti_task, ti->ti_task, "db_id") == FALSE)
+	/* create an index on the file table */
+	char   *sql_file = "CREATE INDEX IF NOT EXISTS idx_%s_file ON %s_file (db_time);";
+
+	if(sqlexec(ti, db, "create index", sql_dir, ti->ti_task, ti->ti_task) == FALSE)
 		return (FALSE);
 
-	if(sqlexec(ti, db, "create index", sql_file,
-			   ti->ti_task, ti->ti_task, "db_time") == FALSE)
+	if(sqlexec(ti, db, "create index", sql_file, ti->ti_task, ti->ti_task) == FALSE)
 		return (FALSE);
 
 	return (TRUE);
