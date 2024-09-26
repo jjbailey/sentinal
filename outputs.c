@@ -131,10 +131,10 @@ void debug_verbose(struct thread_info *ti)
 
 	/* postcmd tokens */
 	DPRINTSTR(stdout, "postcmd   = %s\n", ti->ti_postcmd);
-	strreplace(ti->ti_postcmd, _HOST_TOK, utsbuf.nodename);
-	strreplace(ti->ti_postcmd, _PATH_TOK, ti->ti_dirname);
-	strreplace(ti->ti_postcmd, _FILE_TOK, ti->ti_filename);
-	strreplace(ti->ti_postcmd, _SECT_TOK, ti->ti_section);
+	strreplace(ti->ti_postcmd, _HOST_TOK, utsbuf.nodename, BUFSIZ);
+	strreplace(ti->ti_postcmd, _PATH_TOK, ti->ti_dirname, BUFSIZ);
+	strreplace(ti->ti_postcmd, _FILE_TOK, ti->ti_filename, BUFSIZ);
+	strreplace(ti->ti_postcmd, _SECT_TOK, ti->ti_section, BUFSIZ);
 	DPRINTSTR(stdout, "#           %s\n", ti->ti_postcmd);
 
 	DPRINTNUM(stdout, "truncate  = %d\n", ti->ti_truncate);
@@ -148,7 +148,7 @@ void debug_split(struct thread_info *ti, ini_t *inidata)
 	char    pstbuf[BUFSIZ];							/* for copy of postcmd */
 	char    secbuf[BUFSIZ];							/* for copy of ti->ti_section */
 	int     tt;
-	size_t  strdel(char *, char *, char *, size_t);
+	size_t  strdel(char *, const char *, char *, size_t);
 
 	char   *command = my_ini(inidata, ti->ti_section, "command");
 	char   *dirlimit = my_ini(inidata, ti->ti_section, "dirlimit");
@@ -194,7 +194,7 @@ void debug_split(struct thread_info *ti, ini_t *inidata)
 
 		if(NOT_NULL(postcmd)) {
 			strlcpy(pstbuf, postcmd, BUFSIZ);
-			strreplace(pstbuf, _SECT_TOK, ti->ti_section);
+			strreplace(pstbuf, _SECT_TOK, ti->ti_section, BUFSIZ);
 		}
 
 		if(strcmp(thread_types[tt], _DFS_THR) == 0) {	/* filesystem free space */

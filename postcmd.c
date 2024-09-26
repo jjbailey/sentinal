@@ -69,10 +69,10 @@ int postcmd(struct thread_info *ti, char *filename)
 
 		/* postcmd tokens */
 
-		strreplace(cmdbuf, _HOST_TOK, utsbuf.nodename);
-		strreplace(cmdbuf, _PATH_TOK, ti->ti_dirname);
-		strreplace(cmdbuf, _FILE_TOK, filename);
-		strreplace(cmdbuf, _SECT_TOK, ti->ti_section);
+		strreplace(cmdbuf, _HOST_TOK, utsbuf.nodename, BUFSIZ);
+		strreplace(cmdbuf, _PATH_TOK, ti->ti_dirname, BUFSIZ);
+		strreplace(cmdbuf, _FILE_TOK, filename, BUFSIZ);
+		strreplace(cmdbuf, _SECT_TOK, ti->ti_section, BUFSIZ);
 
 		fprintf(stderr, "%s: %s\n", ti->ti_section, cmdbuf);
 

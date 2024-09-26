@@ -17,29 +17,31 @@
 # define	IS_NULL(s) !((s) && *(s))
 #endif
 
-void strreplace(char *template, char *oldstr, char *newstr)
+void strreplace(char *template, const char *oldstr, const char *newstr, size_t size)
 {
-	char    newbuf[BUFSIZ];
 	char   *p;
-	size_t  len;
+	char    replbuf[BUFSIZ];
+	char    tempbuf[BUFSIZ];
+	size_t  oldlen = strlen(oldstr);
+	size_t  newlen = strlen(newstr);
 	size_t  strlcat(char *, const char *, size_t);
 	size_t  strlcpy(char *, const char *, size_t);
 
-	if(IS_NULL(oldstr) || IS_NULL(newstr))			/* null */
+	if(IS_NULL(oldstr) || IS_NULL(newstr))
 		return;
 
-	if(strstr(newstr, oldstr))						/* recursion */
-		return;
+	strlcpy(tempbuf, template, size);
+	p = tempbuf;
 
-	len = strlen(oldstr);
-	memset(newbuf, '\0', BUFSIZ);
-
-	while((p = strstr(template, oldstr))) {
-		strlcpy(newbuf, template, (p - template) + 1);	/* add NUL */
-		strlcat(newbuf, newstr, BUFSIZ);
-		strlcat(newbuf, p + len, BUFSIZ);
-		strlcpy(template, newbuf, BUFSIZ);
+	while((p = strstr(p, oldstr)) != NULL) {		/* clang warns */
+		strlcpy(replbuf, tempbuf, (p - tempbuf) + 1);
+		strlcat(replbuf, newstr, size);
+		strlcat(replbuf, p + oldlen, size);
+		strlcpy(tempbuf, replbuf, size);
+		p += newlen;
 	}
+
+	strlcpy(template, tempbuf, size);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

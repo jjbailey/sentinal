@@ -277,7 +277,7 @@ static int parsecmd(char *cmd, char *argv[])
 		return (0);
 
 	strlcpy(str, cmd, BUFSIZ);
-	strreplace(str, "\t", " ");
+	strreplace(str, "\t", " ", BUFSIZ);
 
 	if((p = strtok(str, " ")) == NULL)
 		return (0);

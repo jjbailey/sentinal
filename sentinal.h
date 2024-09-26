@@ -151,7 +151,7 @@ uint32_t findfile(struct thread_info *, short, uint32_t *, char *, sqlite3 *);
 void    activethreads(struct thread_info *);
 void    parentsignals(void);
 void    rlimit(int);
-void    strreplace(char *, char *, char *);
+void    strreplace(char *, const char *, const char *, size_t);
 void   *dfsthread(void *);
 void   *expthread(void *);
 void   *slmthread(void *);
