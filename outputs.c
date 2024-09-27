@@ -192,6 +192,8 @@ void debug_split(struct thread_info *ti, ini_t *inidata)
 		 * applies only to ti->ti_postcmd
 		 */
 
+		*pstbuf = '\0';								/* init */
+
 		if(NOT_NULL(postcmd)) {
 			strlcpy(pstbuf, postcmd, BUFSIZ);
 			strreplace(pstbuf, _SECT_TOK, ti->ti_section, BUFSIZ);
