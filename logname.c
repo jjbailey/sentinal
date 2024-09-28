@@ -26,7 +26,7 @@
 #define	_SEC	"%S"
 #define	_ESEC	"%s"
 
-static void substrval(char *, char *, time_t);
+static void substrval(char *, const char *, time_t);
 
 char   *logname(char *template, char *filename)
 {
@@ -56,7 +56,7 @@ char   *logname(char *template, char *filename)
 	return (filename);
 }
 
-static void substrval(char *template, char *token, time_t value)
+static void substrval(char *template, const char *token, time_t value)
 {
 	/* replace all occurrences of token with value */
 
