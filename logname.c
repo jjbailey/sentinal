@@ -26,7 +26,7 @@
 #define	_SEC	"%S"
 #define	_ESEC	"%s"
 
-static void substrval(char *, char *, time_t);
+static void substrval(char *, const char *, time_t);
 
 char   *logname(char *template, char *filename)
 {
@@ -44,8 +44,7 @@ char   *logname(char *template, char *filename)
 	time(&curtime);
 	localtime_r(&curtime, &tbuf);
 
-	strreplace(filename, _FULL, _YMD);
-
+	strreplace(filename, _FULL, _YMD, PATH_MAX);
 	substrval(filename, _YEAR, tbuf.tm_year + 1900);
 	substrval(filename, _MONTH, tbuf.tm_mon + 1);
 	substrval(filename, _DAY, tbuf.tm_mday);
@@ -57,15 +56,11 @@ char   *logname(char *template, char *filename)
 	return (filename);
 }
 
-static void substrval(char *template, char *token, time_t value)
+static void substrval(char *template, const char *token, time_t value)
 {
 	/* replace all occurrences of token with value */
 
-	char    newbuf[PATH_MAX];
-	char    search[PATH_MAX];
 	char    valbuf[PATH_MAX];
-	char   *p;
-	size_t  len;
 
 	if(IS_NULL(token) || *token != '%')
 		return;
@@ -73,19 +68,8 @@ static void substrval(char *template, char *token, time_t value)
 	if(strstr(template, token) == NULL)
 		return;
 
-	len = strlen(token);
-	strlcpy(search, template, PATH_MAX);
-
-	while((p = strstr(search, token))) {
-		memset(newbuf, '\0', PATH_MAX);
-		strlcpy(newbuf, search, (p - search) + 1);	/* add NUL */
-		snprintf(valbuf, PATH_MAX, "%02ld", value);
-		strlcat(newbuf, valbuf, PATH_MAX);
-		strlcat(newbuf, p + len, PATH_MAX);
-		strlcpy(search, newbuf, PATH_MAX);
-	}
-
-	strlcpy(template, search, PATH_MAX);
+	snprintf(valbuf, PATH_MAX, "%02ld", value);
+	strreplace(template, token, valbuf, PATH_MAX);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

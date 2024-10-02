@@ -8,7 +8,7 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"2.1.2"
+#define	VERSION_STRING	"2.1.3"
 
 #ifndef _SYS_TYPES_H
 # include <sys/types.h>
@@ -141,7 +141,7 @@ int     workcmd(int, char **, char **);
 off_t   logsize(char *);
 short   namematch(struct thread_info *, char *);
 short   pcrecompile(struct thread_info *);
-short   rmfile(struct thread_info *, char *, char *);
+short   rmfile(struct thread_info *, const char *, const char *);
 short   threadtype(struct thread_info *, char *);
 short   validdbname(char *);
 size_t  strlcat(char *, const char *, size_t);
@@ -151,7 +151,7 @@ uint32_t findfile(struct thread_info *, short, uint32_t *, char *, sqlite3 *);
 void    activethreads(struct thread_info *);
 void    parentsignals(void);
 void    rlimit(int);
-void    strreplace(char *, char *, char *);
+void    strreplace(char *, const char *, const char *, size_t);
 void   *dfsthread(void *);
 void   *expthread(void *);
 void   *slmthread(void *);

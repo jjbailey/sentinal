@@ -15,18 +15,18 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-short rmfile(struct thread_info *ti, char *obj, char *remark)
+short rmfile(struct thread_info *ti, const char *obj, const char *remark)
 {
-	char    buf[BUFSIZ];
+	char    errbuf[BUFSIZ];
 	extern short dryrun;
 
-	if(!dryrun)
-		if(remove(obj) != 0)
-			if(strerror_r(errno, buf, BUFSIZ) == 0) {
-				fprintf(stderr, "%s: %s %s: %s\n", ti->ti_section, remark, obj, buf);
-				sleep(1);
-				return (FALSE);
-			}
+	if(!dryrun && remove(obj) != 0) {
+		if(strerror_r(errno, errbuf, sizeof(errbuf)) == 0) {
+			fprintf(stderr, "%s: error %s %s: %s\n", ti->ti_section, remark, obj, errbuf);
+			sleep(1);
+			return (FALSE);
+		}
+	}
 
 	if(!ti->ti_terse)
 		fprintf(stderr, "%s: %s %s\n", ti->ti_section, remark, obj);

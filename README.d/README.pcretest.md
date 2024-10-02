@@ -1,4 +1,4 @@
-### Examples of pcretest Usage
+### Examples of pcretest usage
 
 #### Ends with a digit
 

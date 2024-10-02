@@ -1,7 +1,6 @@
 /*
  * strlcat.c
- * NUL terminate when dsize > 0 and something is copied.
- * dsize needs to include space for NUL.
+ * Concatenate two strings, return the length of the new string.
  *
  * Copyright (c) 2021-2024 jjb
  * All rights reserved.
@@ -11,29 +10,13 @@
  */
 
 #include <sys/types.h>
+#include <string.h>
 
-size_t strlcat(char *dst, char *src, size_t dsize)
+size_t strlcat(char *dst, const char *src, size_t size)
 {
-	char   *dp = dst;
-	char   *sp = src;
-
-	while(*dp && dsize > 0) {						/* find the end */
-		dp++;
-		dsize--;
-	}
-
-	while(*sp && dsize > 0) {						/* copy */
-		*dp++ = *sp++;
-		dsize--;
-	}
-
-	if(dp > dst && dsize == 0)						/* make room for NUL */
-		dp--;
-
-	if(dp > dst)
-		*dp = '\0';
-
-	return (dp - dst);
+	strncpy(dst + strlen(dst), src, size);			/* strncpy */
+	dst[size - 1] = '\0';
+	return (strlen(dst));
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

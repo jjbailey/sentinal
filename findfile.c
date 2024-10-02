@@ -81,8 +81,11 @@ uint32_t findfile(struct thread_info *ti, short top, uint32_t *nextid,
 		if(lstat(filename, &stbuf) == -1)
 			continue;
 
-		if(S_ISLNK(stbuf.st_mode) && !ti->ti_symlinks)
-			continue;
+		if(S_ISLNK(stbuf.st_mode))
+			if(!ti->ti_symlinks) {					/* count this entry */
+				entries++;
+				continue;
+			}
 
 		if(stat(filename, &stbuf) == -1)
 			continue;

@@ -109,6 +109,7 @@ install:	all
 			install -o root -g root -m 755 pcrefind -t $(SEN_BIN)
 			install -o root -g root -m 755 pcretest -t $(SEN_BIN)
 			install -o root -g root -m 644 examples/example1.ini -T $(SEN_ETC)/example1.ini
+			install -o root -g root -m 644 examples/example1-split.ini -T $(SEN_ETC)/example1-split.ini
 			install -o root -g root -m 644 examples/example2.ini -T $(SEN_ETC)/example2.ini
 			# install -o root -g root -m 755 pcre2.so $(PCRE_DIR)/pcre2.so
 			cp -p README.md README.d/README.* $(SEN_DOC)
