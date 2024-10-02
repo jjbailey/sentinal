@@ -51,7 +51,7 @@ Section names must be unique in the INI file.
     dirname:   thread and postcmd working directory, file location
     dirlimit:  maximum total size of matching files in a directory, SI or non-SI units, 0 = no max (off)
     subdirs:   option to search subdirectories for matching files (true)
-    pipename:  named pipe/fifo fifo location
+    pipename:  named pipe/fifo file, full path or relative to dirname
     template:  output file name, date(1) sequences %F %Y %m %d %H %M %S %s
     pcrestr:   perl-compatible regex naming files to manage
     uid:       username or uid for command/postcmd, default = nobody
