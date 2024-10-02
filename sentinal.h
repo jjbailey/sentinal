@@ -141,7 +141,7 @@ int     workcmd(int, char **, char **);
 off_t   logsize(char *);
 short   namematch(struct thread_info *, char *);
 short   pcrecompile(struct thread_info *);
-short   rmfile(struct thread_info *, char *, char *);
+short   rmfile(struct thread_info *, const char *, const char *);
 short   threadtype(struct thread_info *, char *);
 short   validdbname(char *);
 size_t  strlcat(char *, const char *, size_t);
