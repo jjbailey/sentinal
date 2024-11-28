@@ -8,7 +8,7 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"2.1.3"
+#define	VERSION_STRING	"2.1.4"
 
 #ifndef _SYS_TYPES_H
 # include <sys/types.h>
@@ -115,8 +115,8 @@ struct thread_info {
 	off_t   ti_rotatesiz;							/* logfile rotate size */
 	char   *ti_expirestr;							/* logfile expire size string */
 	off_t   ti_expiresiz;							/* logfile expire size */
-	long double ti_diskfree;						/* desired percent blocks free */
-	long double ti_inofree;							/* desired percent inodes free */
+	float   ti_diskfree;							/* desired percent blocks free */
+	float   ti_inofree;								/* desired percent inodes free */
 	int     ti_expire;								/* file expiration */
 	char   *ti_retminstr;							/* file retention minimum string */
 	int     ti_retmin;								/* file retention minimum */
