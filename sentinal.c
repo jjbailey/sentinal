@@ -168,12 +168,13 @@ int main(int argc, char *argv[])
 		exit(EXIT_SUCCESS);
 	}
 
-	/* for systemd */
+	/* create pid file, check for lock */
 
-	if(create_pid_file(pidfile) == false) {
-		fprintf(stderr, "%s: can't create pidfile or pidfile is in use\n", myname);
-		exit(EXIT_FAILURE);
-	}
+	if(create_pid_file(pidfile) == false)
+		if(dryrun == false) {
+			fprintf(stderr, "%s: can't create pidfile or pidfile is in use\n", myname);
+			exit(EXIT_FAILURE);
+		}
 
 	parentsignals();								/* important: signal handling */
 	rlimit(MAXFILES);								/* limit the number of open files */
