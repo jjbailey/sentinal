@@ -30,7 +30,7 @@ int postcmd(struct thread_info *ti, char *filename)
 	char    shellbuf[BUFSIZ];						/* shell env var */
 	char    tmplbuf[BUFSIZ];						/* env convenience */
 	char   *home;									/* from passwd file entry */
-	extern short dryrun;							/* dry run bool */
+	extern bool dryrun;								/* dry run flag */
 	int     i;
 	int     status;									/* postcmd child exit */
 	pid_t   pid;									/* postcmd pid */

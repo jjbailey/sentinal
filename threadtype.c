@@ -15,9 +15,9 @@
 
 #define	THRCHECK(ti,n)	threadtype(ti, n) ? "true" : "false"
 
-short threadtype(struct thread_info *ti, char *tname)
+bool threadtype(struct thread_info *ti, char *tname)
 {
-	short   pass = FALSE;
+	bool   pass = false;
 
 	if(strcmp(tname, _DFS_THR) == 0)				/* filesystem free space */
 		pass = ti->ti_pcrecmp && (ti->ti_diskfree || ti->ti_inofree);

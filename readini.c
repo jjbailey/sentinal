@@ -26,7 +26,7 @@
 #include "ini.h"
 
 static int parsecmd(char *, char **);
-static short setiniflag(ini_t *, char *, char *);
+static bool setiniflag(ini_t *, char *, char *);
 
 extern char database[PATH_MAX];						/* database file name */
 extern char *pidfile;								/* sentinal pid */
@@ -172,7 +172,7 @@ int readini(char *myname, char *inifile)
 		p = my_ini(inidata, ti->ti_section, "subdirs");
 
 		if(IS_NULL(p))
-			ti->ti_subdirs = TRUE;
+			ti->ti_subdirs = true;
 		else
 			ti->ti_subdirs = setiniflag(inidata, ti->ti_section, "subdirs");
 
@@ -256,12 +256,12 @@ int readini(char *myname, char *inifile)
 	return (nsect);
 }
 
-static short setiniflag(ini_t *ini, char *section, char *key)
+static bool setiniflag(ini_t *ini, char *section, char *key)
 {
 	char   *inip;
 
 	if(IS_NULL(inip = my_ini(ini, section, key)))
-		return (FALSE);
+		return (false);
 
 	return (strcmp(inip, "1") == 0 || strcasecmp(inip, "true") == 0);
 }

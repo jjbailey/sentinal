@@ -30,9 +30,9 @@
 /* subtract from avail for extra space, reduce flapping */
 #define	PADDING			(float)0.295
 
-static short getvfsstats(struct thread_info *, float *, float *);
+static bool getvfsstats(struct thread_info *, float *, float *);
 static void process_files(struct thread_info *, sqlite3 *);
-static void resreport(struct thread_info *, short, float, float);
+static void resreport(struct thread_info *, bool, float, float);
 
 static char *sql_selectfiles = "SELECT db_dir, db_file\n \
 	FROM  %s_dir, %s_file\n \
@@ -45,12 +45,12 @@ extern pthread_mutex_t dfslock;						/* thread lock */
 
 void   *dfsthread(void *arg)
 {
-	extern short dryrun;							/* dry run bool */
+	extern bool dryrun;								/* dry run flag */
 	extern sqlite3 *db;								/* db handle */
 	float   pc_bfree = 0;							/* blocks free */
 	float   pc_ffree = 0;							/* files free */
-	short   lowres = FALSE;							/* low resources bool */
-	short   runreport = TRUE;						/* for resreport */
+	bool    lowres = false;							/* low resources flag */
+	bool    runreport = true;						/* for resreport */
 	struct statvfs svbuf;							/* filesystem status */
 	struct thread_info *ti = arg;					/* thread settings */
 	uint32_t nextid = 1;							/* db_id, db_dirid */
@@ -120,20 +120,20 @@ void   *dfsthread(void *arg)
 	usleep((useconds_t) rand() & 0xffff);
 
 	for(;;) {
-		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == FALSE)
+		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == false)
 			return ((void *)0);
 
 		lowres = LOW_RES(ti->ti_diskfree, pc_bfree) || LOW_RES(ti->ti_inofree, pc_ffree);
 
 		if(lowres || runreport) {
 			resreport(ti, lowres, pc_bfree, pc_ffree);
-			runreport = FALSE;
+			runreport = false;
 		}
 
 		if(lowres) {
 			pthread_mutex_lock(&dfslock);
 
-			if(findfile(ti, TRUE, &nextid, ti->ti_dirname, db) > 0) {
+			if(findfile(ti, true, &nextid, ti->ti_dirname, db) > 0) {
 				/* process directories emptied by previous run */
 
 				if(ti->ti_rmdir)
@@ -142,7 +142,7 @@ void   *dfsthread(void *arg)
 				/* process matching files */
 
 				process_files(ti, db);
-				runreport = TRUE;
+				runreport = true;
 			}
 
 			pthread_mutex_unlock(&dfslock);
@@ -156,9 +156,9 @@ void   *dfsthread(void *arg)
 	return ((void *)0);
 }
 
-static void resreport(struct thread_info *ti, short lowres, float blk, float ino)
+static void resreport(struct thread_info *ti, bool lowres, float blk, float ino)
 {
-	if(lowres == FALSE) {							/* initial/recovery report */
+	if(lowres == false) {							/* initial/recovery report */
 		if(ti->ti_diskfree > 0)
 			fprintf(stderr, "%s: %s: %.2f%% blocks free\n",
 					ti->ti_section, ti->ti_dirname, blk);
@@ -185,7 +185,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	char    stmt[BUFSIZ];							/* statement buffer */
 	char   *db_dir;									/* sql data */
 	char   *db_file;								/* sql data */
-	extern short dryrun;							/* dry run bool */
+	extern bool dryrun;								/* dry run flag */
 	int     dfd;									/* dirname fd */
 	int     drcount = 0;							/* dryrun count */
 	float   pc_bfree = 0;							/* blocks free */
@@ -207,7 +207,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	for(;;) {
 		/* check if usage dropped before we got here */
 
-		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == FALSE)
+		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == false)
 			break;
 
 		/*
@@ -267,13 +267,13 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 
 #define	PERCENT(x,y)	(((double)x / (double)y) * 100.0)
 
-static short getvfsstats(struct thread_info *ti, float *blk, float *ino)
+static bool getvfsstats(struct thread_info *ti, float *blk, float *ino)
 {
 	struct statvfs svbuf;							/* filesystem status */
 
 	if(statvfs(ti->ti_mountdir, &svbuf) == -1) {
 		fprintf(stderr, "%s: cannot stat: %s\n", ti->ti_section, ti->ti_mountdir);
-		return (FALSE);
+		return (false);
 	}
 
 	if(ti->ti_diskfree > 0)
@@ -282,7 +282,7 @@ static short getvfsstats(struct thread_info *ti, float *blk, float *ino)
 	if(ti->ti_inofree > 0)
 		*ino = PERCENT(svbuf.f_favail, svbuf.f_files);
 
-	return (TRUE);
+	return (true);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

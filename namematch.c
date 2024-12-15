@@ -1,6 +1,6 @@
 /*
  * namematch.c
- * Return TRUE if this is a file we're watching.
+ * Return true if this is a file we're watching.
  *
  * Copyright (c) 2021-2024 jjb
  * All rights reserved.
@@ -13,14 +13,14 @@
 #include <string.h>
 #include "sentinal.h"
 
-short namematch(struct thread_info *ti, char *f)
+bool namematch(struct thread_info *ti, char *f)
 {
 	int     rc;
 	pcre2_match_data *mdata;
 	uint32_t options = 0;
 
 	if(IS_NULL(f) || *f == '.' || ti->ti_pcrecmp == NULL)
-		return (FALSE);
+		return (false);
 
 	mdata = pcre2_match_data_create_from_pattern(ti->ti_pcrecmp, NULL);
 

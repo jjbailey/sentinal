@@ -31,10 +31,10 @@ static struct option long_options[] = {
 	{ 0, 0, 0, 0 }
 };
 
-static short opt_dirs = FALSE;
-static short opt_files = FALSE;
-static short opt_names = FALSE;
-static short opt_xdev = TRUE;
+static bool opt_dirs = false;
+static bool opt_files = false;
+static bool opt_names = false;
+static bool opt_xdev = true;
 
 int main(int argc, char *argv[])
 {
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 	int     c;
 	int     index = 0;
 	struct thread_info ti;							/* so we can use pcrecompile.c */
-	uint32_t pcrefind(struct thread_info *, short, char *);
+	uint32_t pcrefind(struct thread_info *, bool, char *);
 
 	myname = base(argv[0]);
 
@@ -54,20 +54,20 @@ int main(int argc, char *argv[])
 
 		switch (c) {
 
-		case 'd':									/* list directorries */
-			opt_dirs = TRUE;
+		case 'd':									/* list directories */
+			opt_dirs = true;
 			break;
 
 		case 'f':									/* list files */
-			opt_files = TRUE;
+			opt_files = true;
 			break;
 
 		case 'n':									/* check basename, not full path */
-			opt_names = TRUE;
+			opt_names = true;
 			break;
 
 		case 'x':									/* don't descend directories on other filesystems */
-			opt_xdev = FALSE;
+			opt_xdev = false;
 			break;
 
 		case 'V':									/* print version */
@@ -104,28 +104,28 @@ int main(int argc, char *argv[])
 	/* find everything if not given specifics */
 
 	if(!(opt_dirs || opt_files))
-		opt_dirs = opt_files = TRUE;
+		opt_dirs = opt_files = true;
 
 	/* TODO: consider adding this as an option */
-	ti.ti_symlinks = FALSE;
+	ti.ti_symlinks = false;
 
-	if(pcrecompile(&ti) == FALSE)
+	if(pcrecompile(&ti) == false)
 		exit(EXIT_FAILURE);
 
 	while(optind < argc)
-		pcrefind(&ti, TRUE, argv[optind++]);
+		pcrefind(&ti, true, argv[optind++]);
 
 	exit(EXIT_SUCCESS);
 }
 
-uint32_t pcrefind(struct thread_info *ti, short top, char *dir)
+uint32_t pcrefind(struct thread_info *ti, bool top, char *dir)
 {
 	DIR    *dirp;
 	char    filename[PATH_MAX];						/* full pathname */
 	struct dirent *dp;
 	struct stat stbuf;								/* file status */
 	uint32_t entries = 0;							/* file entries */
-	short   pcrematch(struct thread_info *, char *);
+	bool   pcrematch(struct thread_info *, char *);
 
 	if(IS_NULL(dir))
 		return (0);
@@ -176,7 +176,7 @@ uint32_t pcrefind(struct thread_info *ti, short top, char *dir)
 
 		if(S_ISDIR(stbuf.st_mode)) {
 			if(stbuf.st_dev == ti->ti_dev || opt_xdev)
-				entries += pcrefind(ti, FALSE, filename);
+				entries += pcrefind(ti, false, filename);
 
 			continue;
 		}

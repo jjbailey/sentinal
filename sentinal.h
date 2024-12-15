@@ -10,6 +10,10 @@
 
 #define	VERSION_STRING	"2.1.4"
 
+#ifndef _STDBOOL_H
+# include <stdbool.h>
+#endif
+
 #ifndef _SYS_TYPES_H
 # include <sys/types.h>
 #endif
@@ -27,8 +31,6 @@
 # include <pcre2.h>
 #endif
 
-#define	TRUE		(short)1
-#define	FALSE		(short)0
 #define	MAXARGS		32
 #define	MAXSECT		16								/* arbitrary, can be more */
 
@@ -85,10 +87,10 @@ struct thread_info {
 	pthread_t exp_tid;								/* exp thread id */
 	pthread_t slm_tid;								/* slm thread id */
 	pthread_t wrk_tid;								/* wrk thread id */
-	short   dfs_active;								/* pthread_t is opaque */
-	short   exp_active;								/* pthread_t is opaque */
-	short   slm_active;								/* pthread_t is opaque */
-	short   wrk_active;								/* pthread_t is opaque */
+	bool    dfs_active;								/* pthread_t is opaque */
+	bool    exp_active;								/* pthread_t is opaque */
+	bool    slm_active;								/* pthread_t is opaque */
+	bool    wrk_active;								/* pthread_t is opaque */
 	char   *ti_task;								/* pthread_self */
 	char   *ti_section;								/* section name */
 	char   *ti_command;								/* thread command */
@@ -100,7 +102,7 @@ struct thread_info {
 	dev_t   ti_dev;									/* ID of device containing file */
 	char   *ti_dirlimstr;							/* directory size limit string */
 	off_t   ti_dirlimit;							/* directory size limit */
-	short   ti_subdirs;								/* subdirectory recursion flag */
+	bool    ti_subdirs;								/* subdirectory recursion flag */
 	char   *ti_pipename;							/* FIFO name */
 	char   *ti_template;							/* file template */
 	char   *ti_pcrestr;								/* pcre for file match */
@@ -122,11 +124,11 @@ struct thread_info {
 	int     ti_retmin;								/* file retention minimum */
 	char   *ti_retmaxstr;							/* file retention maximum string */
 	int     ti_retmax;								/* file retention maximum */
-	short   ti_terse;								/* notify file removal flag */
-	short   ti_rmdir;								/* remove empty dirs */
-	short   ti_symlinks;							/* follow symlinks */
+	bool    ti_terse;								/* notify file removal flag */
+	bool    ti_rmdir;								/* remove empty dirs */
+	bool    ti_symlinks;							/* follow symlinks */
 	char   *ti_postcmd;								/* command to run after log closes */
-	short   ti_truncate;							/* truncate slm-managed files */
+	bool    ti_truncate;							/* truncate slm-managed files */
 };
 
 char   *convexpire(int, char *);
@@ -139,15 +141,15 @@ int     logretention(char *);
 int     postcmd(struct thread_info *, char *);
 int     workcmd(int, char **, char **);
 off_t   logsize(char *);
-short   namematch(struct thread_info *, char *);
-short   pcrecompile(struct thread_info *);
-short   rmfile(struct thread_info *, const char *, const char *);
-short   threadtype(struct thread_info *, char *);
-short   validdbname(char *);
+bool    namematch(struct thread_info *, char *);
+bool    pcrecompile(struct thread_info *);
+bool    rmfile(struct thread_info *, const char *, const char *);
+bool    threadtype(struct thread_info *, char *);
+bool    validdbname(char *);
 size_t  strlcat(char *, const char *, size_t);
 size_t  strlcpy(char *, const char *, size_t);
 uid_t   verifyuid(char *);
-uint32_t findfile(struct thread_info *, short, uint32_t *, char *, sqlite3 *);
+uint32_t findfile(struct thread_info *, bool, uint32_t *, char *, sqlite3 *);
 void    activethreads(struct thread_info *);
 void    parentsignals(void);
 void    rlimit(int);
@@ -162,12 +164,12 @@ void   *workthread(void *);
 #define	SQLMEMDB	":memory:"						/* pure in-memory database */
 #define	QUERYLIM	100000							/* max return for dfs and exp */
 
-short   create_index(struct thread_info *, sqlite3 *);
-short   create_table(struct thread_info *, sqlite3 *);
-short   drop_table(struct thread_info *, sqlite3 *);
-short   journal_mode(struct thread_info *, sqlite3 *);
-short   sqlexec(struct thread_info *, sqlite3 *, char *, char *, ...);
-short   sync_commit(struct thread_info *, sqlite3 *);
+bool    create_index(struct thread_info *, sqlite3 *);
+bool    create_table(struct thread_info *, sqlite3 *);
+bool    drop_table(struct thread_info *, sqlite3 *);
+bool    journal_mode(struct thread_info *, sqlite3 *);
+bool    sqlexec(struct thread_info *, sqlite3 *, char *, char *, ...);
+bool    sync_commit(struct thread_info *, sqlite3 *);
 uint32_t count_dirs(struct thread_info *, sqlite3 *);
 uint32_t count_files(struct thread_info *, sqlite3 *);
 void    process_dirs(struct thread_info *, sqlite3 *);

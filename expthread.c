@@ -40,7 +40,7 @@ extern pthread_mutex_t explock;						/* thread lock */
 void   *expthread(void *arg)
 {
 	char    ebuf[BUFSIZ];							/* expire buffer */
-	extern short dryrun;							/* dry run bool */
+	extern bool dryrun;								/* dry run flag */
 	extern sqlite3 *db;								/* db handle */
 	struct thread_info *ti = arg;					/* thread settings */
 	uint32_t nextid = 1;							/* db_id, db_dirid */
@@ -89,7 +89,7 @@ void   *expthread(void *arg)
 	for(;;) {
 		pthread_mutex_lock(&explock);
 
-		if(findfile(ti, TRUE, &nextid, ti->ti_dirname, db) > 0) {
+		if(findfile(ti, true, &nextid, ti->ti_dirname, db) > 0) {
 			/* process directories emptied by previous run */
 
 			if(ti->ti_rmdir)
@@ -115,11 +115,11 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	char   *db_dir;									/* sql data */
 	char   *db_file;								/* sql data */
 	char   *reason;									/* why */
-	extern short dryrun;							/* dry run bool */
+	extern bool dryrun;								/* dry run flag */
 	int     dfd;									/* dirname fd */
 	int     drcount = 0;							/* dryrun count */
-	short   expbysize;								/* consider expire size */
-	short   expbytime;								/* consider expire time */
+	bool    expbysize;								/* consider expire size */
+	bool    expbytime;								/* consider expire time */
 	sqlite3_stmt *pstmt;							/* prepared statement */
 	struct stat stbuf;								/* file status */
 	time_t  curtime;								/* now */

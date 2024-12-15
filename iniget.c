@@ -11,16 +11,9 @@
  */
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include "ini.h"
-
-#ifndef TRUE
-# define	TRUE		(short)1
-#endif
-
-#ifndef	FALSE
-# define	FALSE		(short)0
-#endif
 
 #ifndef PATH_MAX
 # define	PATH_MAX	255
@@ -34,7 +27,7 @@
 # define	STREQ(s1,s2) (strcmp(s1, s2) == 0)
 #endif
 
-static short duplicate(int, char *, char **);
+static bool duplicate(int, char *, char **);
 
 char   *EmptyStr = "";								/* empty string for strndup, etc */
 
@@ -62,7 +55,7 @@ int get_sections(ini_t *inidata, int maxsect, char *sections[])
 
 	char   *p;
 	int     i = 0;
-	short   validdbname(char *);
+	bool   validdbname(char *);
 
 	for(p = inidata->data; p < inidata->end; p++)
 		if(*p == '[') {
@@ -75,7 +68,7 @@ int get_sections(ini_t *inidata, int maxsect, char *sections[])
 			if(STREQ(p + 1, "global"))				/* global is not a thread */
 				continue;
 
-			if(validdbname(p + 1) == FALSE)			/* for sqlite3 */
+			if(validdbname(p + 1) == false)			/* for sqlite3 */
 				continue;
 
 			if(duplicate(i, p + 1, sections))		/* section already exists */
@@ -90,15 +83,15 @@ int get_sections(ini_t *inidata, int maxsect, char *sections[])
 	return (i);
 }
 
-static short duplicate(int nsect, char *s, char *sections[])
+static bool duplicate(int nsect, char *s, char *sections[])
 {
 	int     i;
 
 	for(i = 0; i < nsect; i++)
 		if(STREQ(s, sections[i]))
-			return (TRUE);
+			return (true);
 
-	return (FALSE);
+	return (false);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

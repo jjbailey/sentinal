@@ -27,7 +27,7 @@
 #define	ROTATE(lim,n,sig)	((lim && n > lim) || sig == SIGHUP)
 #define	STAT(file,buf)		(stat(file, &buf) == -1 ? -1 : buf.st_size)
 
-static short inotify_watch(char *, char *);
+static bool inotify_watch(char *, char *);
 
 void   *slmthread(void *arg)
 {
@@ -73,7 +73,7 @@ void   *slmthread(void *arg)
 			ti->ti_sig = 0;							/* reset */
 		}
 
-		if(inotify_watch(ti->ti_section, filename) == FALSE)
+		if(inotify_watch(ti->ti_section, filename) == false)
 			sleep(SCANRATE);						/* in lieu of inotify */
 	}
 
@@ -81,7 +81,7 @@ void   *slmthread(void *arg)
 	return ((void *)0);
 }
 
-static short inotify_watch(char *section, char *filename)
+static bool inotify_watch(char *section, char *filename)
 {
 	char    buf[BUFSIZ];
 	int     fd;
@@ -90,11 +90,11 @@ static short inotify_watch(char *section, char *filename)
 	struct pollfd fds[1];
 
 	if(access(filename, R_OK) == -1 || (fd = inotify_init1(IN_NONBLOCK)) == -1)
-		return (FALSE);
+		return (false);
 
 	if((wd = inotify_add_watch(fd, filename, IN_MODIFY | IN_MOVE_SELF)) == -1) {
 		close(fd);
-		return (FALSE);
+		return (false);
 	}
 
 	fds[0].fd = fd;
@@ -112,7 +112,7 @@ static short inotify_watch(char *section, char *filename)
 
 	inotify_rm_watch(fd, wd);
 	close(fd);
-	return (TRUE);
+	return (true);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

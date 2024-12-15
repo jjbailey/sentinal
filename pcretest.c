@@ -22,9 +22,9 @@ int main(int argc, char *argv[])
 {
 	char   *myname;
 	int     i;
-	short   match;
+	bool   match;
 	struct thread_info ti;							/* so we can use pcrecompile.c */
-	short   pcrematch(struct thread_info *, char *);
+	bool   pcrematch(struct thread_info *, char *);
 
 	myname = base(argv[0]);
 
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 	ti.ti_pcrestr = argv[1];
 	ti.ti_terse = strcmp(myname, "pcretest");		/* decides what to print */
 
-	if(pcrecompile(&ti) == FALSE)
+	if(pcrecompile(&ti) == false)
 		exit(EXIT_FAILURE);
 
 	for(i = 2; i < argc; i++) {
