@@ -25,7 +25,7 @@ static char *sql_insertdir = "INSERT INTO %s_dir VALUES(%u, '%s', 0);";
 static char *sql_insertfile = "INSERT INTO %s_file VALUES(?, ?, ?, ?);";
 static char *sql_updatedir = "UPDATE %s_dir SET db_empty = 1 WHERE db_id = %d;";
 
-uint32_t findfile(struct thread_info *ti, short top, uint32_t *nextid,
+uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 				  char *dir, sqlite3 *db)
 {
 	DIR    *dirp;
@@ -46,16 +46,16 @@ uint32_t findfile(struct thread_info *ti, short top, uint32_t *nextid,
 			return (0);
 		}
 
-		if(drop_table(ti, db) == FALSE)
+		if(drop_table(ti, db) == false)
 			return (0);
 
-		if(create_table(ti, db) == FALSE)
+		if(create_table(ti, db) == false)
 			return (0);
 
-		if(journal_mode(ti, db) == FALSE)
+		if(journal_mode(ti, db) == false)
 			return (0);
 
-		if(sync_commit(ti, db) == FALSE)
+		if(sync_commit(ti, db) == false)
 			return (0);
 
 		ti->ti_dev = stbuf.st_dev;					/* save mountpoint device */
@@ -98,7 +98,7 @@ uint32_t findfile(struct thread_info *ti, short top, uint32_t *nextid,
 
 			if(ti->ti_subdirs) {
 				(*nextid)++;
-				entries += findfile(ti, FALSE, nextid, filename, db);
+				entries += findfile(ti, false, nextid, filename, db);
 			}
 
 			continue;

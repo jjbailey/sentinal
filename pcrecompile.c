@@ -13,7 +13,7 @@
 #include <string.h>
 #include "sentinal.h"
 
-short pcrecompile(struct thread_info *ti)
+bool pcrecompile(struct thread_info *ti)
 {
 	PCRE2_SIZE erroffset;
 	PCRE2_SIZE length = PCRE2_ZERO_TERMINATED;

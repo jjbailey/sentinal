@@ -14,7 +14,7 @@
 #include <string.h>
 #include "sentinal.h"
 
-short pcrematch(struct thread_info *ti, char *s)
+bool pcrematch(struct thread_info *ti, char *s)
 {
 	int     rc;
 	pcre2_match_data *mdata;
@@ -23,7 +23,7 @@ short pcrematch(struct thread_info *ti, char *s)
 	/* mostly copied from namematch.c */
 
 	if(IS_NULL(s) || ti->ti_pcrecmp == NULL)
-		return (FALSE);
+		return (false);
 
 	mdata = pcre2_match_data_create_from_pattern(ti->ti_pcrecmp, NULL);
 

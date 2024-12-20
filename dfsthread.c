@@ -22,9 +22,6 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-#define	FLOORF(v)		floorf(v * 100.0) / 100.0
-#define	PERCENT(x,y)	FLOORF(((long double)x / (long double)y) * 100.0)
-
 #define	SCANRATE        (ONE_MINUTE)
 #define	DRYSCAN         30							/* scanrate for dryrun */
 
@@ -33,9 +30,9 @@
 /* subtract from avail for extra space, reduce flapping */
 #define	PADDING			(float)0.295
 
-static short getvfsstats(struct thread_info *, long double *, long double *);
+static bool getvfsstats(struct thread_info *, float *, float *);
 static void process_files(struct thread_info *, sqlite3 *);
-static void resreport(struct thread_info *, short, long double, long double);
+static void resreport(struct thread_info *, bool, float, float);
 
 static char *sql_selectfiles = "SELECT db_dir, db_file\n \
 	FROM  %s_dir, %s_file\n \
@@ -48,12 +45,12 @@ extern pthread_mutex_t dfslock;						/* thread lock */
 
 void   *dfsthread(void *arg)
 {
-	extern short dryrun;							/* dry run bool */
+	extern bool dryrun;								/* dry run flag */
 	extern sqlite3 *db;								/* db handle */
-	long double pc_bfree = 0;						/* blocks free */
-	long double pc_ffree = 0;						/* files free */
-	short   lowres = FALSE;							/* low resources bool */
-	short   runreport = TRUE;						/* for resreport */
+	float   pc_bfree = 0;							/* blocks free */
+	float   pc_ffree = 0;							/* files free */
+	bool    lowres = false;							/* low resources flag */
+	bool    runreport = true;						/* for resreport */
 	struct statvfs svbuf;							/* filesystem status */
 	struct thread_info *ti = arg;					/* thread settings */
 	uint32_t nextid = 1;							/* db_id, db_dirid */
@@ -84,7 +81,7 @@ void   *dfsthread(void *arg)
 	}
 
 	if(ti->ti_diskfree > 0) {
-		fprintf(stderr, "%s: monitor disk: %s for %.2Lf%% free\n",
+		fprintf(stderr, "%s: monitor disk: %s for %.2f%% free\n",
 				ti->ti_section, ti->ti_mountdir, ti->ti_diskfree);
 
 		if(svbuf.f_blocks == 0) {
@@ -96,7 +93,7 @@ void   *dfsthread(void *arg)
 	}
 
 	if(ti->ti_inofree > 0) {
-		fprintf(stderr, "%s: monitor inode: %s for %.2Lf%% free\n",
+		fprintf(stderr, "%s: monitor inode: %s for %.2f%% free\n",
 				ti->ti_section, ti->ti_mountdir, ti->ti_inofree);
 
 		if(svbuf.f_files == 0) {
@@ -123,20 +120,20 @@ void   *dfsthread(void *arg)
 	usleep((useconds_t) rand() & 0xffff);
 
 	for(;;) {
-		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == FALSE)
+		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == false)
 			return ((void *)0);
 
 		lowres = LOW_RES(ti->ti_diskfree, pc_bfree) || LOW_RES(ti->ti_inofree, pc_ffree);
 
 		if(lowres || runreport) {
 			resreport(ti, lowres, pc_bfree, pc_ffree);
-			runreport = FALSE;
+			runreport = false;
 		}
 
 		if(lowres) {
 			pthread_mutex_lock(&dfslock);
 
-			if(findfile(ti, TRUE, &nextid, ti->ti_dirname, db) > 0) {
+			if(findfile(ti, true, &nextid, ti->ti_dirname, db) > 0) {
 				/* process directories emptied by previous run */
 
 				if(ti->ti_rmdir)
@@ -145,7 +142,7 @@ void   *dfsthread(void *arg)
 				/* process matching files */
 
 				process_files(ti, db);
-				runreport = TRUE;
+				runreport = true;
 			}
 
 			pthread_mutex_unlock(&dfslock);
@@ -159,24 +156,23 @@ void   *dfsthread(void *arg)
 	return ((void *)0);
 }
 
-static void resreport(struct thread_info *ti, short lowres,
-					  long double blk, long double ino)
+static void resreport(struct thread_info *ti, bool lowres, float blk, float ino)
 {
-	if(lowres == FALSE) {							/* initial/recovery report */
+	if(lowres == false) {							/* initial/recovery report */
 		if(ti->ti_diskfree > 0)
-			fprintf(stderr, "%s: %s: %.2Lf%% blocks free\n",
+			fprintf(stderr, "%s: %s: %.2f%% blocks free\n",
 					ti->ti_section, ti->ti_dirname, blk);
 
 		if(ti->ti_inofree > 0)
-			fprintf(stderr, "%s: %s: %.2Lf%% inodes free\n",
+			fprintf(stderr, "%s: %s: %.2f%% inodes free\n",
 					ti->ti_section, ti->ti_dirname, ino);
 	} else {										/* low resource report */
 		if(LOW_RES(ti->ti_diskfree, blk))
-			fprintf(stderr, "%s: low free blocks %s: %.2Lf%% < %.2Lf%%\n",
+			fprintf(stderr, "%s: low free blocks %s: %.2f%% < %.2f%%\n",
 					ti->ti_section, ti->ti_dirname, blk, ti->ti_diskfree);
 
 		if(LOW_RES(ti->ti_inofree, ino))
-			fprintf(stderr, "%s: low free inodes %s: %.2Lf%% < %.2Lf%%\n",
+			fprintf(stderr, "%s: low free inodes %s: %.2f%% < %.2f%%\n",
 					ti->ti_section, ti->ti_dirname, ino, ti->ti_inofree);
 	}
 
@@ -189,11 +185,11 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	char    stmt[BUFSIZ];							/* statement buffer */
 	char   *db_dir;									/* sql data */
 	char   *db_file;								/* sql data */
-	extern short dryrun;							/* dry run bool */
+	extern bool dryrun;								/* dry run flag */
 	int     dfd;									/* dirname fd */
 	int     drcount = 0;							/* dryrun count */
-	long double pc_bfree = 0;						/* blocks free */
-	long double pc_ffree = 0;						/* files free */
+	float   pc_bfree = 0;							/* blocks free */
+	float   pc_ffree = 0;							/* files free */
 	sqlite3_stmt *pstmt;							/* prepared statement */
 	uint32_t filecount;								/* matching files */
 	uint32_t removed = 0;							/* matching files removed */
@@ -211,7 +207,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	for(;;) {
 		/* check if usage dropped before we got here */
 
-		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == FALSE)
+		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == false)
 			break;
 
 		/*
@@ -269,13 +265,15 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 				removed, removed == 1 ? "file" : "files");
 }
 
-static short getvfsstats(struct thread_info *ti, long double *blk, long double *ino)
+#define	PERCENT(x,y)	(((double)x / (double)y) * 100.0)
+
+static bool getvfsstats(struct thread_info *ti, float *blk, float *ino)
 {
 	struct statvfs svbuf;							/* filesystem status */
 
 	if(statvfs(ti->ti_mountdir, &svbuf) == -1) {
 		fprintf(stderr, "%s: cannot stat: %s\n", ti->ti_section, ti->ti_mountdir);
-		return (FALSE);
+		return (false);
 	}
 
 	if(ti->ti_diskfree > 0)
@@ -284,7 +282,7 @@ static short getvfsstats(struct thread_info *ti, long double *blk, long double *
 	if(ti->ti_inofree > 0)
 		*ino = PERCENT(svbuf.f_favail, svbuf.f_files);
 
-	return (TRUE);
+	return (true);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

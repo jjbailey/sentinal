@@ -33,20 +33,20 @@
 #include "basename.h"
 #include "ini.h"
 
-static short create_pid_file(char *);
+static bool create_pid_file(char *);
 static void help(char *);
-static void threadwait(char *, pthread_t, short *, char *, short);
+static void threadwait(char *, pthread_t, bool *, char *, bool);
 
-static int debug = FALSE;
-static int split = FALSE;
-static int verbose = FALSE;
+static int debug = false;
+static int split = false;
+static int verbose = false;
 
 /* externals declared here */
 char    database[PATH_MAX];							/* database file name */
 char   *pidfile;									/* sentinal pid */
 char   *sections[MAXSECT];							/* section names */
 ini_t  *inidata;									/* loaded ini data */
-int     dryrun = FALSE;								/* dry run bool */
+int     dryrun = false;								/* dry run flag */
 pthread_mutex_t dfslock;							/* thread lock */
 pthread_mutex_t explock;							/* thread lock */
 sqlite3 *db;										/* db handle */
@@ -95,15 +95,15 @@ int main(int argc, char *argv[])
 		switch (c) {
 
 		case 'D':									/* dry run mode */
-			dryrun = TRUE;
+			dryrun = true;
 			break;
 
 		case 'd':									/* debug INI */
-			debug = TRUE;
+			debug = true;
 			break;
 
 		case 's':									/* debug INI and split */
-			split = TRUE;
+			split = true;
 			break;
 
 		case 'V':									/* print version */
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 			exit(EXIT_SUCCESS);
 
 		case 'v':									/* verbose debug */
-			verbose = TRUE;
+			verbose = true;
 			break;
 
 		case 'f':									/* INI file name */
@@ -132,10 +132,10 @@ int main(int argc, char *argv[])
 
 	/* convert long_options flags to bool */
 
-	debug = debug ? TRUE : FALSE;
-	dryrun = dryrun ? TRUE : FALSE;
-	split = split ? TRUE : FALSE;
-	verbose = verbose ? TRUE : FALSE;
+	debug = debug ? true : false;
+	dryrun = dryrun ? true : false;
+	split = split ? true : false;
+	verbose = verbose ? true : false;
 
 	/* check the INI file for unsafe permissions */
 
@@ -168,12 +168,13 @@ int main(int argc, char *argv[])
 		exit(EXIT_SUCCESS);
 	}
 
-	/* for systemd */
+	/* create pid file, check for lock */
 
-	if(create_pid_file(pidfile) == FALSE) {
-		fprintf(stderr, "%s: can't create pidfile or pidfile is in use\n", myname);
-		exit(EXIT_FAILURE);
-	}
+	if(create_pid_file(pidfile) == false)
+		if(dryrun == false) {
+			fprintf(stderr, "%s: can't create pidfile or pidfile is in use\n", myname);
+			exit(EXIT_FAILURE);
+		}
 
 	parentsignals();								/* important: signal handling */
 	rlimit(MAXFILES);								/* limit the number of open files */
@@ -270,26 +271,26 @@ int main(int argc, char *argv[])
 
 	for(i = 0; i < nsect; i++) {
 		ti = &tinfo[i];								/* shorthand */
-		threadwait(ti->ti_section, ti->dfs_tid, &ti->dfs_active, _DFS_THR, FALSE);
-		threadwait(ti->ti_section, ti->exp_tid, &ti->exp_active, _EXP_THR, FALSE);
-		threadwait(ti->ti_section, ti->slm_tid, &ti->slm_active, _SLM_THR, FALSE);
-		threadwait(ti->ti_section, ti->wrk_tid, &ti->wrk_active, _WRK_THR, FALSE);
+		threadwait(ti->ti_section, ti->dfs_tid, &ti->dfs_active, _DFS_THR, false);
+		threadwait(ti->ti_section, ti->exp_tid, &ti->exp_active, _EXP_THR, false);
+		threadwait(ti->ti_section, ti->slm_tid, &ti->slm_active, _SLM_THR, false);
+		threadwait(ti->ti_section, ti->wrk_tid, &ti->wrk_active, _WRK_THR, false);
 	}
 
 	/* wait for threads */
 
 	for(i = 0; i < nsect; i++) {
 		ti = &tinfo[i];								/* shorthand */
-		threadwait(ti->ti_section, ti->dfs_tid, &ti->dfs_active, _DFS_THR, TRUE);
-		threadwait(ti->ti_section, ti->exp_tid, &ti->exp_active, _EXP_THR, TRUE);
-		threadwait(ti->ti_section, ti->slm_tid, &ti->slm_active, _SLM_THR, TRUE);
-		threadwait(ti->ti_section, ti->wrk_tid, &ti->wrk_active, _WRK_THR, TRUE);
+		threadwait(ti->ti_section, ti->dfs_tid, &ti->dfs_active, _DFS_THR, true);
+		threadwait(ti->ti_section, ti->exp_tid, &ti->exp_active, _EXP_THR, true);
+		threadwait(ti->ti_section, ti->slm_tid, &ti->slm_active, _SLM_THR, true);
+		threadwait(ti->ti_section, ti->wrk_tid, &ti->wrk_active, _WRK_THR, true);
 	}
 
 	exit(EXIT_SUCCESS);
 }
 
-static short create_pid_file(char *pidfile)
+static bool create_pid_file(char *pidfile)
 {
 	FILE   *fp;
 
@@ -299,7 +300,7 @@ static short create_pid_file(char *pidfile)
 		fclose(fp);
 
 		if(locked == -1)							/* not my lock */
-			return (FALSE);
+			return (false);
 	}
 
 	if((fp = fopen(pidfile, "w"))) {
@@ -308,27 +309,27 @@ static short create_pid_file(char *pidfile)
 		rewind(fp);
 
 		if(lockf(fileno(fp), F_LOCK, (off_t) 0) == 0)
-			return (TRUE);
+			return (true);
 
 		fclose(fp);
 	}
 
-	return (FALSE);
+	return (false);
 }
 
 static void threadwait(char *section, pthread_t tid,
-					   short *active, char *tname, short block)
+					   bool *active, char *tname, bool block)
 {
 	int     ret;
 
-	if(*active == FALSE)
+	if(*active == false)
 		return;
 
 	ret = block ? pthread_join(tid, NULL) : pthread_tryjoin_np(tid, NULL);
 
 	if(ret == 0) {
 		fprintf(stderr, "%s: end %s thread\n", section, tname);
-		*active = FALSE;
+		*active = false;
 	}
 }
 

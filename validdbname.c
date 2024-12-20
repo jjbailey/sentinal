@@ -9,22 +9,23 @@
  * in the root directory of this source tree.
  */
 
+#include <stdbool.h>
 #include <ctype.h>
 
-#ifndef TRUE
-# define	TRUE		(short)1
+#ifndef true
+# define	true		(bool)1
 #endif
 
-#ifndef	FALSE
-# define	FALSE		(short)0
+#ifndef	false
+# define	false		(bool)0
 #endif
 
-short validdbname(char *str)
+bool validdbname(char *str)
 {
 	char   *p = str;
 
 	if(!isalpha(*p))
-		return (FALSE);
+		return (false);
 
 	while(*p) {
 		if(!(isalnum(*p) || *p == '_'))
@@ -33,7 +34,7 @@ short validdbname(char *str)
 		p++;
 	}
 
-	return (TRUE);
+	return (true);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

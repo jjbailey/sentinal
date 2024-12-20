@@ -107,12 +107,12 @@ void debug_verbose(struct thread_info *ti)
 	}
 
 	DPRINTSTR(stdout, "dirlimit  = %s\n", ti->ti_dirlimstr);
-	DPRINTNUM(stdout, "diskfree  = %.2Lf\n", ti->ti_diskfree);
+	DPRINTNUM(stdout, "diskfree  = %.2f\n", ti->ti_diskfree);
 	DPRINTSTR(stdout, "expiresiz = %s\n", ti->ti_expirestr);
 	DPRINTSTR(stdout, "expire    = %s\n", convexpire(ti->ti_expire, ebuf));
 	DPRINTNUM(stdout, "uid       = %d\n", ti->ti_uid);
 	DPRINTNUM(stdout, "gid       = %d\n", ti->ti_gid);
-	DPRINTNUM(stdout, "inofree   = %.2Lf\n", ti->ti_inofree);
+	DPRINTNUM(stdout, "inofree   = %.2f\n", ti->ti_inofree);
 	DPRINTSTR(stdout, "pcrestr   = %s\n", ti->ti_pcrestr);
 	DPRINTSTR(stdout, "pipename  = %s\n", ti->ti_pipename);
 	DPRINTNUM(stdout, "retmax    = %d\n", ti->ti_retmax);

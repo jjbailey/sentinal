@@ -2,7 +2,7 @@
  * workcmd.c
  * Create a command in zargv[] for execv().
  *
- * Copyright (c) 2021-2024 jjb 
+ * Copyright (c) 2021-2024 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found

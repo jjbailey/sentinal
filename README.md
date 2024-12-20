@@ -1,19 +1,19 @@
 # sentinal: Software for Logfile and Inode Management
 
 System and application processes can create many files and large files,
-possibly causing disk partitions to run out of space.  sentinal is a systemd
+possibly causing disk partitions to run out of space. sentinal is a systemd
 service for managing files and filesystems to comply with the directives in
-an INI configuration file.  Depending on the goals, sentinal can also act as
+an INI configuration file. Depending on the goals, sentinal can also act as
 an adjunct or an alternative to logrotate.
 
 Monitoring and management capabilities:
 
- - available filesystem disk space by percentage
- - available filesystem inode usage by percentage or count
- - expire files by size, age, or retention settings
- - inodes by age or retention settings
- - log ingestion, processing, and rotation
- - monitor and process log files when they reach a given size
+- available filesystem disk space by percentage
+- available filesystem inode usage by percentage or count
+- expire files by size, age, or retention settings
+- inodes by age or retention settings
+- log ingestion, processing, and rotation
+- monitor and process log files when they reach a given size
 
 ## Usage
 
@@ -28,14 +28,14 @@ Monitoring and management capabilities:
 
 ## Configuration
 
-sentinal uses INI files for its runtime configuration.  Each section in the
+sentinal uses INI files for its runtime configuration. Each section in the
 INI file pertains to one resource: a directory, possibly a file template,
 and the conditions for managing the resource.
 
 ### INI File Description
 
-An INI file must contain a section called `global`.  This section must include
-a pidfile definition and an optional sqlite3 database definition.  The database
+An INI file must contain a section called `global`. This section must include
+a pidfile definition and an optional sqlite3 database definition. The database
 name can be `:memory:`, or a pathname of a disk file.
 
 Section names can be up to 11 characters in length (kernel max), and the
@@ -70,77 +70,81 @@ Section names must be unique in the INI file.
     truncate:  option to truncate slm-managed files (false)
 
 Sizes in bytes or files may be given in SI units {K,M,G,T}i{B,F}, non-SI units {K,M,G,T}{B,F},
-or no units (literal value).  Examples,
-1KB = 1000 bytes, 1K or 1KiB = 1024 bytes.  1MF = 1000000 files, 1M or 1MiF = 1048576 files.
+or no units (literal value). Examples,
+1KB = 1000 bytes, 1K or 1KiB = 1024 bytes. 1MF = 1000000 files, 1M or 1MiF = 1048576 files.
 
-|<h4>Unit</h4>|<h4>Time</h4>|||<h4>Unit</h4>|<h4>Value (Base 2)</h4>|||<h4>Unit</h4>|<h4>Value (Base 10)</h4>|
-|:--|:--|:--|--|:--|:--|:--|:--|:--|:--|
-| m | minutes | | | KiB | 2^10 | | | KB | 10^3
-| H | hours   | | | Mib | 2^20 | | | MB | 10^6
-| D | days    | | | GiB | 2^30 | | | GB | 10^9
-| W | weeks   | | | TiB | 2^40 | | | TB | 10^12
-| M | months  | | | PiB | 2^50 | | | PB | 10^15
-| Y | years   | | | EiB | 2^60 | | | EB | 10^18
+| <h4>Unit</h4> | <h4>Time</h4> |     |     | <h4>Unit</h4> | <h4>Value (Base 2)</h4> |     |     | <h4>Unit</h4> | <h4>Value (Base 10)</h4> |
+| :------------ | :------------ | :-- | --- | :------------ | :---------------------- | :-- | :-- | :------------ | :----------------------- |
+| m             | minutes       |     |     | KiB           | 2^10                    |     |     | KB            | 10^3                     |
+| H             | hours         |     |     | Mib           | 2^20                    |     |     | MB            | 10^6                     |
+| D             | days          |     |     | GiB           | 2^30                    |     |     | GB            | 10^9                     |
+| W             | weeks         |     |     | TiB           | 2^40                    |     |     | TB            | 10^12                    |
+| M             | months        |     |     | PiB           | 2^50                    |     |     | PB            | 10^15                    |
+| Y             | years         |     |     | EiB           | 2^60                    |     |     | EB            | 10^18                    |
 
 ### Thread Requirements
 
-Threads need several keys defined in order for them to run.  Below are the
+Threads need several keys defined in order for them to run. Below are the
 thread types and their required keys:
 
 Diskfree (DFS) Thread
- - pcrestr
- - one or more of the following
-   - diskfree
-   - inofree
- - optional
-   - retmin
+
+- pcrestr
+- one or more of the following
+  - diskfree
+  - inofree
+- optional
+  - retmin
 
 Expire (EXP) Thread
- - pcrestr
- - one or more of the following
-   - dirlimit
-   - expire
-   - retmax
- - optional
-   - retmin
+
+- pcrestr
+- one or more of the following
+  - dirlimit
+  - expire
+  - retmax
+- optional
+  - retmin
 
 Simple log Monitor (SLM) Thread
- - command unset (null)
- - template
- - postcmd
- - rotatesiz
- - optional, likely required by use case
-   - uid
-   - gid
+
+- command unset (null)
+- template
+- postcmd
+- rotatesiz
+- optional, likely required by use case
+  - uid
+  - gid
 
 Work (log ingestion, WRK) Thread
- - command
- - pipename
- - template
- - optional, but recommended
-   - rotatesiz
- - optional
-   - postcmd
- - optional, likely required by use case
-   - uid
-   - gid
 
-Note the following conditions.  If:
+- command
+- pipename
+- template
+- optional, but recommended
+  - rotatesiz
+- optional
+  - postcmd
+- optional, likely required by use case
+  - uid
+  - gid
 
- - `command` is set, `template` must be set.
- - `rotatesiz` is set, rotate the file after it reaches the specified size.
- - `expiresiz` is set, remove files larger than the specified size at the expiration time.
- - `diskfree` is set, create a thread to discard the oldest files to free disk space.
- - `inofree` is set, create a thread to discard the oldest files to free inodes.
- - `expire` is set, remove files older than the expiration time.
- - `retmin` is set, retain `n` number of files, regardless of expiration or available disk space.
- - `retmax` is set, retain a maximum number of `n` files, regardless of expiration.
- - `postcmd` is specified, the value is passed as a command to `bash -c` after the file closes or rotates.  Optional.
+Note the following conditions. If:
+
+- `command` is set, `template` must be set.
+- `rotatesiz` is set, rotate the file after it reaches the specified size.
+- `expiresiz` is set, remove files larger than the specified size at the expiration time.
+- `diskfree` is set, create a thread to discard the oldest files to free disk space.
+- `inofree` is set, create a thread to discard the oldest files to free inodes.
+- `expire` is set, remove files older than the expiration time.
+- `retmin` is set, retain `n` number of files, regardless of expiration or available disk space.
+- `retmax` is set, retain a maximum number of `n` files, regardless of expiration.
+- `postcmd` is specified, the value is passed as a command to `bash -c` after the file closes or rotates. Optional.
 
 Precedence of Keys:
 
- - `retmin`, `retmax` take precedence over `dirlimit`, `diskfree`, `inofree`, `expire`.
- - `dirlimit`, `diskfree`, `inofree` take precedence over `expire`.
+- `retmin`, `retmax` take precedence over `dirlimit`, `diskfree`, `inofree`, `expire`.
+- `dirlimit`, `diskfree`, `inofree` take precedence over `expire`.
 
 ### Free Disk Space
 
@@ -176,11 +180,11 @@ Example: to monitor console logs in /opt/sentinal/log for 20% free disk space:
 sentinal can remove files when they meet one or more of the following constraints:
 retmin, retmax, expire, expiresiz, dirlimit.
 
-The combinations of `expire` and `expiresiz` settings affect expiration behavior.  If:
+The combinations of `expire` and `expiresiz` settings affect expiration behavior. If:
 
- - `expire` is set and `expiresiz` is unset, remove files older than the expiration time.
- - `expire` and `expiresiz` are set, remove files larger than `expiresiz` at the expiration time.
- - `expiresiz` is set and `expire` is unset, take no action.
+- `expire` is set and `expiresiz` is unset, remove files older than the expiration time.
+- `expire` and `expiresiz` are set, remove files larger than `expiresiz` at the expiration time.
+- `expiresiz` is set and `expire` is unset, take no action.
 
 ```mermaid
 flowchart TB
@@ -317,7 +321,7 @@ This example is the same as above, adding a 20% diskfree check for logs processe
 ### Logfile Ingestion and Processing
 
 sentinal can ingest and process logs, rotate them on demand or when they reach a specified size,
-and optionally post-process logs after rotation.  For logfile processing,
+and optionally post-process logs after rotation. For logfile processing,
 replace the application's logfile with a FIFO, and set sentinal to read from it.
 
 ```mermaid
@@ -362,7 +366,7 @@ intermediate files), and rotates the compressed log when it reaches 1GiB in size
 
 ### systemd unit file
 
-sentinal runs as a systemd service.  The following is an example of a unit file:
+sentinal runs as a systemd service. The following is an example of a unit file:
 
     [Unit]
     Description=Shim to zstd-compress logs
@@ -383,16 +387,16 @@ sentinal runs as a systemd service.  The following is an example of a unit file:
 
 ### User/Group ID Notes
 
- - User/Group ID applies only to `command` and `postcmd`; otherwise, sentinal runs
-as the calling user.
+- User/Group ID applies only to `command` and `postcmd`; otherwise, sentinal runs
+  as the calling user.
 
- - If an application never needs root privileges to run and process logs, consider
-setting and using the application's user and group IDs in the unit file.
+- If an application never needs root privileges to run and process logs, consider
+  setting and using the application's user and group IDs in the unit file.
 
- - Running sentinal as root is likely necessary when a single sentinal instance
-monitors several different applications.
+- Running sentinal as root is likely necessary when a single sentinal instance
+  monitors several different applications.
 
- - When unspecified, the user and group IDs are set to `nobody` and `nogroup`.
+- When unspecified, the user and group IDs are set to `nobody` and `nogroup`.
 
 ### Exported Environment Variables
 
@@ -452,8 +456,8 @@ to install an example as a starting point.
 
 ## Test INI Files
 
-sentinal provides two options for testing INI files.  `-d|--debug` prints INI
-file sections as parsed, where the output is similar to the input.  `-v|--verbose`
+sentinal provides two options for testing INI files. `-d|--debug` prints INI
+file sections as parsed, where the output is similar to the input. `-v|--verbose`
 prints INI file sections with the keys evaluated as they would be at run time,
 including symlink resolution and relative to full pathname conversion.
 
@@ -480,29 +484,28 @@ Examples of on-demand log rotation:
 
 ## Notes
 
- - Linux processes writing to pipes block when processes are not reading from them.
-systemd manages sentinal to ensure sentinal is always running.  See README.fifo for additional
-information about FIFO behavior.
+- Linux processes writing to pipes block when processes are not reading from them.
+  systemd manages sentinal to ensure sentinal is always running. See README.fifo for additional
+  information about FIFO behavior.
 
- - The default pipe size in Linux is either 64KB or 1MB. sentinal increases its pipe sizes on
-3.x.x and newer kernels to 64MiB.  Consider this a tuning parameter that can affect performance.
+- The default pipe size in Linux is either 64KB or 1MB. sentinal increases its pipe sizes on
+  3.x.x and newer kernels to 64MiB. Consider this a tuning parameter that can affect performance.
 
- - In the inline compression example, zstd can be changed to a different program, e.g.,
-gzip or (p)bzip2, though they are slower and may impact the performance of the writer application.
+- In the inline compression example, zstd can be changed to a different program, e.g.,
+  gzip or (p)bzip2, though they are slower and may impact the performance of the writer application.
 
- - For inode management, sentinal counts inodes in `dirname`, not inodes in the filesystem.
+- For inode management, sentinal counts inodes in `dirname`, not inodes in the filesystem.
 
- - sentinal reports free space for unprivileged users, which may be less than privileged
-users' values reported by disk utility programs.
+- sentinal reports free space for unprivileged users, which may be less than privileged
+  users' values reported by disk utility programs.
 
- - The `rotatesiz` key represents bytes written to disk.  When `command` is a
-compression program, log rotation occurs after sentinal writes `rotatesiz` bytes
-post-compression.  If `rotatesiz` is unset or zero, the thread requires manual
-or cron-based log rotation.
+- The `rotatesiz` key represents bytes written to disk. When `command` is a
+  compression program, log rotation occurs after sentinal writes `rotatesiz` bytes
+  post-compression. If `rotatesiz` is unset or zero, the thread requires manual
+  or cron-based log rotation.
 
- - sentinal removes empty directories within `dirname` when `rmdir` is true.
-To preserve a single directory, create a file in the directory with a file name
-that does not match `pcrestr`, for example, `.persist`.
+- sentinal removes empty directories within `dirname` when `rmdir` is true.
+  To preserve a single directory, create a file in the directory with a file name
+  that does not match `pcrestr`, for example, `.persist`.
 
- - sentinal does not descend into directories in other filesystems, similar to `find dir -xdev`.
-
+- sentinal does not descend into directories in other filesystems, similar to `find dir -xdev`.

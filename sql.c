@@ -17,7 +17,7 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-short sqlexec(struct thread_info *ti, sqlite3 *db, char *desc, char *format, ...)
+bool sqlexec(struct thread_info *ti, sqlite3 *db, char *desc, char *format, ...)
 {
 	char    stmt[BUFSIZ];							/* statement buffer */
 	int     tries;									/* lock retries */
@@ -32,7 +32,7 @@ short sqlexec(struct thread_info *ti, sqlite3 *db, char *desc, char *format, ...
 
 		case SQLITE_OK:								/* no error */
 		case SQLITE_ABORT:							/* ignore */
-			return (TRUE);
+			return (true);
 
 		case SQLITE_LOCKED:							/* retry */
 			usleep((useconds_t) 100000);
@@ -46,10 +46,10 @@ short sqlexec(struct thread_info *ti, sqlite3 *db, char *desc, char *format, ...
 	fprintf(stderr, "%s: sqlite3_exec: %s: %s\n",
 			ti->ti_section, desc, sqlite3_errmsg(db));
 
-	return (FALSE);
+	return (false);
 }
 
-short drop_table(struct thread_info *ti, sqlite3 *db)
+bool drop_table(struct thread_info *ti, sqlite3 *db)
 {
 	/* drop the directory table */
 	char   *sql_dir = "DROP TABLE IF EXISTS %s_dir;";
@@ -57,16 +57,16 @@ short drop_table(struct thread_info *ti, sqlite3 *db)
 	/* drop the file table */
 	char   *sql_file = "DROP TABLE IF EXISTS %s_file;";
 
-	if(sqlexec(ti, db, "drop table", sql_dir, ti->ti_task) == FALSE)
-		return (FALSE);
+	if(sqlexec(ti, db, "drop table", sql_dir, ti->ti_task) == false)
+		return (false);
 
-	if(sqlexec(ti, db, "drop table", sql_file, ti->ti_task) == FALSE)
-		return (FALSE);
+	if(sqlexec(ti, db, "drop table", sql_file, ti->ti_task) == false)
+		return (false);
 
-	return (TRUE);
+	return (true);
 }
 
-short create_table(struct thread_info *ti, sqlite3 *db)
+bool create_table(struct thread_info *ti, sqlite3 *db)
 {
 	/* VARCHAR -- see sqlite3 faq #9 */
 
@@ -81,16 +81,16 @@ short create_table(struct thread_info *ti, sqlite3 *db)
 		db_time   INT NOT NULL,\n \
 		db_size   UNSIGNED BIG INT NOT NULL);";
 
-	if(sqlexec(ti, db, "create table", sql_dir, ti->ti_task) == FALSE)
-		return (FALSE);
+	if(sqlexec(ti, db, "create table", sql_dir, ti->ti_task) == false)
+		return (false);
 
-	if(sqlexec(ti, db, "create table", sql_file, ti->ti_task) == FALSE)
-		return (FALSE);
+	if(sqlexec(ti, db, "create table", sql_file, ti->ti_task) == false)
+		return (false);
 
-	return (TRUE);
+	return (true);
 }
 
-short create_index(struct thread_info *ti, sqlite3 *db)
+bool create_index(struct thread_info *ti, sqlite3 *db)
 {
 	/* create an index on the directory table */
 	char   *sql_dir = "CREATE INDEX IF NOT EXISTS idx_%s_dir ON %s_dir (db_id);";
@@ -98,33 +98,33 @@ short create_index(struct thread_info *ti, sqlite3 *db)
 	/* create an index on the file table */
 	char   *sql_file = "CREATE INDEX IF NOT EXISTS idx_%s_file ON %s_file (db_time);";
 
-	if(sqlexec(ti, db, "create index", sql_dir, ti->ti_task, ti->ti_task) == FALSE)
-		return (FALSE);
+	if(sqlexec(ti, db, "create index", sql_dir, ti->ti_task, ti->ti_task) == false)
+		return (false);
 
-	if(sqlexec(ti, db, "create index", sql_file, ti->ti_task, ti->ti_task) == FALSE)
-		return (FALSE);
+	if(sqlexec(ti, db, "create index", sql_file, ti->ti_task, ti->ti_task) == false)
+		return (false);
 
-	return (TRUE);
+	return (true);
 }
 
-short journal_mode(struct thread_info *ti, sqlite3 *db)
+bool journal_mode(struct thread_info *ti, sqlite3 *db)
 {
 	char   *sql_journal = "PRAGMA journal_mode = OFF;";
 
-	if(sqlexec(ti, db, "disable journal", sql_journal) == FALSE)
-		return (FALSE);
+	if(sqlexec(ti, db, "disable journal", sql_journal) == false)
+		return (false);
 
-	return (TRUE);
+	return (true);
 }
 
-short sync_commit(struct thread_info *ti, sqlite3 *db)
+bool sync_commit(struct thread_info *ti, sqlite3 *db)
 {
 	char   *sql_sync = "PRAGMA synchronous = NORMAL;";
 
-	if(sqlexec(ti, db, "synchronous commit", sql_sync) == FALSE)
-		return (FALSE);
+	if(sqlexec(ti, db, "synchronous commit", sql_sync) == false)
+		return (false);
 
-	return (TRUE);
+	return (true);
 }
 
 uint32_t count_dirs(struct thread_info *ti, sqlite3 *db)
@@ -168,7 +168,7 @@ void process_dirs(struct thread_info *ti, sqlite3 *db)
 	char    filename[PATH_MAX];						/* full pathname */
 	char    stmt[BUFSIZ];							/* statement buffer */
 	char   *db_dir;									/* sql data */
-	extern short dryrun;							/* dry run bool */
+	extern bool dryrun;								/* dry run flag */
 	int     drcount = 0;							/* dryrun count */
 	sqlite3_stmt *pstmt;							/* prepared statement */
 	uint32_t removed = 0;							/* directories removed */

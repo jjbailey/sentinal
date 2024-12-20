@@ -15,23 +15,23 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-short rmfile(struct thread_info *ti, const char *obj, const char *remark)
+bool rmfile(struct thread_info *ti, const char *obj, const char *remark)
 {
 	char    errbuf[BUFSIZ];
-	extern short dryrun;
+	extern bool dryrun;
 
 	if(!dryrun && remove(obj) != 0) {
 		if(strerror_r(errno, errbuf, sizeof(errbuf)) == 0) {
 			fprintf(stderr, "%s: error %s %s: %s\n", ti->ti_section, remark, obj, errbuf);
 			sleep(1);
-			return (FALSE);
+			return (false);
 		}
 	}
 
 	if(!ti->ti_terse)
 		fprintf(stderr, "%s: %s %s\n", ti->ti_section, remark, obj);
 
-	return (TRUE);
+	return (true);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

@@ -269,7 +269,7 @@ static int fifoopen(struct thread_info *ti)
 	int     fd;
 	int     status;
 	pid_t   pid;
-	short   pflag = FALSE;
+	bool   pflag = false;
 	struct stat stbuf;								/* file status */
 
 	/* create a FIFO. note: this permits symlinks to FIFOs */
@@ -282,7 +282,7 @@ static int fifoopen(struct thread_info *ti)
 			return (-1);
 		}
 	} else
-		pflag = TRUE;
+		pflag = true;
 
 	if(pflag) {										/* need a FIFO */
 		/* fork to set ids */
