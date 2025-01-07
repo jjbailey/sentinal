@@ -1,7 +1,7 @@
 /*
  * sentinal.h
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -133,7 +133,7 @@ struct thread_info {
 
 char   *convexpire(int, char *);
 char   *findmnt(char *, char *);
-char   *fullpath(char *, char *, char *);
+char   *fullpath(const char *, const char *, char *);
 char   *logname(char *, char *);
 char   *threadname(struct thread_info *, char *);
 gid_t   verifygid(char *);

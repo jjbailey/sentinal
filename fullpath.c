@@ -2,7 +2,7 @@
  * fullpath.c
  * Return the full path of a file.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include "sentinal.h"
 
-char   *fullpath(char *dir, char *file, char *path)
+char   *fullpath(const char *dir, const char *file, char *path)
 {
 	if(NOT_NULL(dir) && NOT_NULL(file)) {
 		if(*file == '/')
