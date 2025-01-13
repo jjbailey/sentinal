@@ -3,7 +3,7 @@
  * Functions to read INI files.
  * Wrapper for rxi ini_get() along with a couple of utility functions.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -55,7 +55,7 @@ int get_sections(ini_t *inidata, int maxsect, char *sections[])
 
 	char   *p;
 	int     i = 0;
-	bool   validdbname(char *);
+	bool    validdbname(char *);
 
 	for(p = inidata->data; p < inidata->end; p++)
 		if(*p == '[') {
