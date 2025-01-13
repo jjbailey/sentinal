@@ -2,7 +2,7 @@
  * workthread.c
  * Execute command, read input from a FIFO, write output to a logfile.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -99,7 +99,7 @@ void   *workthread(void *arg)
 		fprintf(stderr, "%s: ", ti->ti_section);
 		for(i = 0; zargv[i]; i++)
 			fprintf(stderr, "%s ", zargv[i]);
-		fprintf(stderr, "> %s\n", ti->ti_filename);	/* show redirect */
+		fprintf(stderr, "> %s\n", filename);		/* show redirect */
 
 		/* get going */
 
@@ -269,7 +269,7 @@ static int fifoopen(struct thread_info *ti)
 	int     fd;
 	int     status;
 	pid_t   pid;
-	bool   pflag = false;
+	bool    pflag = false;
 	struct stat stbuf;								/* file status */
 
 	/* create a FIFO. note: this permits symlinks to FIFOs */
