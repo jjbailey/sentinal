@@ -33,7 +33,7 @@ SQLITE_EXTENSION_INIT1 typedef struct {
 # define CACHE_SIZE 16
 #endif
 
-static void regexp(sqlite3_context * ctx, int argc, sqlite3_value ** argv)
+static void regexp(sqlite3_context *ctx, int argc, sqlite3_value **argv)
 {
 	const unsigned char *pattern_str, *subject_str;
 	int     pattern_len, subject_len;
@@ -153,7 +153,7 @@ static void regexp(sqlite3_context * ctx, int argc, sqlite3_value ** argv)
 	}
 }
 
-int sqlite3_extension_init(sqlite3 *db, char **err, const sqlite3_api_routines * api)
+int sqlite3_extension_init(sqlite3 *db, char **err, const sqlite3_api_routines *api)
 {
 	SQLITE_EXTENSION_INIT2(api)
 	cache_entry *cache = calloc(CACHE_SIZE, sizeof(cache_entry));
