@@ -2,7 +2,7 @@
  * slmthread.c
  * Simple log monitor thread.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -83,10 +83,9 @@ void   *slmthread(void *arg)
 
 static bool inotify_watch(char *section, char *filename)
 {
-	char    buf[BUFSIZ];
+	char    buf[BUFSIZ] __attribute__((aligned(__alignof__(struct inotify_event))));
 	int     fd;
 	int     wd;
-	struct inotify_event *event;
 	struct pollfd fds[1];
 
 	if(access(filename, R_OK) == -1 || (fd = inotify_init1(IN_NONBLOCK)) == -1)
@@ -104,7 +103,7 @@ static bool inotify_watch(char *section, char *filename)
 
 	if(poll(fds, 1, POLLTIMEOUT) > 0)
 		if(read(fd, buf, BUFSIZ) > 0) {
-			event = (struct inotify_event *)buf;
+			struct inotify_event *event = (struct inotify_event *)buf;
 
 			if(event->mask & IN_MOVE_SELF)
 				fprintf(stderr, "%s: %s moved\n", section, filename);
