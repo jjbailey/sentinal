@@ -2,7 +2,7 @@
  * pcrefind.c
  * Program to find files matching Perl-compatible regular expressions.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -125,7 +125,7 @@ uint32_t pcrefind(struct thread_info *ti, bool top, char *dir)
 	struct dirent *dp;
 	struct stat stbuf;								/* file status */
 	uint32_t entries = 0;							/* file entries */
-	bool   pcrematch(struct thread_info *, char *);
+	bool    pcrematch(struct thread_info *, char *);
 
 	if(IS_NULL(dir))
 		return (0);

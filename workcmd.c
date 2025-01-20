@@ -2,7 +2,7 @@
  * workcmd.c
  * Create a command in zargv[] for execv().
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -13,23 +13,20 @@
 #include "sentinal.h"
 #include "basename.h"
 
-static char *compprogs[] = {
-	"bzip2",
-	"gzip",
-	"lzip",
-	"pbzip2",
-	"pigz",
-	"pzstd",
-	"xz",
-	"zstd"
-};
-
-static int ncprogs = (sizeof(compprogs) / sizeof(compprogs[0]));
-
 int workcmd(int argc, char *argv[], char *zargv[])
 {
+	static const char *compprogs[] = {
+		"bzip2", "gzip", "lzip", "pbzip2",
+		"pigz", "pzstd", "xz", "zstd"
+	};
+
+	static const int ncprogs = sizeof(compprogs) / sizeof(compprogs[0]);
+
 	int     i;
 	int     n = 0;
+
+	if(argc < 1 || !argv || !zargv)
+		return (0);
 
 	zargv[n++] = base(argv[0]);
 
@@ -43,9 +40,12 @@ int workcmd(int argc, char *argv[], char *zargv[])
 
 	/* copy the remaining command line options from the INI file */
 
-	for(i = 1; i < argc; i++)
+	for(i = 1; i < argc; i++) {
 		if(n < (MAXARGS - 1))
 			zargv[n++] = argv[i];
+		else
+			break;
+	}
 
 	zargv[n] = NULL;
 	return (n);

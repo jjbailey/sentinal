@@ -1,14 +1,14 @@
 /*
  * sentinal.h
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"2.1.4"
+#define	VERSION_STRING	"2.1.5"
 
 #ifndef _STDBOOL_H
 # include <stdbool.h>
@@ -131,32 +131,32 @@ struct thread_info {
 	bool    ti_truncate;							/* truncate slm-managed files */
 };
 
-char   *convexpire(int, char *);
-char   *findmnt(char *, char *);
-char   *fullpath(char *, char *, char *);
-char   *logname(char *, char *);
-char   *threadname(struct thread_info *, char *);
-gid_t   verifygid(char *);
-int     logretention(char *);
-int     postcmd(struct thread_info *, char *);
-int     workcmd(int, char **, char **);
-off_t   logsize(char *);
 bool    namematch(struct thread_info *, char *);
 bool    pcrecompile(struct thread_info *);
 bool    rmfile(struct thread_info *, const char *, const char *);
 bool    threadtype(struct thread_info *, char *);
 bool    validdbname(char *);
+char   *convexpire(int, char *);
+char   *findmnt(char *, char *);
+char   *fullpath(const char *, const char *, char *);
+char   *logname(char *, char *);
+char   *threadname(struct thread_info *, char *);
+gid_t   verifygid(const char *);
+int     logretention(char *);
+int     postcmd(struct thread_info *, char *);
+int     workcmd(int, char **, char **);
+off_t   logsize(char *);
 size_t  strlcat(char *, const char *, size_t);
 size_t  strlcpy(char *, const char *, size_t);
-uid_t   verifyuid(char *);
+uid_t   verifyuid(const char *);
 uint32_t findfile(struct thread_info *, bool, uint32_t *, char *, sqlite3 *);
 void    activethreads(struct thread_info *);
-void    parentsignals(void);
-void    rlimit(int);
-void    strreplace(char *, const char *, const char *, size_t);
 void   *dfsthread(void *);
 void   *expthread(void *);
+void    parentsignals(void);
+void    rlimit(int);
 void   *slmthread(void *);
+void    strreplace(char *, const char *, const char *, size_t);
 void   *workthread(void *);
 
 /* sqlite */

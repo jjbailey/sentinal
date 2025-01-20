@@ -70,11 +70,14 @@ SEN_ETC=	$(SEN_HOME)/etc
 SEN_DOC=	$(SEN_HOME)/doc
 PCRE_DIR=	/usr/lib/sqlite3
 
-# CC=			clang-18
-
 CC=			gcc
 WARNINGS=	-Wno-unused-result -Wunused-variable -Wunused-but-set-variable
 CFLAGS=		-O2 -fstack-protector-strong -pthread $(WARNINGS)
+
+# clang version 18.1.3
+# -O causes segfault in stdio-common/vfprintf-process-arg.c
+# CC=			clang-18
+# CFLAGS=		-fstack-protector-strong -pthread $(WARNINGS)
 
 PCRELIB=	-lpcre2-8
 

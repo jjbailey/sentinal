@@ -2,7 +2,7 @@
  * strlcat.c
  * Concatenate two strings, return the length of the new string.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -14,7 +14,9 @@
 
 size_t strlcat(char *dst, const char *src, size_t size)
 {
-	strncpy(dst + strlen(dst), src, size);			/* strncpy */
+	const size_t dlen = strlen(dst);
+
+	strncpy(dst + dlen, src, size - dlen);
 	dst[size - 1] = '\0';
 	return (strlen(dst));
 }

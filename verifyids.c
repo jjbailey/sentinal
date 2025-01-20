@@ -2,7 +2,7 @@
  * verifyids.c
  * Verify user and group ids.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -19,7 +19,7 @@
 #define	NOBODY	((uid_t) 65534)
 #define	NOGROUP	((gid_t) 65534)
 
-uid_t verifyuid(char *id)
+uid_t verifyuid(const char *id)
 {
 	struct passwd *p;
 	uid_t   myuid;
@@ -47,7 +47,7 @@ uid_t verifyuid(char *id)
 	return (uid);
 }
 
-gid_t verifygid(char *id)
+gid_t verifygid(const char *id)
 {
 	struct group *p;
 	gid_t   mygid;

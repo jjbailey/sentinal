@@ -11,45 +11,52 @@ pidfile   = /tmp/example.pid
 database  = :memory:
 
 [dfs_example]
-# required
+# dirname is required
 dirname   = /path/to/dir
+diskfree  = 10.00
+expire    = 0m
+inofree   = 10.00
 pcrestr   = pcre
-diskfree  = 10
-inofree   = 10
-# optional
+# optional, recommended
 retmin    = 1K
+# threads   dfs: true   exp: false   slm: false   wrk: false
 
 [exp_example]
-# required
+# dirname is required
 dirname   = /path/to/dir
-pcrestr   = pcre
-# at least one of the following is required
+# at least one of the following three is required
 dirlimit  = 100M
 expire    = 1W
 retmax    = 1M
-# optional
+pcrestr   = pcre
+# optional, recommended
 retmin    = 1K
+# threads   dfs: false   exp: true   slm: false   wrk: false
 
 [slm_example]
 # command must be unset
 dirname   = /path/to/dir
-template  = file
+expire    = 0m
 rotatesiz = 1024M
+template  = file
 postcmd   = command
 # optional, likely required by use case
 uid       = user
 gid       = group
+# threads   dfs: false   exp: false   slm: true   wrk: false
 
 [wrk_example]
-# required
-command   = /path/to/command
+# dirname is required
 dirname   = /path/to/dir
+command   = /path/to/command
+expire    = 0m
 pipename  = /path/to/pipe
-template  = template
 # optional, recommended
 rotatesiz = 1024M
+template  = template
 # optional
 postcmd   = command
 # optional, likely required by use case
 uid       = user
 gid       = group
+# threads   dfs: false   exp: false   slm: false   wrk: true

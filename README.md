@@ -172,8 +172,8 @@ Example: to monitor console logs in /opt/sentinal/log for 20% free disk space:
 
     [console]
     dirname   = /opt/sentinal/log
-    pcrestr   = console
     diskfree  = 20
+    pcrestr   = console
 
 ### File Expiration
 
@@ -221,9 +221,9 @@ This INI configuration removes gzipped files in /var/log and its subdirectories 
 
     [zipped]
     dirname   = /var/log
-    subdirs   = true
-    pcrestr   = \.gz
     expire    = 2w
+    pcrestr   = \.gz
+    subdirs   = true
 
 Expiration example:
 This INI uses two threads to remove compressed files in /sandbox.
@@ -237,17 +237,17 @@ logging the removals.
 
     [sandbox2M]
     dirname   = /sandbox
-    subdirs   = true
-    pcrestr   = \.(bz2|gz|lz|zip|zst)
     expire    = 2M
+    pcrestr   = \.(bz2|gz|lz|zip|zst)
+    subdirs   = true
 
     [sandbox1M]
     dirname   = /sandbox
-    subdirs   = true
-    pcrestr   = \.(bz2|gz|lz|zip|zst)
-    rotatesiz = 10G
     expiresiz = 10G
     expire    = 1M
+    pcrestr   = \.(bz2|gz|lz|zip|zst)
+    rotatesiz = 10G
+    subdirs   = true
     terse     = false
 
 Directory usage example:
@@ -296,11 +296,11 @@ In this example, sentinal runs logrotate on chattyapp.log when the log exceeds 5
 
     [chattyapp]
     dirname   = /var/log
-    template  = chattyapp.log
     uid       = root
     gid       = root
-    rotatesiz = 50M
     postcmd   = /usr/sbin/logrotate -f /opt/sentinal/etc/chattyapp.conf
+    rotatesiz = 50M
+    template  = chattyapp.log
 
 This example is the same as above, adding a 20% diskfree check for logs processed by logrotate:
 
@@ -310,13 +310,13 @@ This example is the same as above, adding a 20% diskfree check for logs processe
 
     [chattyapp]
     dirname   = /var/log
-    template  = chattyapp.log
-    pcrestr   = chattyapp\.log\.\d
+    diskfree  = 20
     uid       = root
     gid       = root
-    rotatesiz = 50M
-    diskfree  = 20
+    pcrestr   = chattyapp\.log\.\d
     postcmd   = /usr/sbin/logrotate -f /opt/sentinal/etc/chattyapp.conf
+    rotatesiz = 50M
+    template  = chattyapp.log
 
 ### Logfile Ingestion and Processing
 
@@ -341,28 +341,28 @@ For example, this configuration connects the dd program to example.log for log i
 and rotates and compresses the log when it reaches 5GiB in size:
 
     [example]
-    command   = /bin/dd bs=64K status=none
     dirname   = /var/log
-    pipename  = example.log
-    template  = example-%Y-%m-%d_%H-%M-%S.log
-    pcrestr   = example-
+    command   = /bin/dd bs=64K status=none
     uid       = appowner
     gid       = appgroup
+    pcrestr   = example-
+    pipename  = example.log
+    postcmd   = /usr/bin/zstd --rm %file 2>/dev/nul
     rotatesiz = 5G
-    postcmd   = /usr/bin/zstd --rm %file 2>/dev/null
+    template  = example-%Y-%m-%d_%H-%M-%S.log
 
 This example does basically the same as above, but with inline compression (no
 intermediate files), and rotates the compressed log when it reaches 1GiB in size:
 
     [example]
-    command   = /usr/bin/zstd
     dirname   = /var/log
-    pipename  = example.log
-    template  = example-%Y-%m-%d_%H-%M-%S.log.zst
-    pcrestr   = example-
+    command   = /usr/bin/zstd
     uid       = appowner
     gid       = appgroup
+    pcrestr   = example-
+    pipename  = example.log
     rotatesiz = 1G
+    template  = example-%Y-%m-%d_%H-%M-%S.log.zst
 
 ### systemd unit file
 

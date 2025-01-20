@@ -2,7 +2,7 @@
  * threadtype.c
  * Considering the config data given, test if threads should run.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -17,7 +17,7 @@
 
 bool threadtype(struct thread_info *ti, char *tname)
 {
-	bool   pass = false;
+	bool    pass = false;
 
 	if(strcmp(tname, _DFS_THR) == 0)				/* filesystem free space */
 		pass = ti->ti_pcrecmp && (ti->ti_diskfree || ti->ti_inofree);
