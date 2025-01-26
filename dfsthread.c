@@ -220,8 +220,8 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 			break;
 
 		if(ti->ti_retmin && filecount <= ti->ti_retmin) {
-			fprintf(stderr, "%s: cannot clear space: retmin exceeds filecount\n",
-					ti->ti_section);
+			fprintf(stderr, "%s: cannot clear space: retmin exceeds filecount: %d > %d\n",
+					ti->ti_section, ti->ti_retmin, filecount);
 
 			sleep(SCANRATE);
 			break;
