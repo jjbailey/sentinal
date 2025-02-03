@@ -1,8 +1,8 @@
 /*
  * validdbname.c
- * Fix the string to conform to sqlite3 database/table naming rules.
+ * Fix the string to conform to SQLite3 database/table naming rules.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -12,27 +12,18 @@
 #include <stdbool.h>
 #include <ctype.h>
 
-#ifndef true
-# define	true		(bool)1
-#endif
-
-#ifndef	false
-# define	false		(bool)0
+#ifndef	IS_NULL
+# define	IS_NULL(s) !((s) && *(s))
 #endif
 
 bool validdbname(char *str)
 {
-	char   *p = str;
-
-	if(!isalpha(*p))
+	if(IS_NULL(str) || !isalpha((unsigned char)*str))
 		return (false);
 
-	while(*p) {
-		if(!(isalnum(*p) || *p == '_'))
+	for(char *p = str; *p; p++)
+		if(!(isalnum((unsigned char)*p) || *p == '_'))
 			*p = '_';
-
-		p++;
-	}
 
 	return (true);
 }
