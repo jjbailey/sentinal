@@ -2,7 +2,7 @@
  * signals.c
  * Set signals for handling events.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <string.h>
 #include <unistd.h>
 #include "sentinal.h"
 
@@ -33,15 +34,19 @@ void parentsignals(void)
 	struct sigaction sasigsegv;						/* don't catch or reject */
 	struct sigaction sasigstp;						/* for testing */
 
+	memset(&saparent, 0, sizeof(saparent));
 	saparent.sa_handler = sigparent;
 	sigemptyset(&saparent.sa_mask);
 	saparent.sa_flags = (int)SA_RESETHAND;
 
+	memset(&sareject, 0, sizeof(sareject));
 	sareject.sa_handler = sigreject;
 	sigemptyset(&sareject.sa_mask);
 	sareject.sa_flags = (int)SA_RESETHAND;
 
+	memset(&sasigsegv, 0, sizeof(sasigsegv));
 	sigaction(SIGSEGV, NULL, &sasigsegv);
+	memset(&sasigstp, 0, sizeof(sasigstp));
 	sigaction(SIGTSTP, NULL, &sasigstp);
 
 	for(i = 1; i < NSIG; i++)
