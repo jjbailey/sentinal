@@ -4,7 +4,7 @@
  * to processes writing to pipes.  Keep pipes given in the INI file,
  * if they exist, always open for reading.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
 {
 	char    filename[PATH_MAX];						/* full pathname */
 	char    inifile[PATH_MAX];						/* ini file name */
+	char   *my_ini(ini_t *, char *, char *);
 	char   *myname;
 	char   *p1, *p2;
 	char    rbuf[PATH_MAX];
@@ -52,11 +53,10 @@ int main(int argc, char *argv[])
 	char    tbuf[PATH_MAX];
 	ini_t  *inidata;								/* loaded ini data */
 	int     c;
+	int     get_sections(ini_t *, int, char **);
 	int     i;
 	int     index = 0;
 	int     nsect;									/* number of sections found */
-	char   *my_ini(ini_t *, char *, char *);
-	int     get_sections(ini_t *, int, char **);
 
 	myname = base(argv[0]);
 
@@ -173,6 +173,7 @@ static void systemd_signals(void)
 	int     i;
 	struct sigaction sacatch;
 
+	memset(&sacatch, 0, sizeof(sacatch));
 	sacatch.sa_handler = sigcatch;
 	sigemptyset(&sacatch.sa_mask);
 	sacatch.sa_flags = (int)SA_RESETHAND;
