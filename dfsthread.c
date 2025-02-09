@@ -128,6 +128,9 @@ void   *dfsthread(void *arg)
 		if(lowres || runreport) {
 			resreport(ti, lowres, pc_bfree, pc_ffree);
 			runreport = false;
+
+			/* another overlapping thread might find sonething first */
+			sleep(1);
 		}
 
 		if(lowres) {
@@ -220,7 +223,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 			break;
 
 		if(ti->ti_retmin && ti->ti_retmin >= filecount) {
-			fprintf(stderr, "%s: cannot clear space: retmin >= filecount: %d > %d\n",
+			fprintf(stderr, "%s: cannot clear space: retmin >= filecount: %d >= %d\n",
 					ti->ti_section, ti->ti_retmin, filecount);
 
 			sleep(SCANRATE);
