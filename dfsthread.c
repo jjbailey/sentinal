@@ -128,9 +128,6 @@ void   *dfsthread(void *arg)
 		if(lowres || runreport) {
 			resreport(ti, lowres, pc_bfree, pc_ffree);
 			runreport = false;
-
-			/* another overlapping thread might find sonething first */
-			sleep(1);
 		}
 
 		if(lowres) {
