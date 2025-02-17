@@ -16,7 +16,7 @@ size_t strlcat(char *dst, const char *src, size_t size)
 {
 	const size_t dlen = strlen(dst);
 
-	strncpy(dst + dlen, src, size - dlen);
+	strncpy(dst + dlen, src, size - dlen - 1);
 	dst[size - 1] = '\0';
 	return (strlen(dst));
 }
