@@ -18,10 +18,12 @@
 
 bool validdbname(char *str)
 {
+	char   *p;
+
 	if(IS_NULL(str) || !isalpha((unsigned char)*str))
 		return (false);
 
-	for(char *p = str; *p; p++)
+	for(p = str; *p; p++)
 		if(!(isalnum((unsigned char)*p) || *p == '_'))
 			*p = '_';
 
