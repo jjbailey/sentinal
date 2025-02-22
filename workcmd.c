@@ -15,6 +15,10 @@
 
 int workcmd(int argc, char *argv[], char *zargv[])
 {
+	char   *baseName;
+	int     i;
+	int     n = 0;
+
 	static const char *compprogs[] = {
 		"bzip2", "gzip", "lzip", "pbzip2",
 		"pigz", "pzstd", "xz", "zstd"
@@ -22,13 +26,15 @@ int workcmd(int argc, char *argv[], char *zargv[])
 
 	static const int ncprogs = sizeof(compprogs) / sizeof(compprogs[0]);
 
-	int     i;
-	int     n = 0;
-
 	if(argc < 1 || !argv || !zargv)
 		return (0);
 
-	zargv[n++] = base(argv[0]);
+	baseName = base(argv[0]);
+
+	if(IS_NULL(baseName))
+		return (0);
+
+	zargv[n++] = baseName;
 
 	/* sorry, we're going to add/enforce -f for compression programs */
 
@@ -40,12 +46,8 @@ int workcmd(int argc, char *argv[], char *zargv[])
 
 	/* copy the remaining command line options from the INI file */
 
-	for(i = 1; i < argc; i++) {
-		if(n < (MAXARGS - 1))
-			zargv[n++] = argv[i];
-		else
-			break;
-	}
+	for(i = 1; i < argc && n < (MAXARGS - 1); ++i)
+		zargv[n++] = argv[i];
 
 	zargv[n] = NULL;
 	return (n);

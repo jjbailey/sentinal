@@ -73,6 +73,12 @@ void   *workthread(void *arg)
 
 	fprintf(stderr, "%s: command: %s\n", ti->ti_section, ti->ti_command);
 
+	if(workcmd(ti->ti_argc, ti->ti_argv, zargv) == 0) {
+		/* shouldn't happen */
+		fprintf(stderr, "%s: no work\n", ti->ti_section);
+		return ((void *)0);
+	}
+
 	if(ti->ti_rotatesiz)
 		fprintf(stderr, "%s: monitor file: %s for size %s\n",
 				ti->ti_section, ti->ti_pcrestr, ti->ti_rotatestr);
@@ -92,7 +98,6 @@ void   *workthread(void *arg)
 
 		logname(ti->ti_template, ti->ti_filename);
 		fullpath(ti->ti_dirname, ti->ti_filename, filename);
-		workcmd(ti->ti_argc, ti->ti_argv, zargv);
 
 		/* for systemctl status sentinal */
 
