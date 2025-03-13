@@ -2,7 +2,7 @@
  * sql.c
  * Most, but not all of the sqlite work.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -198,7 +198,7 @@ void process_dirs(struct thread_info *ti, sqlite3 *db)
 		db_dir = (char *)sqlite3_column_text(pstmt, 0);
 
 		if(NOT_NULL(db_dir)) {
-			/* assemble filename: ti_dirname + / + db_dir */
+			/* assemble dirname: ti_dirname + / + db_dir */
 
 			snprintf(filename, PATH_MAX, "%s/%s", ti->ti_dirname, db_dir);
 
