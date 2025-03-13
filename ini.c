@@ -245,8 +245,8 @@ void ini_free(ini_t *ini)
 char   *ini_get(ini_t *ini, char *section, char *key)
 {
 	char   *current_section = "";
-	char   *val = "";
 	char   *p = ini->data;
+	char   *val;
 
 	if(*p == '\0') {
 		p = next(ini, p);
