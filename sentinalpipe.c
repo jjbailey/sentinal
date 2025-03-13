@@ -202,12 +202,11 @@ static void sigcatch(int sig)
 
 static void help(char *prog)
 {
-	char   *p = base(prog);
-
-	fprintf(stderr, "\nUsage:\n");
-	fprintf(stderr, "%s -f|--ini-file ini-file\n\n", p);
-	fprintf(stderr, "Print the program version, exit\n");
-	fprintf(stderr, "%s -V|--version\n\n", p);
+	fprintf(stderr, "Usage: %s -f ini-file [-V]\n", base(prog));
+	fprintf(stderr,
+			" -f, --ini-file   INI file, full path or relative to /opt/sentinal/etc\n");
+	fprintf(stderr, " -V, --version    print version number, exit\n");
+	fprintf(stderr, " -?, --help       this message\n");
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
