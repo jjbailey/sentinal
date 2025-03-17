@@ -3,7 +3,7 @@
  * Check dir and possibly subdirs for files matching pcrestr (pcrecmp).
  * Return the number of files matching pcrestr.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -86,9 +86,6 @@ uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 				entries++;
 				continue;
 			}
-
-		if(stat(filename, &stbuf) == -1)
-			continue;
 
 		if(stbuf.st_dev != ti->ti_dev)				/* never cross filesystems */
 			continue;
