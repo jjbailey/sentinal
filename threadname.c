@@ -2,7 +2,7 @@
  * threadname.c
  * Name the thread for use with shell utils.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -24,10 +24,11 @@ char   *threadname(struct thread_info *ti, char *tname)
 	snprintf(delbuf, BUFSIZ, "_%s", tname);
 	strdel(secbuf, ti->ti_section, delbuf, BUFSIZ);
 
-	/* add tname to the section name and call it the task name */
-	ti->ti_task = malloc(TASK_COMM_LEN);
-	snprintf(ti->ti_task, TASK_COMM_LEN, "%.11s_%.3s", secbuf, tname);
+	if((ti->ti_task = (char *)malloc(TASK_COMM_LEN)) == NULL)
+		return (NULL);
 
+	/* add tname to the section name and call it the task name */
+	snprintf(ti->ti_task, TASK_COMM_LEN, "%.11s_%.3s", secbuf, tname);
 	return (ti->ti_task);
 }
 

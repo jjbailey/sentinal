@@ -171,9 +171,6 @@ uint32_t pcrefind(struct thread_info *ti, bool top, char *dir)
 		if(S_ISLNK(stbuf.st_mode) && !ti->ti_symlinks)
 			continue;
 
-		if(stat(filename, &stbuf) == -1)
-			continue;
-
 		if(S_ISDIR(stbuf.st_mode)) {
 			if(stbuf.st_dev == ti->ti_dev || opt_xdev)
 				entries += pcrefind(ti, false, filename);
