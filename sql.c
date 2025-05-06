@@ -20,15 +20,18 @@
 bool sqlexec(struct thread_info *ti, sqlite3 *db, char *desc, char *format, ...)
 {
 	char    stmt[BUFSIZ];							/* statement buffer */
+	int     rc;										/* return code */
 	int     tries;									/* lock retries */
 	va_list ap;
 
 	va_start(ap, format);
-	va_end(ap);
 	vsnprintf(stmt, BUFSIZ, format, ap);
+	va_end(ap);
 
 	for(tries = 0; tries < 3; tries++) {
-		switch (sqlite3_exec(db, stmt, NULL, 0, NULL)) {
+		rc = sqlite3_exec(db, stmt, NULL, 0, NULL);
+
+		switch (rc) {
 
 		case SQLITE_OK:								/* no error */
 		case SQLITE_ABORT:							/* ignore */
@@ -39,12 +42,11 @@ bool sqlexec(struct thread_info *ti, sqlite3 *db, char *desc, char *format, ...)
 			continue;
 
 		default:
-			break;
+			fprintf(stderr, "%s: sqlite3_exec: %s: %s\n",
+					ti->ti_section, desc, sqlite3_errmsg(db));
+			return (false);
 		}
 	}
-
-	fprintf(stderr, "%s: sqlite3_exec: %s: %s\n",
-			ti->ti_section, desc, sqlite3_errmsg(db));
 
 	return (false);
 }
@@ -130,46 +132,55 @@ bool sync_commit(struct thread_info *ti, sqlite3 *db)
 uint32_t count_dirs(struct thread_info *ti, sqlite3 *db)
 {
 	char    stmt[BUFSIZ];							/* statement buffer */
+	int     rc;										/* return code */
 	sqlite3_stmt *pstmt;							/* prepared statement */
-	uint32_t dircount;
+	uint32_t dircount = 0;
 
 	char   *sql_dircount = "SELECT COUNT(*)\n \
 		FROM  %s_dir\n \
 		WHERE db_empty = 1;";
 
 	snprintf(stmt, BUFSIZ, sql_dircount, ti->ti_task);
-	sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
-	sqlite3_step(pstmt);
-	dircount = (uint32_t) sqlite3_column_int(pstmt, 0);
-	sqlite3_finalize(pstmt);
+
+	if((rc = sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL)) == SQLITE_OK) {
+		if(sqlite3_step(pstmt) == SQLITE_ROW)
+			dircount = (uint32_t) sqlite3_column_int(pstmt, 0);
+		sqlite3_finalize(pstmt);
+	}
+
 	return (dircount);
 }
 
 uint32_t count_files(struct thread_info *ti, sqlite3 *db)
 {
 	char    stmt[BUFSIZ];							/* statement buffer */
+	int     rc;										/* return code */
 	sqlite3_stmt *pstmt;							/* prepared statement */
-	uint32_t filecount;
+	uint32_t filecount = 0;
 
 	char   *sql_filecount = "SELECT COUNT(*)\n \
 		FROM  %s_dir, %s_file\n \
 		WHERE db_dirid = db_id;";
 
 	snprintf(stmt, BUFSIZ, sql_filecount, ti->ti_task, ti->ti_task);
-	sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
-	sqlite3_step(pstmt);
-	filecount = (uint32_t) sqlite3_column_int(pstmt, 0);
-	sqlite3_finalize(pstmt);
+
+	if((rc = sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL)) == SQLITE_OK) {
+		if(sqlite3_step(pstmt) == SQLITE_ROW)
+			filecount = (uint32_t) sqlite3_column_int(pstmt, 0);
+		sqlite3_finalize(pstmt);
+	}
+
 	return (filecount);
 }
 
 void process_dirs(struct thread_info *ti, sqlite3 *db)
 {
+	char   *db_dir;									/* sql data */
 	char    filename[PATH_MAX];						/* full pathname */
 	char    stmt[BUFSIZ];							/* statement buffer */
-	char   *db_dir;									/* sql data */
 	extern bool dryrun;								/* dry run flag */
 	int     drcount = 0;							/* dryrun count */
+	int     rc;										/* return code */
 	sqlite3_stmt *pstmt;							/* prepared statement */
 	uint32_t removed = 0;							/* directories removed */
 
@@ -182,16 +193,17 @@ void process_dirs(struct thread_info *ti, sqlite3 *db)
 		return;
 
 	snprintf(stmt, BUFSIZ, sql_emptydirs, ti->ti_task);
-	sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
 
-	for(;;) {
-		if(sqlite3_step(pstmt) != SQLITE_ROW)
-			break;
+	if((rc = sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL)) != SQLITE_OK) {
+		fprintf(stderr, "%s: sqlite3_prepare_v2: %s\n",
+				ti->ti_section, sqlite3_errmsg(db));
+		return;
+	}
 
+	while((rc = sqlite3_step(pstmt)) == SQLITE_ROW) {
 		if(dryrun && drcount++ == 10) {				/* dryrun doesn't remove anything */
 			if(!ti->ti_terse)
 				fprintf(stderr, "%s: ...\n", ti->ti_section);
-
 			break;
 		}
 
@@ -206,6 +218,9 @@ void process_dirs(struct thread_info *ti, sqlite3 *db)
 				removed++;
 		}
 	}
+
+	if(rc != SQLITE_DONE)
+		fprintf(stderr, "%s: sqlite3_step: %s\n", ti->ti_section, sqlite3_errmsg(db));
 
 	sqlite3_finalize(pstmt);
 
