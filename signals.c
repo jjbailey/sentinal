@@ -37,12 +37,12 @@ void parentsignals(void)
 	memset(&saparent, 0, sizeof(saparent));
 	saparent.sa_handler = sigparent;
 	sigemptyset(&saparent.sa_mask);
-	saparent.sa_flags = (int)SA_RESETHAND;
+	saparent.sa_flags = SA_RESTART;
 
 	memset(&sareject, 0, sizeof(sareject));
 	sareject.sa_handler = sigreject;
 	sigemptyset(&sareject.sa_mask);
-	sareject.sa_flags = (int)SA_RESETHAND;
+	sareject.sa_flags = SA_RESTART;
 
 	memset(&sasigsegv, 0, sizeof(sasigsegv));
 	sigaction(SIGSEGV, NULL, &sasigsegv);
@@ -79,7 +79,7 @@ static void sigparent(int sig)
 		return;
 	}
 
-	/* marked the threads as signaled */
+	/* mark the threads as signaled */
 	/* only workers use ti_wfd */
 
 	for(i = 0; i < MAXSECT; i++)
