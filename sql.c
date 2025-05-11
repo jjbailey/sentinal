@@ -44,6 +44,7 @@ bool sqlexec(struct thread_info *ti, sqlite3 *db, char *desc, char *format, ...)
 		default:
 			fprintf(stderr, "%s: sqlite3_exec: %s: %s\n",
 					ti->ti_section, desc, sqlite3_errmsg(db));
+
 			return (false);
 		}
 	}
@@ -145,6 +146,7 @@ uint32_t count_dirs(struct thread_info *ti, sqlite3 *db)
 	if((rc = sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL)) == SQLITE_OK) {
 		if(sqlite3_step(pstmt) == SQLITE_ROW)
 			dircount = (uint32_t) sqlite3_column_int(pstmt, 0);
+
 		sqlite3_finalize(pstmt);
 	}
 
@@ -167,6 +169,7 @@ uint32_t count_files(struct thread_info *ti, sqlite3 *db)
 	if((rc = sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL)) == SQLITE_OK) {
 		if(sqlite3_step(pstmt) == SQLITE_ROW)
 			filecount = (uint32_t) sqlite3_column_int(pstmt, 0);
+
 		sqlite3_finalize(pstmt);
 	}
 
@@ -197,6 +200,7 @@ void process_dirs(struct thread_info *ti, sqlite3 *db)
 	if((rc = sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL)) != SQLITE_OK) {
 		fprintf(stderr, "%s: sqlite3_prepare_v2: %s\n",
 				ti->ti_section, sqlite3_errmsg(db));
+
 		return;
 	}
 
@@ -204,6 +208,7 @@ void process_dirs(struct thread_info *ti, sqlite3 *db)
 		if(dryrun && drcount++ == 10) {				/* dryrun doesn't remove anything */
 			if(!ti->ti_terse)
 				fprintf(stderr, "%s: ...\n", ti->ti_section);
+
 			break;
 		}
 
@@ -219,7 +224,7 @@ void process_dirs(struct thread_info *ti, sqlite3 *db)
 		}
 	}
 
-	if(rc != SQLITE_DONE)
+	if(rc != SQLITE_DONE && rc != SQLITE_ERROR)
 		fprintf(stderr, "%s: sqlite3_step: %s\n", ti->ti_section, sqlite3_errmsg(db));
 
 	sqlite3_finalize(pstmt);
