@@ -2,7 +2,7 @@
  * postcmd.c
  * Run command after the log closes or rotates.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -75,6 +75,7 @@ int postcmd(struct thread_info *ti, char *filename)
 		strreplace(cmdbuf, _SECT_TOK, ti->ti_section, BUFSIZ);
 
 		fprintf(stderr, "%s: %s\n", ti->ti_section, cmdbuf);
+		fflush(stderr);
 
 		if(dryrun)
 			exit(EXIT_SUCCESS);
