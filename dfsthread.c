@@ -32,7 +32,7 @@
 
 static bool getvfsstats(struct thread_info *, float *, float *);
 static void process_files(struct thread_info *, sqlite3 *);
-static void resreport(struct thread_info *, bool, float, float);
+static void resource_report(struct thread_info *, bool, float, float);
 
 static char *sql_selectfiles = "SELECT db_dir, db_file\n \
 	FROM  %s_dir, %s_file\n \
@@ -45,12 +45,14 @@ extern pthread_mutex_t dfslock;						/* thread lock */
 
 void   *dfsthread(void *arg)
 {
+	bool    lowres = false;							/* low resources flag */
+	bool    runreport = true;						/* for resource_report */
 	extern bool dryrun;								/* dry run flag */
 	extern sqlite3 *db;								/* db handle */
 	float   pc_bfree = 0;							/* blocks free */
 	float   pc_ffree = 0;							/* files free */
-	bool    lowres = false;							/* low resources flag */
-	bool    runreport = true;						/* for resreport */
+	float   save_pc_bfree = 0;						/* saved blocks free */
+	float   save_pc_ffree = 0;						/* saved files free */
 	struct statvfs svbuf;							/* filesystem status */
 	struct thread_info *ti = arg;					/* thread settings */
 	uint32_t nextid = 1;							/* db_id, db_dirid */
@@ -123,11 +125,21 @@ void   *dfsthread(void *arg)
 		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == false)
 			return ((void *)0);
 
+		/* report low resources */
+
 		lowres = LOW_RES(ti->ti_diskfree, pc_bfree) || LOW_RES(ti->ti_inofree, pc_ffree);
 
+		/* report changes >= 1% */
+
+		if(!runreport)
+			if(abs(pc_bfree - save_pc_bfree) >= 1 || abs(pc_ffree - save_pc_ffree) >= 1)
+				runreport = true;
+
 		if(lowres || runreport) {
-			resreport(ti, lowres, pc_bfree, pc_ffree);
+			resource_report(ti, lowres, pc_bfree, pc_ffree);
 			runreport = false;
+			save_pc_bfree = pc_bfree;
+			save_pc_ffree = pc_ffree;
 		}
 
 		if(lowres) {
@@ -156,9 +168,9 @@ void   *dfsthread(void *arg)
 	return ((void *)0);
 }
 
-static void resreport(struct thread_info *ti, bool lowres, float blk, float ino)
+static void resource_report(struct thread_info *ti, bool lowres, float blk, float ino)
 {
-	if(lowres == false) {							/* initial/recovery report */
+	if(lowres == false) {							/* initial/recovery/status report */
 		if(ti->ti_diskfree > 0)
 			fprintf(stderr, "%s: %s: %.2f%% blocks free\n",
 					ti->ti_section, ti->ti_dirname, blk);

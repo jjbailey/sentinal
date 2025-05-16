@@ -14,16 +14,23 @@
 
 char   *fullpath(const char *dir, const char *file, char *path)
 {
-	if(NOT_NULL(dir) && NOT_NULL(file)) {
-		if(*file == '/')
-			strlcpy(path, file, PATH_MAX);
-		else
-			snprintf(path, PATH_MAX, "%s/%s", dir, file);
-	} else {
-		/* program error */
-		*path = '\0';
+	if(path == NULL)
+		return (NULL);
+
+	if(NOT_NULL(file) && *file == '/') {
+		/* absolute path */
+		strlcpy(path, file, PATH_MAX);
+		return (path);
 	}
 
+	if(NOT_NULL(dir) && NOT_NULL(file)) {
+		/* relative path */
+		snprintf(path, PATH_MAX, "%s/%s", dir, file);
+		return (path);
+	}
+
+	/* program error */
+	*path = '\0';
 	return (path);
 }
 
