@@ -19,21 +19,26 @@
 #include <pthread.h>
 #include <sqlite3.h>
 #include <string.h>
+#include <errno.h>
 #include "sentinal.h"
 
-static char *sql_insertdir = "INSERT INTO %s_dir VALUES(%u, '%s', 0);";
-static char *sql_insertfile = "INSERT INTO %s_file VALUES(?, ?, ?, ?);";
-static char *sql_updatedir = "UPDATE %s_dir SET db_empty = 1 WHERE db_id = %d;";
+#define INSERT_DIR_SQL	"INSERT INTO %s_dir VALUES(?, ?, ?);"
+#define INSERT_FILE_SQL	"INSERT INTO %s_file VALUES(?, ?, ?, ?);"
+#define UPDATE_DIR_SQL	"UPDATE %s_dir SET db_empty = 1 WHERE db_id = ?;"
 
 uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 				  char *dir, sqlite3 *db)
 {
 	DIR    *dirp;
-	char    filename[PATH_MAX];						/* full pathname */
-	char    stmt[BUFSIZ];							/* statement buffer */
-	sqlite3_stmt *pstmt;							/* prepared statement */
+	char    fullpath[PATH_MAX];						/* full pathname */
+	char    relpath[PATH_MAX];						/* relative pathname */
+	char    stmtbuf[BUFSIZ];						/* statement buffer */
+	int     rc;										/* return code */
+	sqlite3_stmt *insert_dir_stmt = NULL;
+	sqlite3_stmt *insert_file_stmt = NULL;
+	sqlite3_stmt *update_dir_stmt = NULL;
 	struct dirent *dp;
-	struct stat stbuf;								/* file status */
+	struct stat st;									/* file status */
 	uint32_t entries = 0;							/* file entries */
 	uint32_t rowid = *nextid;						/* db_id, db_dirid */
 
@@ -41,61 +46,87 @@ uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 		return (0);
 
 	if(top) {
-		if(stat(dir, &stbuf) == -1) {
-			fprintf(stderr, "%s: cannot stat: %s\n", ti->ti_section, dir);
+		if(stat(dir, &st) == -1) {
+			fprintf(stderr, "%s: cannot stat: %s: %s\n", ti->ti_section, dir,
+					strerror(errno));
+
+			closedir(dirp);
 			return (0);
 		}
 
-		if(drop_table(ti, db) == false)
+		if(!drop_table(ti, db) || !create_table(ti, db) ||
+		   !journal_mode(ti, db) || !sync_commit(ti, db)) {
+			closedir(dirp);
 			return (0);
+		}
 
-		if(create_table(ti, db) == false)
-			return (0);
-
-		if(journal_mode(ti, db) == false)
-			return (0);
-
-		if(sync_commit(ti, db) == false)
-			return (0);
-
-		ti->ti_dev = stbuf.st_dev;					/* save mountpoint device */
+		ti->ti_dev = st.st_dev;						/* save mountpoint device */
 		rowid = *nextid = 1;						/* starting over */
+
+		sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
 	}
 
-	/* directory insert */
+	snprintf(stmtbuf, sizeof(stmtbuf), INSERT_DIR_SQL, ti->ti_task);
 
-	sqlexec(ti, db, "insert", sql_insertdir,
-			ti->ti_task, rowid, top ? "" : dir + strlen(ti->ti_dirname) + 1);
+	if((rc = sqlite3_prepare_v2(db, stmtbuf, -1, &insert_dir_stmt, NULL)) != SQLITE_OK) {
+		fprintf(stderr, "%s: sqlite3_prepare_v2 insert_dir: %s\n",
+				ti->ti_section, sqlite3_errmsg(db));
 
-	/* prepare file insert */
+		goto cleanup;
+	}
 
-	snprintf(stmt, BUFSIZ, sql_insertfile, ti->ti_task);
-	sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
+	if(top) {
+		*relpath = '\0';
+	} else {
+		size_t  prefix_len = strlen(ti->ti_dirname);
+		snprintf(relpath, sizeof(relpath), "%s", dir + prefix_len + 1);
+	}
 
-	while((dp = readdir(dirp))) {
+	sqlite3_bind_int(insert_dir_stmt, 1, rowid);
+	sqlite3_bind_text(insert_dir_stmt, 2, relpath, -1, SQLITE_TRANSIENT);
+	sqlite3_bind_int(insert_dir_stmt, 3, 0);
+	sqlite3_step(insert_dir_stmt);
+	sqlite3_finalize(insert_dir_stmt);
+	insert_dir_stmt = NULL;
+
+	snprintf(stmtbuf, sizeof(stmtbuf), INSERT_FILE_SQL, ti->ti_task);
+
+	if((rc = sqlite3_prepare_v2(db, stmtbuf, -1, &insert_file_stmt, NULL)) != SQLITE_OK) {
+		fprintf(stderr, "%s: sqlite3_prepare_v2 insert_file: %s\n",
+				ti->ti_section, sqlite3_errmsg(db));
+
+		goto cleanup;
+	}
+
+	while((dp = readdir(dirp)) != NULL) {
 		if(MY_DIR(dp->d_name) || MY_PARENT(dp->d_name))
 			continue;
 
-		snprintf(filename, PATH_MAX, "%s/%s", dir, dp->d_name);
+		if(snprintf(fullpath, sizeof(fullpath),
+					"%s/%s", dir, dp->d_name) >= sizeof(fullpath)) {
+			fprintf(stderr, "%s: path too long: %s/%s\n", ti->ti_section, dir,
+					dp->d_name);
 
-		if(lstat(filename, &stbuf) == -1)
+			continue;
+		}
+
+		if(lstat(fullpath, &st) == -1)
 			continue;
 
-		if(S_ISLNK(stbuf.st_mode))
+		if(S_ISLNK(st.st_mode)) {
 			if(!ti->ti_symlinks) {					/* count this entry */
 				entries++;
 				continue;
 			}
+		}
 
-		if(stbuf.st_dev != ti->ti_dev)				/* never cross filesystems */
+		if(st.st_dev != ti->ti_dev)					/* never cross filesystems */
 			continue;
 
-		if(S_ISDIR(stbuf.st_mode)) {				/* next db_dirid */
-			/* this condition was missing prior to 2.1.0, was assumed to be true */
-
+		if(S_ISDIR(st.st_mode)) {					/* next db_dirid */
 			if(ti->ti_subdirs) {
 				(*nextid)++;
-				entries += findfile(ti, false, nextid, filename, db);
+				entries += findfile(ti, false, nextid, fullpath, db);
 			}
 
 			continue;
@@ -103,18 +134,21 @@ uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 
 		entries++;
 
-		if(!S_ISREG(stbuf.st_mode) || !namematch(ti, dp->d_name))
+		if(!S_ISREG(st.st_mode) || !namematch(ti, dp->d_name))
 			continue;
 
-		sqlite3_reset(pstmt);
-		sqlite3_bind_int(pstmt, 1, rowid);
-		sqlite3_bind_text(pstmt, 2, dp->d_name, -1, NULL);
-		sqlite3_bind_int(pstmt, 3, stbuf.st_mtim.tv_sec);
-		sqlite3_bind_int(pstmt, 4, stbuf.st_size);
-		sqlite3_step(pstmt);
+		sqlite3_reset(insert_file_stmt);
+		sqlite3_bind_int(insert_file_stmt, 1, rowid);
+		sqlite3_bind_text(insert_file_stmt, 2, dp->d_name, -1, SQLITE_TRANSIENT);
+		sqlite3_bind_int(insert_file_stmt, 3, (int)st.st_mtim.tv_sec);
+		sqlite3_bind_int(insert_file_stmt, 4, (int)st.st_size);
+		sqlite3_step(insert_file_stmt);
 	}
 
-	sqlite3_finalize(pstmt);
+  cleanup:
+	if(insert_file_stmt)
+		sqlite3_finalize(insert_file_stmt);
+
 	closedir(dirp);
 
 	/*
@@ -122,13 +156,24 @@ uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 	 * we are interested only in empty directories
 	 */
 
-	if(!entries)
-		sqlexec(ti, db, "update", sql_updatedir, ti->ti_task, rowid);
+	if(entries == 0) {
+		snprintf(stmtbuf, sizeof(stmtbuf), UPDATE_DIR_SQL, ti->ti_task);
 
-	if(top)											/* indexes */
+		if(sqlite3_prepare_v2(db, stmtbuf, -1, &update_dir_stmt, NULL) == SQLITE_OK) {
+			sqlite3_bind_int(update_dir_stmt, 1, rowid);
+			sqlite3_step(update_dir_stmt);
+			sqlite3_finalize(update_dir_stmt);
+		} else {
+			fprintf(stderr, "%s: sqlite3_prepare_v2 update_dir: %s\n",
+					ti->ti_section, sqlite3_errmsg(db));
+		}
+	}
+
+	if(top) {										/* indexes */
 		create_index(ti, db);
+		sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
+	}
 
-	/* sqlite3_db_cacheflush(db); */
 	return (entries);
 }
 

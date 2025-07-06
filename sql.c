@@ -7,6 +7,8 @@
  *
  * This source code is licensed under the MIT license found
  * in the root directory of this source tree.
+ *
+ * Note: All SQLite access must be serialized if using threads.
  */
 
 #define	_GNU_SOURCE
@@ -17,207 +19,178 @@
 #include <unistd.h>
 #include "sentinal.h"
 
-bool sqlexec(struct thread_info *ti, sqlite3 *db, char *desc, char *format, ...)
+#define RETRY_COUNT			3
+#define RETRY_DELAY_USEC	100000
+#define SQL_DIR_FMT			"DROP TABLE IF EXISTS %s_dir;"
+#define SQL_FILE_FMT		"DROP TABLE IF EXISTS %s_file;"
+#define SQL_CREATE_DIR_FMT \
+	"CREATE TABLE IF NOT EXISTS %s_dir (db_id INT NOT NULL, db_dir VARCHAR(255) NOT NULL, db_empty BOOLEAN NOT NULL);"
+#define SQL_CREATE_FILE_FMT \
+	"CREATE TABLE IF NOT EXISTS %s_file (db_dirid INT NOT NULL, db_file VARCHAR(255) NOT NULL, db_time INT NOT NULL, db_size UNSIGNED BIG INT NOT NULL);"
+#define SQL_INDEX_DIR_FMT	"CREATE INDEX IF NOT EXISTS idx_%s_dir ON %s_dir (db_id);"
+#define SQL_INDEX_FILE_FMT	"CREATE INDEX IF NOT EXISTS idx_%s_file ON %s_file (db_time);"
+#define SQL_COUNT_DIR_FMT	"SELECT COUNT(*) FROM %s_dir WHERE db_empty = 1;"
+#define SQL_COUNT_FILE_FMT	"SELECT COUNT(*) FROM %s_dir, %s_file WHERE db_dirid = db_id;"
+#define SQL_EMPTYDIRS_FMT	"SELECT db_dir FROM %s_dir WHERE db_empty = 1 ORDER BY db_dir DESC;"
+
+static bool execute_sql(const struct thread_info *ti, sqlite3 *db, const char *desc,
+						const char *format, va_list ap)
 {
-	char    stmt[BUFSIZ];							/* statement buffer */
+	char    stmtbuf[BUFSIZ];						/* statement buffer */
 	int     rc;										/* return code */
-	int     tries;									/* lock retries */
-	va_list ap;
 
-	va_start(ap, format);
-	vsnprintf(stmt, BUFSIZ, format, ap);
-	va_end(ap);
+	vsnprintf(stmtbuf, sizeof(stmtbuf), format, ap);
 
-	for(tries = 0; tries < 3; tries++) {
-		rc = sqlite3_exec(db, stmt, NULL, 0, NULL);
+	for(int tries = 0; tries < RETRY_COUNT; ++tries) {
+		rc = sqlite3_exec(db, stmtbuf, NULL, NULL, NULL);
 
-		switch (rc) {
-
-		case SQLITE_OK:								/* no error */
-		case SQLITE_ABORT:							/* ignore */
+		if(rc == SQLITE_OK || rc == SQLITE_ABORT)
 			return (true);
 
-		case SQLITE_LOCKED:							/* retry */
-			usleep((useconds_t) 100000);
+		if(rc == SQLITE_LOCKED) {
+			usleep(RETRY_DELAY_USEC);
 			continue;
-
-		default:
-			fprintf(stderr, "%s: sqlite3_exec: %s: %s\n",
-					ti->ti_section, desc, sqlite3_errmsg(db));
-
-			return (false);
 		}
+
+		fprintf(stderr, "%s: sqlite3_exec (%s): %s\n",
+				ti->ti_section, desc, sqlite3_errmsg(db));
+
+		return (false);
 	}
 
 	return (false);
 }
 
+bool sqlexec(struct thread_info *ti, sqlite3 *db, char *desc, char *format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	bool    result = execute_sql(ti, db, desc, format, ap);
+
+	va_end(ap);
+	return (result);
+}
+
+static inline bool run_sql_fmt(const struct thread_info *ti, sqlite3 *db,
+							   const char *desc, const char *sql_fmt, const char *arg1,
+							   const char *arg2)
+{
+	char    stmtbuf[BUFSIZ];						/* statement buffer */
+
+	if(arg2)
+		snprintf(stmtbuf, sizeof(stmtbuf), sql_fmt, arg1, arg2);
+	else
+		snprintf(stmtbuf, sizeof(stmtbuf), sql_fmt, arg1);
+
+	return (sqlexec((struct thread_info *)ti, db, (char *)desc, "%s", stmtbuf));
+}
+
 bool drop_table(struct thread_info *ti, sqlite3 *db)
 {
-	/* drop the directory table */
-	char   *sql_dir = "DROP TABLE IF EXISTS %s_dir;";
-
-	/* drop the file table */
-	char   *sql_file = "DROP TABLE IF EXISTS %s_file;";
-
-	if(sqlexec(ti, db, "drop table", sql_dir, ti->ti_task) == false)
-		return (false);
-
-	if(sqlexec(ti, db, "drop table", sql_file, ti->ti_task) == false)
-		return (false);
-
-	return (true);
+	return (run_sql_fmt(ti, db, "drop table", SQL_DIR_FMT, ti->ti_task, NULL) &&
+			run_sql_fmt(ti, db, "drop table", SQL_FILE_FMT, ti->ti_task, NULL));
 }
 
 bool create_table(struct thread_info *ti, sqlite3 *db)
 {
-	/* VARCHAR -- see sqlite3 faq #9 */
-
-	char   *sql_dir = "CREATE TABLE IF NOT EXISTS %s_dir (\n \
-		db_id     INT NOT NULL,\n \
-		db_dir    VARCHAR(255) NOT NULL,\n \
-		db_empty  BOOLEAN NOT NULL);";
-
-	char   *sql_file = "CREATE TABLE IF NOT EXISTS %s_file (\n \
-		db_dirid  INT NOT NULL,\n \
-		db_file   VARCHAR(255) NOT NULL,\n \
-		db_time   INT NOT NULL,\n \
-		db_size   UNSIGNED BIG INT NOT NULL);";
-
-	if(sqlexec(ti, db, "create table", sql_dir, ti->ti_task) == false)
-		return (false);
-
-	if(sqlexec(ti, db, "create table", sql_file, ti->ti_task) == false)
-		return (false);
-
-	return (true);
+	return (run_sql_fmt(ti, db, "create table", SQL_CREATE_DIR_FMT, ti->ti_task, NULL) &&
+			run_sql_fmt(ti, db, "create table", SQL_CREATE_FILE_FMT, ti->ti_task, NULL));
 }
 
 bool create_index(struct thread_info *ti, sqlite3 *db)
 {
-	/* create an index on the directory table */
-	char   *sql_dir = "CREATE INDEX IF NOT EXISTS idx_%s_dir ON %s_dir (db_id);";
-
-	/* create an index on the file table */
-	char   *sql_file = "CREATE INDEX IF NOT EXISTS idx_%s_file ON %s_file (db_time);";
-
-	if(sqlexec(ti, db, "create index", sql_dir, ti->ti_task, ti->ti_task) == false)
-		return (false);
-
-	if(sqlexec(ti, db, "create index", sql_file, ti->ti_task, ti->ti_task) == false)
-		return (false);
-
-	return (true);
+	return (run_sql_fmt
+			(ti, db, "create index", SQL_INDEX_DIR_FMT, ti->ti_task, ti->ti_task) &&
+			run_sql_fmt(ti, db, "create index", SQL_INDEX_FILE_FMT, ti->ti_task,
+						ti->ti_task));
 }
 
 bool journal_mode(struct thread_info *ti, sqlite3 *db)
 {
-	char   *sql_journal = "PRAGMA journal_mode = OFF;";
-
-	if(sqlexec(ti, db, "disable journal", sql_journal) == false)
-		return (false);
-
-	return (true);
+	return (sqlexec(ti, db, "disable journal", "PRAGMA journal_mode = OFF;"));
 }
 
 bool sync_commit(struct thread_info *ti, sqlite3 *db)
 {
-	char   *sql_sync = "PRAGMA synchronous = NORMAL;";
+	return (sqlexec(ti, db, "synchronous commit", "PRAGMA synchronous = NORMAL;"));
+}
 
-	if(sqlexec(ti, db, "synchronous commit", sql_sync) == false)
-		return (false);
+static uint32_t get_count(const struct thread_info *ti, sqlite3 *db, const char *sql_fmt,
+						  const char *arg1, const char *arg2)
+{
+	char    stmtbuf[BUFSIZ];						/* statement buffer */
+	int     rc;										/* return code */
+	sqlite3_stmt *pstmt = NULL;						/* prepared statement */
+	uint32_t count = 0;
 
-	return (true);
+	// Format SQL using one or two arguments
+
+	if(arg2)
+		snprintf(stmtbuf, sizeof(stmtbuf), sql_fmt, arg1, arg2);
+	else
+		snprintf(stmtbuf, sizeof(stmtbuf), sql_fmt, arg1);
+
+	rc = sqlite3_prepare_v2(db, stmtbuf, -1, &pstmt, NULL);
+
+	if(rc == SQLITE_OK) {
+		if(sqlite3_step(pstmt) == SQLITE_ROW)
+			count = (uint32_t) sqlite3_column_int(pstmt, 0);
+
+		sqlite3_finalize(pstmt);
+	} else {
+		fprintf(stderr, "%s: sqlite3_prepare_v2 (count): %s\n",
+				ti->ti_section, sqlite3_errmsg(db));
+	}
+
+	return (count);
 }
 
 uint32_t count_dirs(struct thread_info *ti, sqlite3 *db)
 {
-	char    stmt[BUFSIZ];							/* statement buffer */
-	int     rc;										/* return code */
-	sqlite3_stmt *pstmt;							/* prepared statement */
-	uint32_t dircount = 0;
-
-	char   *sql_dircount = "SELECT COUNT(*)\n \
-		FROM  %s_dir\n \
-		WHERE db_empty = 1;";
-
-	snprintf(stmt, BUFSIZ, sql_dircount, ti->ti_task);
-
-	if((rc = sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL)) == SQLITE_OK) {
-		if(sqlite3_step(pstmt) == SQLITE_ROW)
-			dircount = (uint32_t) sqlite3_column_int(pstmt, 0);
-
-		sqlite3_finalize(pstmt);
-	}
-
-	return (dircount);
+	return (get_count(ti, db, SQL_COUNT_DIR_FMT, ti->ti_task, NULL));
 }
 
 uint32_t count_files(struct thread_info *ti, sqlite3 *db)
 {
-	char    stmt[BUFSIZ];							/* statement buffer */
-	int     rc;										/* return code */
-	sqlite3_stmt *pstmt;							/* prepared statement */
-	uint32_t filecount = 0;
-
-	char   *sql_filecount = "SELECT COUNT(*)\n \
-		FROM  %s_dir, %s_file\n \
-		WHERE db_dirid = db_id;";
-
-	snprintf(stmt, BUFSIZ, sql_filecount, ti->ti_task, ti->ti_task);
-
-	if((rc = sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL)) == SQLITE_OK) {
-		if(sqlite3_step(pstmt) == SQLITE_ROW)
-			filecount = (uint32_t) sqlite3_column_int(pstmt, 0);
-
-		sqlite3_finalize(pstmt);
-	}
-
-	return (filecount);
+	return (get_count(ti, db, SQL_COUNT_FILE_FMT, ti->ti_task, ti->ti_task));
 }
 
 void process_dirs(struct thread_info *ti, sqlite3 *db)
 {
-	char   *db_dir;									/* sql data */
-	char    filename[PATH_MAX];						/* full pathname */
-	char    stmt[BUFSIZ];							/* statement buffer */
+	char    stmtbuf[BUFSIZ];						/* statement buffer */
 	extern bool dryrun;								/* dry run flag */
-	int     drcount = 0;							/* dryrun count */
+	int     drcount = 0;							/* dry run count */
 	int     rc;										/* return code */
-	sqlite3_stmt *pstmt;							/* prepared statement */
+	sqlite3_stmt *pstmt = NULL;						/* prepared statement */
 	uint32_t removed = 0;							/* directories removed */
-
-	char   *sql_emptydirs = "SELECT db_dir\n \
-		FROM  %s_dir\n \
-		WHERE db_empty = 1\n \
-		ORDER BY db_dir DESC;";
 
 	if(count_dirs(ti, db) < 1)
 		return;
 
-	snprintf(stmt, BUFSIZ, sql_emptydirs, ti->ti_task);
+	snprintf(stmtbuf, sizeof(stmtbuf), SQL_EMPTYDIRS_FMT, ti->ti_task);
+	rc = sqlite3_prepare_v2(db, stmtbuf, -1, &pstmt, NULL);
 
-	if((rc = sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL)) != SQLITE_OK) {
-		fprintf(stderr, "%s: sqlite3_prepare_v2: %s\n",
-				ti->ti_section, sqlite3_errmsg(db));
+	if(rc != SQLITE_OK) {
+		fprintf(stderr, "%s: sqlite3_prepare_v2: %s\n", ti->ti_section,
+				sqlite3_errmsg(db));
 
 		return;
 	}
 
 	while((rc = sqlite3_step(pstmt)) == SQLITE_ROW) {
-		if(dryrun && drcount++ == 10) {				/* dryrun doesn't remove anything */
+		if(dryrun && ++drcount > 10) {
 			if(!ti->ti_terse)
 				fprintf(stderr, "%s: ...\n", ti->ti_section);
 
 			break;
 		}
 
-		db_dir = (char *)sqlite3_column_text(pstmt, 0);
+		const char *db_dir = (const char *)sqlite3_column_text(pstmt, 0);
 
-		if(NOT_NULL(db_dir)) {
-			/* assemble dirname: ti_dirname + / + db_dir */
+		if(db_dir && *db_dir) {
+			char    filename[PATH_MAX];
 
-			snprintf(filename, PATH_MAX, "%s/%s", ti->ti_dirname, db_dir);
+			snprintf(filename, sizeof(filename), "%s/%s", ti->ti_dirname, db_dir);
 
 			if(rmfile(ti, filename, "rmdir"))
 				removed++;
@@ -229,7 +202,7 @@ void process_dirs(struct thread_info *ti, sqlite3 *db)
 
 	sqlite3_finalize(pstmt);
 
-	if(removed)
+	if(removed > 0)
 		fprintf(stderr, "%s: %u empty %s removed\n", ti->ti_section,
 				removed, removed == 1 ? "directory" : "directories");
 }

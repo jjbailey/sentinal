@@ -117,10 +117,10 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	char   *reason;									/* why */
 	extern bool dryrun;								/* dry run flag */
 	int     dfd;									/* dirname fd */
-	int     drcount = 0;							/* dryrun count */
+	int     drcount = 0;							/* dry run count */
 	bool    expbysize;								/* consider expire size */
 	bool    expbytime;								/* consider expire time */
-	sqlite3_stmt *pstmt;							/* prepared statement */
+	sqlite3_stmt *pstmt = NULL;						/* prepared statement */
 	struct stat stbuf;								/* file status */
 	time_t  curtime;								/* now */
 	uint32_t db_size;								/* sql data */
