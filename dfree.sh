@@ -128,7 +128,22 @@ if [[ -z $mount_info ]] ; then
     exit 0
 fi
 
-printf "%-20s %10s %10s %10s %7s %s\n" "Filesystem" "Size" "Used" "Avail" "Use%" "Mounted on"
+max_fs_width=10     # Minimum width
+while IFS=' ' read -r device mount_point ; do
+    [[ ! -d $mount_point ]] && continue
+
+    fs_info=$(get_fs_info "$mount_point")
+    [[ -z $fs_info ]] && continue
+
+    device_length=${#device}
+    if ((device_length > max_fs_width)) ; then
+        max_fs_width=$device_length
+    fi
+done <<< "$mount_info"
+
+((max_fs_width++))
+
+printf "%-${max_fs_width}s %10s %10s %10s %7s %s\n" "Filesystem" "Size" "Used" "Avail" "Use%" "Mounted on"
 
 while IFS=' ' read -r device mount_point ; do
     [[ ! -d $mount_point ]] && continue
@@ -141,10 +156,9 @@ while IFS=' ' read -r device mount_point ; do
     total_human=$(human_readable $total_bytes)
     used_human=$(human_readable $used_bytes)
     available_human=$(human_readable $available_bytes)
-
     use_percent=$(calc_percentage $used_bytes $total_bytes)
 
-    printf "%-20s %10s %10s %10s %7s %s\n" \
+    printf "%-${max_fs_width}s %10s %10s %10s %7s %s\n" \
         "$device" \
         "$total_human" \
         "$used_human" \
