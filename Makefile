@@ -8,6 +8,7 @@
 
 all:		sentinal		\
 			sentinalpipe	\
+			dfree			\
 			pcrefind		\
 			pcretest		\
 			pcre2.so
@@ -109,6 +110,7 @@ install:	all
 			chown root:root $(SEN_HOME) $(SEN_BIN) $(SEN_ETC) $(SEN_DOC)
 			install -o root -g root -m 755 sentinal -t $(SEN_BIN)
 			install -o root -g root -m 755 sentinalpipe -t $(SEN_BIN)
+			install -o root -g root -m 755 dfree -t $(SEN_BIN)
 			install -o root -g root -m 755 pcrefind -t $(SEN_BIN)
 			install -o root -g root -m 755 pcretest -t $(SEN_BIN)
 			install -o root -g root -m 644 examples/example1.ini -T $(SEN_ETC)/example1.ini
@@ -134,7 +136,7 @@ rpm:
 
 clean:
 			rm -f $(SENOBJS) $(SPMOBJS) $(PCFOBJS) $(PCTOBJS) $(PCRESO)
-			rm -f sentinal sentinalpipe pcrefind pcretest
+			rm -f sentinal sentinalpipe dfree pcrefind pcretest
 			rm -f sentinal.service sentinalpipe.service
 			rm -fr packaging/debian/sentinal_*
 			rm -fr packaging/redhat/sentinal-* packaging/redhat/rpmbuild

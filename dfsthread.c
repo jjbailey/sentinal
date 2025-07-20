@@ -131,9 +131,8 @@ void   *dfsthread(void *arg)
 
 		/* report changes >= 1% */
 
-		if(!runreport)
-			if(abs(pc_bfree - save_pc_bfree) >= 1 || abs(pc_ffree - save_pc_ffree) >= 1)
-				runreport = true;
+		runreport = (abs(pc_bfree - save_pc_bfree) >= 1 ||
+					 abs(pc_ffree - save_pc_ffree) >= 1);
 
 		if(lowres || runreport) {
 			resource_report(ti, lowres, pc_bfree, pc_ffree);
@@ -199,10 +198,10 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	char   *db_file;								/* sql data */
 	extern bool dryrun;								/* dry run flag */
 	int     dfd;									/* dirname fd */
-	int     drcount = 0;							/* dryrun count */
+	int     drcount = 0;							/* dry run count */
 	float   pc_bfree = 0;							/* blocks free */
 	float   pc_ffree = 0;							/* files free */
-	sqlite3_stmt *pstmt;							/* prepared statement */
+	sqlite3_stmt *pstmt = NULL;						/* prepared statement */
 	uint32_t filecount;								/* matching files */
 	uint32_t removed = 0;							/* matching files removed */
 

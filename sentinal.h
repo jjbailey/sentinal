@@ -8,7 +8,7 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"2.1.8"
+#define	VERSION_STRING	"2.2.0"
 
 #ifndef _STDBOOL_H
 # include <stdbool.h>
