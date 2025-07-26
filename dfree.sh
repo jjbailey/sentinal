@@ -105,7 +105,7 @@ get_specific_mounts()
 
 get_all_mounts()
 {
-    mount | grep -E '^/' | grep -Ev '^(/dev/loop|/snap/)' | awk '{print $1 " " $3}'
+    mount | grep -E '^/' | grep -Ev '(/dev/loop|/snap)' | awk '{print $1 " " $3}'
 }
 
 # Main script logic
