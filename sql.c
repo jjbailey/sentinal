@@ -38,10 +38,11 @@ static bool execute_sql(const struct thread_info *ti, sqlite3 *db, const char *d
 {
 	char    stmtbuf[BUFSIZ];						/* statement buffer */
 	int     rc;										/* return code */
+	int     tries;									/* retries */
 
 	vsnprintf(stmtbuf, sizeof(stmtbuf), format, ap);
 
-	for(int tries = 0; tries < RETRY_COUNT; ++tries) {
+	for(tries = 0; tries < RETRY_COUNT; ++tries) {
 		rc = sqlite3_exec(db, stmtbuf, NULL, NULL, NULL);
 
 		if(rc == SQLITE_OK || rc == SQLITE_ABORT)

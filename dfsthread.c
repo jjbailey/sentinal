@@ -131,8 +131,8 @@ void   *dfsthread(void *arg)
 
 		/* report changes >= 1% */
 
-		runreport = (abs(pc_bfree - save_pc_bfree) >= 1 ||
-					 abs(pc_ffree - save_pc_ffree) >= 1);
+		runreport = (fabsf(pc_bfree - save_pc_bfree) >= 1 ||
+					 fabsf(pc_ffree - save_pc_ffree) >= 1);
 
 		if(lowres || runreport) {
 			resource_report(ti, lowres, pc_bfree, pc_ffree);
