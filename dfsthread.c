@@ -179,11 +179,11 @@ static void resource_report(struct thread_info *ti, bool lowres, float blk, floa
 					ti->ti_section, ti->ti_dirname, ino);
 	} else {										/* low resource report */
 		if(LOW_RES(ti->ti_diskfree, blk))
-			fprintf(stderr, "%s: low free blocks %s: %.2f%% < %.2f%%\n",
+			fprintf(stderr, "%s: low free blocks %s: %.2f%% <= %.2f%%\n",
 					ti->ti_section, ti->ti_dirname, blk, ti->ti_diskfree);
 
 		if(LOW_RES(ti->ti_inofree, ino))
-			fprintf(stderr, "%s: low free inodes %s: %.2f%% < %.2f%%\n",
+			fprintf(stderr, "%s: low free inodes %s: %.2f%% <= %.2f%%\n",
 					ti->ti_section, ti->ti_dirname, ino, ti->ti_inofree);
 	}
 
