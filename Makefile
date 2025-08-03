@@ -1,6 +1,6 @@
 # Makefile
 #
-# Copyright (c) 2021-2024 jjb
+# Copyright (c) 2021-2025 jjb
 # All rights reserved.
 #
 # This source code is licensed under the MIT license found
@@ -71,11 +71,15 @@ SEN_ETC=	$(SEN_HOME)/etc
 SEN_DOC=	$(SEN_HOME)/doc
 PCRE_DIR=	/usr/lib/sqlite3
 
-CC=			gcc
 WARNINGS=	-Wno-unused-result -Wunused-variable -Wunused-but-set-variable
+
+CC=			gcc
 CFLAGS=		-O2 -fstack-protector-strong -pthread $(WARNINGS)
 
 # CC=			clang-19
+# CFLAGS=		-O -fstack-protector-strong -pthread $(WARNINGS)
+
+# CC=			zig cc
 # CFLAGS=		-O -fstack-protector-strong -pthread $(WARNINGS)
 
 PCRELIB=	-lpcre2-8
