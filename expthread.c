@@ -135,7 +135,14 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 
 	if(ti->ti_dirlimit) {							/* count bytes in dir */
 		snprintf(stmt, BUFSIZ, sql_selectbytes, ti->ti_task);
-		sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
+
+		if(sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL) != SQLITE_OK) {
+			fprintf(stderr, "%s: sqlite3_prepare_v2: %s\n", ti->ti_section,
+					sqlite3_errmsg(db));
+
+			return;
+		}
+
 		sqlite3_step(pstmt);
 		dirbytes = (unsigned long long)sqlite3_column_int64(pstmt, 0);
 		sqlite3_finalize(pstmt);
@@ -144,7 +151,14 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	/* process expired files */
 
 	snprintf(stmt, BUFSIZ, sql_selectfiles, ti->ti_task, ti->ti_task, QUERYLIM);
-	sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
+
+	if(sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL) != SQLITE_OK) {
+		fprintf(stderr, "%s: sqlite3_prepare_v2: %s\n", ti->ti_section,
+				sqlite3_errmsg(db));
+
+		return;
+	}
+
 	time(&curtime);
 
 	for(;;) {
