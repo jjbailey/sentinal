@@ -33,7 +33,6 @@ uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 	char    fullpath[PATH_MAX];						/* full pathname */
 	char    relpath[PATH_MAX];						/* relative pathname */
 	char    stmtbuf[BUFSIZ];						/* statement buffer */
-	int     rc;										/* return code */
 	sqlite3_stmt *insert_dir_stmt = NULL;
 	sqlite3_stmt *insert_file_stmt = NULL;
 	sqlite3_stmt *update_dir_stmt = NULL;
@@ -68,7 +67,7 @@ uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 
 	snprintf(stmtbuf, sizeof(stmtbuf), INSERT_DIR_SQL, ti->ti_task);
 
-	if((rc = sqlite3_prepare_v2(db, stmtbuf, -1, &insert_dir_stmt, NULL)) != SQLITE_OK) {
+	if(sqlite3_prepare_v2(db, stmtbuf, -1, &insert_dir_stmt, NULL) != SQLITE_OK) {
 		fprintf(stderr, "%s: sqlite3_prepare_v2 insert_dir: %s\n",
 				ti->ti_section, sqlite3_errmsg(db));
 
@@ -91,7 +90,7 @@ uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 
 	snprintf(stmtbuf, sizeof(stmtbuf), INSERT_FILE_SQL, ti->ti_task);
 
-	if((rc = sqlite3_prepare_v2(db, stmtbuf, -1, &insert_file_stmt, NULL)) != SQLITE_OK) {
+	if(sqlite3_prepare_v2(db, stmtbuf, -1, &insert_file_stmt, NULL) != SQLITE_OK) {
 		fprintf(stderr, "%s: sqlite3_prepare_v2 insert_file: %s\n",
 				ti->ti_section, sqlite3_errmsg(db));
 
