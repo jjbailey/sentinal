@@ -28,7 +28,7 @@
 #define	LOW_RES(target,avail)	(target > 0 && avail < target)
 
 /* subtract from avail for extra space, reduce flapping */
-#define	PADDING			(float)0.295
+#define	PADDING			0.295f
 
 static bool getvfsstats(struct thread_info *, float *, float *);
 static void process_files(struct thread_info *, sqlite3 *);
@@ -56,6 +56,7 @@ void   *dfsthread(void *arg)
 	struct statvfs svbuf;							/* filesystem status */
 	struct thread_info *ti = arg;					/* thread settings */
 	uint32_t nextid = 1;							/* db_id, db_dirid */
+	uint32_t seed;									/* random seed */
 
 	/*
 	 * this thread requires:
@@ -118,8 +119,9 @@ void   *dfsthread(void *arg)
 	/* monitor filesystem usage */
 	/* let's not start all the same thread types at once */
 
-	srand(pthread_self());
-	usleep((useconds_t) rand() & 0xffff);
+	seed = (unsigned int)(time(NULL) ^ (uintptr_t) pthread_self());
+	srand(seed);
+	usleep(rand_r(&seed) & 0xFFFFF);
 
 	for(;;) {
 		if(getvfsstats(ti, &pc_bfree, &pc_ffree) == false)
@@ -131,8 +133,8 @@ void   *dfsthread(void *arg)
 
 		/* report changes >= 1% */
 
-		runreport = (fabsf(pc_bfree - save_pc_bfree) >= 1 ||
-					 fabsf(pc_ffree - save_pc_ffree) >= 1);
+		runreport = (fabsf(pc_bfree - save_pc_bfree) >= 1.0f ||
+					 fabsf(pc_ffree - save_pc_ffree) >= 1.0f);
 
 		if(lowres || runreport) {
 			resource_report(ti, lowres, pc_bfree, pc_ffree);
@@ -142,6 +144,13 @@ void   *dfsthread(void *arg)
 		}
 
 		if(lowres) {
+			/*
+			 * for multiple threads monitoring the same filesystem
+			 * give the other thread(s) a chance to run first
+			 */
+
+			usleep(rand_r(&seed) & 0xFFFFF);
+
 			pthread_mutex_lock(&dfslock);
 
 			if(findfile(ti, true, &nextid, ti->ti_dirname, db) > 0) {
@@ -192,15 +201,15 @@ static void resource_report(struct thread_info *ti, bool lowres, float blk, floa
 
 static void process_files(struct thread_info *ti, sqlite3 *db)
 {
-	char    filename[PATH_MAX];						/* full pathname */
-	char    stmt[BUFSIZ];							/* statement buffer */
 	char   *db_dir;									/* sql data */
 	char   *db_file;								/* sql data */
+	char    filename[PATH_MAX];						/* full pathname */
+	char    stmt[BUFSIZ];							/* statement buffer */
 	extern bool dryrun;								/* dry run flag */
-	int     dfd;									/* dirname fd */
-	int     drcount = 0;							/* dry run count */
 	float   pc_bfree = 0;							/* blocks free */
 	float   pc_ffree = 0;							/* files free */
+	int     dfd;									/* dirname fd */
+	int     drcount = 0;							/* dry run count */
 	sqlite3_stmt *pstmt = NULL;						/* prepared statement */
 	uint32_t filecount;								/* matching files */
 	uint32_t removed = 0;							/* matching files removed */
@@ -213,7 +222,13 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	/* process all files */
 
 	snprintf(stmt, BUFSIZ, sql_selectfiles, ti->ti_task, ti->ti_task, QUERYLIM);
-	sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL);
+
+	if(sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL) != SQLITE_OK) {
+		fprintf(stderr, "%s: sqlite3_prepare_v2: %s\n", ti->ti_section,
+				sqlite3_errmsg(db));
+
+		return;
+	}
 
 	for(;;) {
 		/* check if usage dropped before we got here */
@@ -251,6 +266,11 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 		db_dir = (char *)sqlite3_column_text(pstmt, 0);
 		db_file = (char *)sqlite3_column_text(pstmt, 1);
 
+		if(IS_NULL(db_file)) {
+			fprintf(stderr, "%s: null file entry in database\n", ti->ti_section);
+			continue;
+		}
+
 		if(NOT_NULL(db_dir))
 			snprintf(filename, PATH_MAX, "%s/%s/%s", ti->ti_dirname, db_dir, db_file);
 		else
@@ -271,12 +291,15 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 		close(dfd);
 	}
 
-	if(removed)
+	if(removed > 0)
 		fprintf(stderr, "%s: %u %s removed\n", ti->ti_section,
 				removed, removed == 1 ? "file" : "files");
 }
 
-#define	PERCENT(x,y)	(((double)x / (double)y) * 100.0)
+static inline double percent(double x, double y)
+{
+	return (y != 0.0) ? (x / y) * 100.0 : 0.0;
+}
 
 static bool getvfsstats(struct thread_info *ti, float *blk, float *ino)
 {
@@ -288,10 +311,10 @@ static bool getvfsstats(struct thread_info *ti, float *blk, float *ino)
 	}
 
 	if(ti->ti_diskfree > 0)
-		*blk = PERCENT(svbuf.f_bavail, svbuf.f_blocks);
+		*blk = (float)percent(svbuf.f_bavail, svbuf.f_blocks);
 
 	if(ti->ti_inofree > 0)
-		*ino = PERCENT(svbuf.f_favail, svbuf.f_files);
+		*ino = (float)percent(svbuf.f_favail, svbuf.f_files);
 
 	return (true);
 }
