@@ -18,7 +18,9 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <limits.h>
 #include <math.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include "sentinal.h"

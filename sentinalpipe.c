@@ -16,7 +16,9 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <libgen.h>
+#include <limits.h>
 #include <signal.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include "sentinal.h"
 #include "basename.h"

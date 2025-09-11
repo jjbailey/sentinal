@@ -11,7 +11,9 @@
 
 #include <stdio.h>
 #include <libgen.h>
+#include <limits.h>
 #include <mntent.h>
+#include <stdlib.h>
 #include <string.h>
 #include "sentinal.h"
 
