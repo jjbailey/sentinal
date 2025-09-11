@@ -6,7 +6,7 @@
 #
 # This source code is licensed under the MIT license found
 # in the root directory of this source tree.
-#/
+#
 
 human_readable()
 {
@@ -95,7 +95,7 @@ get_specific_mounts()
 
 get_all_mounts()
 {
-    mount | grep -E '^/' | grep -Ev '(/dev/loop|/snap)' | awk '{print $1 " " $3}'
+    findmnt -rn -o SOURCE,TARGET -t ext4,xfs,nfs,nfs4,cifs
 }
 
 # Main script logic
