@@ -2,7 +2,7 @@
  * readini.c
  * Read INI file and process the keys/values.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
