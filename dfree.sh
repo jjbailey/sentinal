@@ -50,20 +50,10 @@ calc_percentage()
 get_fs_info()
 {
     local mount_point=$1
-    local stat_output
-
-    if stat_output=$(stat -f "$mount_point" 2> /dev/null) ; then
-        local total_blocks free_blocks available_blocks block_size
-
-        total_blocks=$(echo "$stat_output" | awk '/Blocks:/ {print $3}')
-        free_blocks=$(echo "$stat_output" | awk '/Blocks:/ {print $5}')
-        available_blocks=$(echo "$stat_output" | awk '/Blocks:/ {print $7}')
-        block_size=$(echo "$stat_output" | awk '/Block size:/ {print $3}')
-
-        local total_bytes=$((total_blocks * block_size))
-        local available_bytes=$((available_blocks * block_size))
-        local used_bytes=$((total_bytes - available_bytes))
-
+    local df_output
+    if df_output=$(df -B1 "$mount_point" 2> /dev/null | awk 'NR==2') ; then
+        local total_bytes used_bytes available_bytes
+        read -r _ total_bytes used_bytes available_bytes _ _ <<< "$df_output"
         echo "$total_bytes $used_bytes $available_bytes"
     else
         echo ""
@@ -128,7 +118,7 @@ if [[ -z $mount_info ]] ; then
     exit 0
 fi
 
-max_fs_width=10     # Minimum width
+max_fs_width=10
 while IFS=' ' read -r device mount_point ; do
     [[ ! -d $mount_point ]] && continue
 
