@@ -10,25 +10,27 @@
 
 human_readable()
 {
-    local bytes=$1
-    local units=("B" "K" "M" "G" "T" "P")
-    local unit=0
-    local size=$bytes
+    local bytes="$1"
 
-    while ((size >= 1024 && unit < 5)) ; do
-        size=$((size / 1024))
-        ((unit++))
-    done
-
-    if ((unit == 0)) ; then
-        echo "${size}${units[$unit]}"
-    else
-        if command -v bc > /dev/null 2>&1 ; then
-            printf "%.1f%s" "$(echo "scale=1 ; $bytes / (1024^$unit)" | bc)" "${units[$unit]}"
-        else
-            echo "${size}${units[$unit]}"
-        fi
+    # Defensive: treat empty/non-numeric as zero
+    if [[ -z $bytes || $bytes != [0-9]* ]] ; then
+        echo "0B"
+        return
     fi
+
+    # Use awk (floating arithmetic) to avoid bash 64-bit overflow issues.
+    awk -v b="$bytes" 'BEGIN {
+        split("B K M G T P E", u, " ") ;
+        if (b == 0) { print "0B" ; exit }
+        unit = 1
+        val = b + 0
+        while (val >= 1024 && unit < length(u)) {
+            val = val / 1024
+            unit++
+        }
+        # one decimal like your original function
+        printf "%.1f%s\n", val, u[unit]
+    }'
 }
 
 calc_percentage()
@@ -95,7 +97,8 @@ get_specific_mounts()
 
 get_all_mounts()
 {
-    findmnt -rn -o SOURCE,TARGET -t ext4,xfs,nfs,nfs4,cifs
+    findmnt -rn -o SOURCE,TARGET -t ext4,xfs,nfs,nfs4,cifs |
+        grep -Ev '(/dev/loop|/var/snap|/snap)'
 }
 
 # Main script logic
