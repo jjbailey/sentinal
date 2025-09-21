@@ -10,13 +10,14 @@
  */
 
 #include <stdio.h>
+#include <sys/stat.h>
+#include <sys/statvfs.h>
+#include <errno.h>
+#include <limits.h>
+#include <linux/limits.h>
+#include <mntent.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/statvfs.h>
-#include <mntent.h>
-#include <errno.h>
-#include <sys/stat.h>
-#include <limits.h>
 
 #define MAX_PATH    256
 #define MAX_LINE    1024
@@ -105,7 +106,8 @@ int get_fs_info(const char *mount_point,
 // Get mount for each user-specified path
 int get_specific_mounts(int argc, char *argv[], Filesystem *fs_list, int *fs_count)
 {
-	for(int i = 1; i < argc; i++) {
+	int     i;
+	for(i = 1; i < argc; i++) {
 		char    resolved_path[PATH_MAX];
 		if(realpath(argv[i], resolved_path) == NULL) {
 			fprintf(stderr, "Warning: Cannot resolve path '%s': %s\n", argv[i],
@@ -198,9 +200,10 @@ int main(int argc, char *argv[])
 {
 	Filesystem fs_list[MAX_MOUNTS];
 	int     fs_count = 0;
+	int     i;
 
 	// Help
-	for(int i = 1; i < argc; i++) {
+	for(i = 1; i < argc; i++) {
 		if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0 ||
 		   strcmp(argv[i], "-?") == 0) {
 			show_usage(argv[0]);
@@ -221,7 +224,7 @@ int main(int argc, char *argv[])
 	}
 	// Calculate max width of device column
 	int     max_fs_width = 10;
-	for(int i = 0; i < fs_count; i++) {
+	for(i = 0; i < fs_count; i++) {
 		int     len = strlen(fs_list[i].device);
 		if(len > max_fs_width)
 			max_fs_width = len;
@@ -233,7 +236,7 @@ int main(int argc, char *argv[])
 		   max_fs_width, "Filesystem", "Size", "Used", "Avail", "Use%", "Mounted on");
 
 	// Print data
-	for(int i = 0; i < fs_count; i++) {
+	for(i = 0; i < fs_count; i++) {
 		if(!is_directory(fs_list[i].mount_point))
 			continue;
 
