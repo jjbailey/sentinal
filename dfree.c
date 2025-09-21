@@ -27,7 +27,8 @@ typedef struct {
 	char    mount_point[MAX_PATH];
 	unsigned long long total_bytes;
 	unsigned long long used_bytes;
-	unsigned long long available_bytes;
+	unsigned long long avail_bytes;					// Available to unprivileged users
+	unsigned long long f_bavail_bytes;				// Exactly same as avail_bytes (for clarity)
 } Filesystem;
 
 // Converts bytes into human readable format into buf (thread-safe)
@@ -43,14 +44,17 @@ void human_readable(char *buf, size_t buflen, unsigned long long bytes)
 	snprintf(buf, buflen, "%.1f%s", val, units[unit]);
 }
 
-// Calculates '% used' into buf
-void calc_percentage(char *buf, size_t buflen, unsigned long long used,
-					 unsigned long long total)
+// Calculates '% used' in the way that `df` calculates it
+// Used = total - f_bfree
+// Avail = f_bavail (as per statvfs)
+// % = used / (used + avail)
+void calc_percentage(char *buf, size_t buflen,
+					 unsigned long long used, unsigned long long avail)
 {
-	if(total == 0) {
+	if((used + avail) == 0) {
 		snprintf(buf, buflen, "0.00%%");
 	} else {
-		double  percent = (double)used * 100 / total;
+		double  percent = (double)used * 100.0 / (used + avail);
 		snprintf(buf, buflen, "%.2f%%", percent);
 	}
 }
@@ -78,8 +82,9 @@ void show_usage(const char *progname)
 
 // Get size stats for a mount
 int get_fs_info(const char *mount_point,
-				unsigned long long *total, unsigned long long *used,
-				unsigned long long *avail)
+				unsigned long long *total,
+				unsigned long long *used,
+				unsigned long long *avail, unsigned long long *f_bavail_raw)
 {
 	struct statvfs fs;
 	if(statvfs(mount_point, &fs) != 0) {
@@ -88,9 +93,12 @@ int get_fs_info(const char *mount_point,
 		return 1;
 	}
 	unsigned long long block_size = fs.f_frsize ? fs.f_frsize : fs.f_bsize;
+
 	*total = fs.f_blocks * block_size;
-	*avail = fs.f_bavail * block_size;
+	*f_bavail_raw = fs.f_bavail * block_size;
+	*avail = fs.f_bavail * block_size;				// To unprivileged (like df)
 	*used = (fs.f_blocks - fs.f_bfree) * block_size;
+
 	return 0;
 }
 
@@ -229,16 +237,21 @@ int main(int argc, char *argv[])
 		if(!is_directory(fs_list[i].mount_point))
 			continue;
 
+		unsigned long long f_bavail_bytes = 0;
 		if(get_fs_info(fs_list[i].mount_point, &fs_list[i].total_bytes,
-					   &fs_list[i].used_bytes, &fs_list[i].available_bytes) != 0)
+					   &fs_list[i].used_bytes, &fs_list[i].avail_bytes,
+					   &f_bavail_bytes) != 0)
 			continue;
+		fs_list[i].f_bavail_bytes = f_bavail_bytes;
 
 		char    total_human[32], used_human[32], avail_human[32], use_percent[16];
 		human_readable(total_human, sizeof(total_human), fs_list[i].total_bytes);
 		human_readable(used_human, sizeof(used_human), fs_list[i].used_bytes);
-		human_readable(avail_human, sizeof(avail_human), fs_list[i].available_bytes);
-		calc_percentage(use_percent, sizeof(use_percent), fs_list[i].used_bytes,
-						fs_list[i].total_bytes);
+		human_readable(avail_human, sizeof(avail_human), fs_list[i].avail_bytes);
+
+		// Use correct percentage: used/(used+avail) -- note avail is f_bavail
+		calc_percentage(use_percent, sizeof(use_percent),
+						fs_list[i].used_bytes, fs_list[i].f_bavail_bytes);
 
 		printf("%-*s %10s %10s %10s %7s %s\n",
 			   max_fs_width, fs_list[i].device, total_human, used_human, avail_human,
