@@ -174,7 +174,8 @@ int get_all_mounts(Filesystem *fs_list, int *fs_count)
 	while((ent = getmntent(mnt))) {
 		// Only allow desired fs types
 		if(!(strstr(ent->mnt_type, "ext4") || strstr(ent->mnt_type, "xfs") ||
-			 strstr(ent->mnt_type, "nfs") || strstr(ent->mnt_type, "cifs"))) {
+			 strstr(ent->mnt_type, "nfs") || strstr(ent->mnt_type, "cifs") ||
+			 strstr(ent->mnt_type, "ntfs3") || strstr(ent->mnt_type, "ntfs"))) {
 			continue;
 		}
 		// Exclude loop devices and snap mounts
