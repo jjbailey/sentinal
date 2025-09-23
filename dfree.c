@@ -28,9 +28,21 @@ typedef struct {
 	char    mount_point[MAX_PATH];
 	unsigned long long total_bytes;
 	unsigned long long used_bytes;
-	unsigned long long avail_bytes;					// Available to unprivileged users
-	unsigned long long f_bavail_bytes;				// Exactly same as avail_bytes (for clarity)
+	unsigned long long avail_bytes;
+	unsigned long long f_bavail_bytes;
 } Filesystem;
+
+const char *allowed_types[] =
+	{ "ext4", "xfs", "ext2", "ext3", "nfs", "cifs", "ntfs3", "ntfs", NULL };
+
+int is_allowed_type(const char *type)
+{
+	for(const char **p = allowed_types; *p; p++) {
+		if(strstr(type, *p))
+			return 1;
+	}
+	return 0;
+}
 
 // Converts bytes into human readable format into buf (thread-safe)
 void human_readable(char *buf, size_t buflen, unsigned long long bytes)
@@ -97,7 +109,7 @@ int get_fs_info(const char *mount_point,
 
 	*total = fs.f_blocks * block_size;
 	*f_bavail_raw = fs.f_bavail * block_size;
-	*avail = fs.f_bavail * block_size;				// To unprivileged (like df)
+	*avail = fs.f_bavail * block_size;
 	*used = (fs.f_blocks - fs.f_bfree) * block_size;
 
 	return 0;
@@ -172,10 +184,7 @@ int get_all_mounts(Filesystem *fs_list, int *fs_count)
 	}
 	struct mntent *ent;
 	while((ent = getmntent(mnt))) {
-		// Only allow desired fs types
-		if(!(strstr(ent->mnt_type, "ext4") || strstr(ent->mnt_type, "xfs") ||
-			 strstr(ent->mnt_type, "nfs") || strstr(ent->mnt_type, "cifs") ||
-			 strstr(ent->mnt_type, "ntfs3") || strstr(ent->mnt_type, "ntfs"))) {
+		if(!is_allowed_type(ent->mnt_type)) {
 			continue;
 		}
 		// Exclude loop devices and snap mounts
