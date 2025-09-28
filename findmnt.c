@@ -2,7 +2,7 @@
  * findmnt.c
  * Find the mount point for a directory.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2025 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -11,7 +11,9 @@
 
 #include <stdio.h>
 #include <libgen.h>
+#include <limits.h>
 #include <mntent.h>
+#include <stdlib.h>
 #include <string.h>
 #include "sentinal.h"
 

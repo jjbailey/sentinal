@@ -20,11 +20,11 @@
 
 int main(int argc, char *argv[])
 {
+	bool    match;
+	bool    pcrematch(struct thread_info *, char *);
 	char   *myname;
 	int     i;
-	bool    match;
 	struct thread_info ti;							/* so we can use pcrecompile.c */
-	bool    pcrematch(struct thread_info *, char *);
 
 	myname = base(argv[0]);
 

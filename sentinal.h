@@ -8,7 +8,7 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"2.2.2"
+#define	VERSION_STRING	"2.2.3"
 
 #ifndef _STDBOOL_H
 # include <stdbool.h>
@@ -133,6 +133,7 @@ struct thread_info {
 
 bool    namematch(struct thread_info *, char *);
 bool    pcrecompile(struct thread_info *);
+bool    pcrematch(struct thread_info *, char *);
 bool    rmfile(struct thread_info *, const char *, const char *);
 bool    threadtype(struct thread_info *, char *);
 bool    validdbname(char *);

@@ -10,6 +10,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -66,7 +67,7 @@ int main(int argc, char *argv[])
 			opt_names = true;
 			break;
 
-		case 'x':									/* don't descend directories on other filesystems */
+		case 'x':									/* don't descend into other filesystems */
 			opt_xdev = false;
 			break;
 
@@ -125,7 +126,6 @@ uint32_t pcrefind(struct thread_info *ti, bool top, char *dir)
 	struct dirent *dp;
 	struct stat stbuf;								/* file status */
 	uint32_t entries = 0;							/* file entries */
-	bool    pcrematch(struct thread_info *, char *);
 
 	if(IS_NULL(dir))
 		return (0);
@@ -151,8 +151,8 @@ uint32_t pcrefind(struct thread_info *ti, bool top, char *dir)
 		}
 
 	if((dirp = opendir(dir)) == NULL) {
-		if(errno == EACCES)
-			perror(dir);
+		fprintf(stderr, "%s: cannot open directory: %s: %s\n", ti->ti_section, dir,
+				strerror(errno));
 
 		return (entries);
 	}
@@ -163,7 +163,11 @@ uint32_t pcrefind(struct thread_info *ti, bool top, char *dir)
 		if(MY_DIR(dp->d_name) || MY_PARENT(dp->d_name))
 			continue;
 
-		snprintf(filename, PATH_MAX, "%s/%s", dir, dp->d_name);
+		if(snprintf(filename, PATH_MAX, "%s/%s", dir, dp->d_name) >= PATH_MAX) {
+			fprintf(stderr, "%s: path too long: %s/%s\n", ti->ti_section, dir,
+					dp->d_name);
+			continue;
+		}
 
 		if(lstat(filename, &stbuf) == -1)
 			continue;
