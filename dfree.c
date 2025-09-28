@@ -37,7 +37,8 @@ const char *allowed_types[] =
 
 int is_allowed_type(const char *type)
 {
-	for(const char **p = allowed_types; *p; p++) {
+	const char **p;
+	for(p = allowed_types; *p; p++) {
 		if(strstr(type, *p))
 			return 1;
 	}
