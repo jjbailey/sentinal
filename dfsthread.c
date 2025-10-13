@@ -289,7 +289,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 
 	/* modified buffer cache pages */
 
-	if((dfd = open(ti->ti_dirname, R_OK)) > 0) {
+	if((dfd = open(ti->ti_dirname, O_RDONLY)) >= 0) {
 		fdatasync(dfd);
 		close(dfd);
 	}
