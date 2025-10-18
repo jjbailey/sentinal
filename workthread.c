@@ -309,8 +309,15 @@ static int fifoopen(struct thread_info *ti)
 			exit(EXIT_SUCCESS);
 		}
 
-		if(pid > 0)
+		if(pid > 0) {
 			waitpid(pid, &status, 0);
+			if(!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+				fprintf(stderr, "%s: can't mkfifo %s\n", ti->ti_section,
+						base(ti->ti_pipename));
+
+				return (-1);
+			}
+		}
 	}
 
 	if((fd = open(ti->ti_pipename, O_RDONLY)) == -1) {
