@@ -156,13 +156,13 @@ sentinal can remove files when the filesystem they occupy falls below the free s
 
 ```mermaid
 flowchart TB
-    s1[read diskfree]
-    s2[check diskfree]
-    d1{low free space}
-    a1[yes]
-    a2[no]
-    s3[remove oldest files]
-    s9[return to check diskfree]
+    s1[ read diskfree ]
+    s2[ check diskfree ]
+    d1{ low free space }
+    a1[ yes ]
+    a2[ no ]
+    s3[ remove oldest files ]
+    s9[ return to check diskfree ]
     s1 --> s2 --> d1
     d1 --> a1 --> s3 --> s9
     d1 --> a2 --> s9
@@ -193,22 +193,22 @@ The combinations of `expire` and `expiresiz` settings affect expiration behavior
 
 ```mermaid
 flowchart TB
-    s1[read<br>retmin, retmax<br>expire, expiresiz<br>dirlimit]
-    s2[check vars]
-    d1{min retention}
-    d2{max retention}
-    d3{dir size limit}
-    d4{expiration time<br>or size}
-    a1[yes]
-    a2[no]
-    a3[yes]
-    a4[no]
-    a5[yes]
-    a6[no]
-    a7[yes]
-    a8[no]
-    s3[remove oldest or expired files]
-    s9[return to check vars]
+    s1[ read<br>retmin, retmax<br>expire, expiresiz<br>dirlimit ]
+    s2[ check vars ]
+    d1{ min retention }
+    d2{ max retention }
+    d3{ dir size limit }
+    d4{ expiration time<br>or size }
+    a1[ yes ]
+    a2[ no ]
+    a3[ yes ]
+    a4[ no ]
+    a5[ yes ]
+    a6[ no ]
+    a7[ yes ]
+    a8[ no ]
+    s3[ remove oldest or expired files ]
+    s9[ return to check vars ]
     s1 --> s2
     s2 --> d1 --> a1 --> s9
     d1 --> a2 --> d2 --> a3 --> s3 --> s9
@@ -274,13 +274,13 @@ sentinal, using inotify, can monitor and process logs when they reach a specifie
 
 ```mermaid
 flowchart TB
-    s1[read rotatesiz, postcmd]
-    s2[check size]
-    d1{size reached}
-    a1[yes]
-    a2[no]
-    s3[run postcmd]
-    s4[return to check size]
+    s1[ read rotatesiz, postcmd ]
+    s2[ check size ]
+    d1{ size reached }
+    a1[ yes ]
+    a2[ no ]
+    s3[ run postcmd ]
+    s4[ return to check size ]
     s1 --> s2
     s2 --> d1
     d1 --> a1
