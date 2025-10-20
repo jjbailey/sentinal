@@ -34,6 +34,11 @@ static void safe_reset_sig(volatile sig_atomic_t * sig_var);
 
 void   *slmthread(void *arg)
 {
+	char    filename[PATH_MAX];
+	int     status;
+	struct stat stbuf;
+	struct thread_info *ti = arg;
+
 	/*
 	 * this thread requires:
 	 *  - ti_command unset
@@ -46,11 +51,6 @@ void   *slmthread(void *arg)
 	 *  - ti_gid
 	 *  - ti_truncate
 	 */
-
-	char    filename[PATH_MAX];
-	int     status;
-	struct stat stbuf;
-	struct thread_info *ti = arg;
 
 	int     setname_err = pthread_setname_np(pthread_self(), threadname(ti, _SLM_THR));
 
