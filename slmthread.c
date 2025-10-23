@@ -34,10 +34,10 @@ static void safe_reset_sig(volatile sig_atomic_t * sig_var);
 
 void   *slmthread(void *arg)
 {
-	char    filename[PATH_MAX];
-	int     status;
-	struct stat stbuf;
-	struct thread_info *ti = arg;
+	char    filename[PATH_MAX];						/* full pathname */
+	int     status;									/* postcmd child exit */
+	struct stat stbuf;								/* file status */
+	struct thread_info *ti = arg;					/* thread settings */
 
 	/*
 	 * this thread requires:
@@ -65,7 +65,7 @@ void   *slmthread(void *arg)
 		return ((void *)0);
 	}
 
-	if(ti->ti_rotatesiz)
+	if(ti->ti_rotatesiz)							/* mandatory, check anyway */
 		fprintf(stderr, "%s: monitor file: %s for size %s\n",
 				ti->ti_section, filename, ti->ti_rotatestr);
 
