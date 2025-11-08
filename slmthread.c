@@ -31,8 +31,8 @@ static bool inotify_watch(char *, char *);
 
 void   *slmthread(void *arg)
 {
-	char    filename[PATH_MAX];
-	int     status;
+	char    filename[PATH_MAX];						/* full pathname */
+	int     status;									/* postcmd child exit */
 	struct stat stbuf;								/* file status */
 	struct thread_info *ti = arg;					/* thread settings */
 
@@ -84,14 +84,15 @@ void   *slmthread(void *arg)
 static bool inotify_watch(char *section, char *filename)
 {
 	char    buf[BUFSIZ] __attribute__((aligned(__alignof__(struct inotify_event))));
-	int     fd;
-	int     wd;
+	int     fd = -1;
+	int     wd = -1;
+	int     watchflags = IN_MODIFY | IN_MOVE_SELF | IN_DELETE_SELF;
 	struct pollfd fds[1];
 
 	if(access(filename, R_OK) == -1 || (fd = inotify_init1(IN_NONBLOCK)) == -1)
 		return (false);
 
-	if((wd = inotify_add_watch(fd, filename, IN_MODIFY | IN_MOVE_SELF)) == -1) {
+	if((wd = inotify_add_watch(fd, filename, watchflags)) == -1) {
 		close(fd);
 		return (false);
 	}

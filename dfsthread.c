@@ -25,7 +25,10 @@
 #define	SCANRATE        (ONE_MINUTE)
 #define	DRYSCAN         30							/* scanrate for dryrun */
 
-#define	LOW_RES(target,avail)	(target > 0 && avail < target)
+static inline bool LOW_RES(float target, float avail)
+{
+	return target > 0 && avail < target;
+}
 
 /* subtract from avail for extra space, reduce flapping */
 #define	PADDING			0.295f
@@ -35,10 +38,10 @@ static void process_files(struct thread_info *, sqlite3 *);
 static void resource_report(struct thread_info *, bool, float, float);
 
 static char *sql_selectfiles = "SELECT db_dir, db_file\n \
-	FROM  %s_dir, %s_file\n \
-	WHERE db_dirid = db_id\n \
-	ORDER BY db_time\n \
-	LIMIT %d;";
+    FROM  %s_dir, %s_file\n \
+    WHERE db_dirid = db_id\n \
+    ORDER BY db_time\n \
+    LIMIT %d;";
 
 /* externals */
 extern pthread_mutex_t dfslock;						/* thread lock */
@@ -286,7 +289,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 
 	/* modified buffer cache pages */
 
-	if((dfd = open(ti->ti_dirname, R_OK)) > 0) {
+	if((dfd = open(ti->ti_dirname, O_RDONLY)) >= 0) {
 		fdatasync(dfd);
 		close(dfd);
 	}

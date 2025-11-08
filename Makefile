@@ -34,7 +34,9 @@ SENOBJS := sentinal.o convexpire.o dfsthread.o expthread.o findfile.o \
 	strdel.o strlcat.o strlcpy.o strreplace.o threadname.o \
 	threadtype.o validdbname.o verifyids.o workcmd.o workthread.o
 
-SPMOBJS := sentinalpipe.o fullpath.o iniget.o ini.o strlcpy.o validdbname.o
+SPMOBJS := sentinalpipe.o fullpath.o iniget.o ini.o rlimit.o \
+	strlcpy.o validdbname.o
+
 PCFOBJS := pcrefind.o fullpath.o pcrecompile.o pcrematch.o strlcpy.o
 PCTOBJS := pcretest.o pcrecompile.o pcrematch.o
 PCRESO := pcre2.so
