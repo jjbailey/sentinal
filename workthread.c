@@ -2,7 +2,7 @@
  * workthread.c
  * Execute command, read input from a FIFO, write output to a logfile.
  *
- * Copyright (c) 2021-2025 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -87,13 +87,15 @@ void   *workthread(void *arg)
 		/* set up pipes */
 
 		if((logfd = fifoopen(ti)) == -1) {
-			/* open/create FIFO failed */
-			return ((void *)0);
+			sleep(ONE_MINUTE);
+			continue;
 		}
 
 		if(pipe(pipefd) == -1) {
 			fprintf(stderr, "%s: can't create IPC pipe\n", ti->ti_section);
-			return ((void *)0);
+			close(logfd);
+			sleep(ONE_MINUTE);
+			continue;
 		}
 
 		logname(ti->ti_template, ti->ti_filename);
@@ -112,7 +114,11 @@ void   *workthread(void *arg)
 
 		case -1:
 			fprintf(stderr, "%s: can't fork command\n", ti->ti_section);
-			return ((void *)0);
+			close(logfd);
+			close(pipefd[0]);
+			close(pipefd[1]);
+			sleep(ONE_MINUTE);
+			continue;
 
 		case 0:
 			/*
@@ -320,13 +326,16 @@ static int fifoopen(struct thread_info *ti)
 		}
 	}
 
-	if((fd = open(ti->ti_pipename, O_RDONLY)) == -1) {
-		/* systemctl restart can cause EINTR */
+	while((fd = open(ti->ti_pipename, O_RDONLY)) == -1) {
+		if(errno == EINTR)
+			continue;
 
-		if(errno != EINTR)
-			fprintf(stderr, "%s: can't open %s: %s\n", ti->ti_section,
-					base(ti->ti_pipename), strerror(errno));
-	} else {
+		fprintf(stderr, "%s: can't open %s: %s\n", ti->ti_section,
+				base(ti->ti_pipename), strerror(errno));
+		break;
+	}
+
+	if(fd != -1) {
 		/* reinforce in case these were changed externally */
 
 		chown(ti->ti_pipename, ti->ti_uid, ti->ti_gid);
