@@ -2,7 +2,7 @@
  * sentinal.c
  * sentinal: Manage directory contents according to an INI file.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
+#include <fcntl.h>
 #include <getopt.h>
 #include <unistd.h>
 #include "sentinal.h"
@@ -170,11 +171,14 @@ int main(int argc, char *argv[])
 
 	/* create pid file, check for lock */
 
-	if(create_pid_file(pidfile) == false)
-		if(dryrun == false) {
+	if(dryrun == false) {
+		if(create_pid_file(pidfile) == false) {
 			fprintf(stderr, "%s: can't create pidfile or pidfile is in use\n", myname);
 			exit(EXIT_FAILURE);
 		}
+	} else {
+		strlcpy(database, SQLMEMDB, PATH_MAX);
+	}
 
 	parentsignals();								/* important: signal handling */
 	rlimit(MAXFILES);								/* limit the number of open files */
@@ -292,6 +296,7 @@ int main(int argc, char *argv[])
 
 static bool create_pid_file(char *pidfile)
 {
+	int     fd;
 	FILE   *fp;
 
 	if((fp = fopen(pidfile, "r"))) {
@@ -303,15 +308,17 @@ static bool create_pid_file(char *pidfile)
 			return (false);
 	}
 
-	if((fp = fopen(pidfile, "w"))) {
+	if((fd = open(pidfile, O_RDWR | O_CREAT, 0644)) != -1) {
+		if(lockf(fd, F_LOCK, (off_t) 0) == -1) {
+			close(fd);
+			return (false);
+		}
+
+		ftruncate(fd, (off_t) 0);
+		fp = fdopen(fd, "w");
 		fprintf(fp, "%d\n", getpid());
 		fflush(fp);
-		rewind(fp);
-
-		if(lockf(fileno(fp), F_LOCK, (off_t) 0) == 0)
-			return (true);
-
-		fclose(fp);
+		return (true);
 	}
 
 	return (false);
