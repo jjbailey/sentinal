@@ -2,7 +2,7 @@
  * expthread.c
  * File expiration thread.  Remove files older than expire time.
  *
- * Copyright (c) 2021-2025 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -123,7 +123,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	sqlite3_stmt *pstmt = NULL;						/* prepared statement */
 	struct stat stbuf;								/* file status */
 	time_t  curtime;								/* now */
-	uint32_t db_size;								/* sql data */
+	unsigned long long db_size;						/* sql data */
 	uint32_t filecount;								/* matching files */
 	uint32_t removed = 0;							/* matching files removed */
 	unsigned long long dirbytes = 0L;				/* dirsize in bytes */
@@ -143,8 +143,8 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 			return;
 		}
 
-		sqlite3_step(pstmt);
-		dirbytes = (unsigned long long)sqlite3_column_int64(pstmt, 0);
+		if(sqlite3_step(pstmt) == SQLITE_ROW)
+			dirbytes = (unsigned long long)sqlite3_column_int64(pstmt, 0);
 		sqlite3_finalize(pstmt);
 	}
 
@@ -177,7 +177,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 
 		db_dir = (char *)sqlite3_column_text(pstmt, 0);
 		db_file = (char *)sqlite3_column_text(pstmt, 1);
-		db_size = (uint32_t) sqlite3_column_int(pstmt, 2);
+		db_size = (unsigned long long)sqlite3_column_int64(pstmt, 2);
 
 		/* assemble filename: ti_dirname + / + db_dir + / + db_file */
 
@@ -217,7 +217,10 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 		if(rmfile(ti, filename, reason)) {
 			removed++;
 			filecount--;
-			dirbytes -= db_size;
+			if(dirbytes >= db_size)
+				dirbytes -= db_size;
+			else
+				dirbytes = 0;
 		}
 	}
 
