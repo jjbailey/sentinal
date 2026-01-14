@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <strings.h>
 #include "ini.h"
 
 #if 0												/* jjb */
@@ -46,7 +47,7 @@ static int strcmpci(char *a, char *b)
 #define	strcmpci	strcasecmp						/* jjb */
 
 /* Returns the next string in the split data */
-static char *next(ini_t *ini, char *p)
+static char *next(const ini_t *ini, char *p)
 {
 	p += strlen(p);
 	while(p < ini->end && *p == '\0') {
@@ -184,11 +185,11 @@ static void split_data(ini_t *ini)
 	}
 }
 
-ini_t  *ini_load(char *filename)
+ini_t  *ini_load(const char *filename)
 {
 	ini_t  *ini = NULL;
 	FILE   *fp = NULL;
-	int     n, sz;
+	long    n, sz;
 
 	/* Init INI struct */
 	ini = malloc(sizeof(*ini));
@@ -214,6 +215,10 @@ ini_t  *ini_load(char *filename)
 
 	/* Load file content into memory, null terminate, init end var */
 	ini->data = malloc(sz + 1);
+	if(!ini->data) {
+		goto fail;
+	}
+
 	ini->data[sz] = '\0';
 	ini->end = ini->data + sz;
 	n = fread(ini->data, 1, sz, fp);
@@ -238,11 +243,13 @@ ini_t  *ini_load(char *filename)
 
 void ini_free(ini_t *ini)
 {
-	free(ini->data);
-	free(ini);
+	if(ini) {
+		free(ini->data);
+		free(ini);
+	}
 }
 
-char   *ini_get(ini_t *ini, char *section, char *key)
+char   *ini_get(const ini_t *ini, const char *section, const char *key)
 {
 	char   *current_section = "";
 	char   *p = ini->data;
@@ -275,7 +282,7 @@ char   *ini_get(ini_t *ini, char *section, char *key)
 }
 
 #if 0												/* jjb */
-int ini_sget(ini_t *ini, char *section, char *key, char *scanfmt, void *dst)
+int ini_sget(const ini_t *ini, const char *section, const char *key, const char *scanfmt, void *dst)
 {
 	char   *val = ini_get(ini, section, key);
 	if(!val) {
