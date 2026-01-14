@@ -2,7 +2,7 @@
  * readini.c
  * Read INI file and process the keys/values.
  *
- * Copyright (c) 2021-2025 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -59,26 +59,31 @@ int readini(char *myname, char *inifile)
 			return (0);
 		}
 
-	realpath(inifile, inipath);
+	if(realpath(inifile, inipath) == NULL) {
+		fprintf(stderr, "%s: can't resolve %s\n", myname, inifile);
+		return (0);
+	}
 
-	if((inifd = open(inipath, O_RDONLY)) > 0)
+	if((inifd = open(inipath, O_RDONLY)) != -1) {
 		if(lstat(inipath, &stbuf) == 0) {
 			if(S_ISLNK(stbuf.st_mode)) {
 				fprintf(stderr, "%s: %s is a symlink\n", myname, inipath);
+				close(inifd);
 				return (0);
 			}
 
 			if(stbuf.st_mode & S_IWGRP || stbuf.st_mode & S_IWOTH) {
 				fprintf(stderr, "%s: %s is writable by group or other\n", myname,
 						inipath);
-
+				close(inifd);
 				return (0);
 			}
 
 			/* tighter */
 			fchmod(inifd, stbuf.st_mode & ~(S_IWGRP | S_IXGRP | S_IWOTH | S_IXOTH));
-			close(inifd);
 		}
+		close(inifd);
+	}
 
 	/* configure the threads */
 
@@ -155,6 +160,11 @@ int readini(char *myname, char *inifile)
 		ti->ti_dirname = strndup(rpbuf, PATH_MAX);
 		ti->ti_mountdir = malloc(PATH_MAX);			/* for findmnt() */
 
+		if(ti->ti_mountdir == NULL) {
+			fprintf(stderr, "%s: malloc failed\n", ti->ti_section);
+			return (0);
+		}
+
 		if(IS_NULL(ti->ti_dirname) || strcmp(ti->ti_dirname, "/") == 0) {
 			fprintf(stderr, "%s: missing or bad dirname\n", ti->ti_section);
 			return (0);
@@ -215,6 +225,12 @@ int readini(char *myname, char *inifile)
 		}
 
 		ti->ti_template = malloc(BUFSIZ);			/* more than PATH_MAX */
+
+		if(ti->ti_template == NULL) {
+			fprintf(stderr, "%s: malloc failed\n", ti->ti_section);
+			return (0);
+		}
+
 		memset(ti->ti_template, '\0', BUFSIZ);
 		strlcpy(ti->ti_template,
 				base(my_ini(inidata, ti->ti_section, "template")), PATH_MAX);
@@ -223,6 +239,12 @@ int readini(char *myname, char *inifile)
 		pcrecompile(ti);
 
 		ti->ti_filename = malloc(BUFSIZ);			/* more than PATH_MAX */
+
+		if(ti->ti_filename == NULL) {
+			fprintf(stderr, "%s: malloc failed\n", ti->ti_section);
+			return (0);
+		}
+
 		memset(ti->ti_filename, '\0', BUFSIZ);
 
 		ti->ti_pid = (pid_t) 0;						/* only workers use this */
@@ -251,6 +273,12 @@ int readini(char *myname, char *inifile)
 		ti->ti_retmax = logsize(ti->ti_retmaxstr);
 
 		ti->ti_postcmd = malloc(BUFSIZ);
+
+		if(ti->ti_postcmd == NULL) {
+			fprintf(stderr, "%s: malloc failed\n", ti->ti_section);
+			return (0);
+		}
+
 		memset(ti->ti_postcmd, '\0', BUFSIZ);
 		strlcpy(ti->ti_postcmd, my_ini(inidata, ti->ti_section, "postcmd"), BUFSIZ);
 	}
