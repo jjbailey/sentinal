@@ -4,7 +4,7 @@
  * to processes writing to pipes.  Keep pipes given in the INI file,
  * if they exist, always open for reading.
  *
- * Copyright (c) 2021-2025 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 
 		if(realpath(dirname(tbuf), rbuf) == NULL) {
 			/* ignore broken path */
-			fprintf(stderr, "%s: missing or bad pipedir\n", rbuf);
+			fprintf(stderr, "%s: missing or bad pipedir\n", sections[i]);
 			continue;
 		}
 
