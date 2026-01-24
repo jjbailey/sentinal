@@ -2,7 +2,7 @@
  * logsize.c
  * Return the number of bytes represented in the INI file spec.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -10,6 +10,7 @@
  */
 
 #include <ctype.h>
+#include <stdlib.h>
 #include "sentinal.h"
 
 /* SI units */
@@ -24,47 +25,46 @@
 #define	ONE_GB		(ONE_MB * 1000)					/* G{B,F} */
 #define	ONE_TB		(ONE_GB * 1000)					/* T{B,F} */
 
-/* is non-SI unit */
-#define	UNIT(p)		(*(p + 1))
-#define	IS_NSI(p)	(UNIT(p) && (toupper(UNIT(p)) == 'B' || toupper(UNIT(p)) == 'F'))
-
 off_t logsize(char *str)
 {
-	bool    isNsi;
-	char   *p;
-	off_t   n;
+	char   *endptr;
+	long long n;
 
-	n = (off_t) labs(atol(str));
+	if(!str)
+		return 0;
 
-	for(p = str; *p; p++)
-		if(isalpha(*p))
-			break;
+	n = strtoll(str, &endptr, 10);
+	if(endptr == str)
+		return 0;
 
-	if(IS_NULL(p))
-		return (n);
+	n = n < 0 ? -n : n;
 
-	isNsi = IS_NSI(p);
+	if(!*endptr)
+		return (off_t) n;
 
-	switch (toupper(*p)) {
+	bool    isNsi = (endptr[1] &&
+					 (toupper(endptr[1]) == 'B' || toupper(endptr[1]) == 'F'));
+
+	switch (toupper(*endptr)) {
 
 	case 'B':
 	case 'F':
-		return (n);
+		return (off_t) n;
 
 	case 'K':
-		return (n * (isNsi ? ONE_KB : ONE_KiB));
+		return (off_t) (n * (isNsi ? ONE_KB : ONE_KiB));
 
 	case 'M':
-		return (n * (isNsi ? ONE_MB : ONE_MiB));
+		return (off_t) (n * (isNsi ? ONE_MB : ONE_MiB));
 
 	case 'G':
-		return (n * (isNsi ? ONE_GB : ONE_GiB));
+		return (off_t) (n * (isNsi ? ONE_GB : ONE_GiB));
 
 	case 'T':
-		return (n * (isNsi ? ONE_TB : ONE_TiB));
+		return (off_t) (n * (isNsi ? ONE_TB : ONE_TiB));
 	}
 
-	return (n);
+	return (off_t) n;
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
