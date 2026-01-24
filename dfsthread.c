@@ -2,7 +2,7 @@
  * dfsthread.c
  * Filesystem monitor thread.  Remove files to create the desired free space.
  *
- * Copyright (c) 2021-2025 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -50,6 +50,7 @@ void   *dfsthread(void *arg)
 {
 	bool    lowres = false;							/* low resources flag */
 	bool    runreport = true;						/* for resource_report */
+	bool    save_lowres = false;					/* from prior loop */
 	extern bool dryrun;								/* dry run flag */
 	extern sqlite3 *db;								/* db handle */
 	float   pc_bfree = 0;							/* blocks free */
@@ -139,9 +140,10 @@ void   *dfsthread(void *arg)
 		runreport = (fabsf(pc_bfree - save_pc_bfree) >= 1.0f ||
 					 fabsf(pc_ffree - save_pc_ffree) >= 1.0f);
 
-		if(lowres || runreport) {
+		if(lowres || runreport || save_lowres) {
 			resource_report(ti, lowres, pc_bfree, pc_ffree);
 			runreport = false;
+			save_lowres = false;
 			save_pc_bfree = pc_bfree;
 			save_pc_ffree = pc_ffree;
 		}
@@ -155,6 +157,13 @@ void   *dfsthread(void *arg)
 			usleep(rand_r(&seed) & 0xFFFFF);
 
 			pthread_mutex_lock(&dfslock);
+
+			/*
+			 * previous run
+			 * adequate free space can become available and be less than 1% changed
+			 */
+
+			save_lowres = true;
 
 			if(findfile(ti, true, &nextid, ti->ti_dirname, db) > 0) {
 				/* process directories emptied by previous run */
