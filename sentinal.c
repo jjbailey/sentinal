@@ -308,7 +308,7 @@ static bool create_pid_file(char *pidfile)
 			return (false);
 	}
 
-	if((fd = open(pidfile, O_RDWR | O_CREAT, 0644)) != -1) {
+	if((fd = open(pidfile, O_RDWR | O_CREAT, 0640)) != -1) {
 		if(lockf(fd, F_LOCK, (off_t) 0) == -1) {
 			close(fd);
 			return (false);
