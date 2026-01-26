@@ -60,14 +60,8 @@ void strreplace(char *template, const char *oldstr, const char *newstr, size_t s
 	}
 
 	// Copy remaining
-	size_t  remain_len = strlen(src);
 
-	if(dst + remain_len < result + size) {
-		strcpy(dst, src);
-	} else {
-		strlcpy(dst, src, (result + size) - dst);
-	}
-
+	strlcpy(dst, src, (result + size) - dst);
 	strlcpy(template, result, size);
 
 	free(result);
