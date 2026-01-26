@@ -1,14 +1,14 @@
 /*
  * sentinal.h
  *
- * Copyright (c) 2021-2025 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"2.2.4"
+#define	VERSION_STRING	"2.2.5"
 
 #ifndef _STDBOOL_H
 # include <stdbool.h>

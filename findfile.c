@@ -3,7 +3,7 @@
  * Check dir and possibly subdirs for files matching pcrestr (pcrecmp).
  * Return the number of files matching pcrestr.
  *
- * Copyright (c) 2021-2025 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -140,7 +140,7 @@ uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 		sqlite3_bind_int(insert_file_stmt, 1, rowid);
 		sqlite3_bind_text(insert_file_stmt, 2, dp->d_name, -1, SQLITE_TRANSIENT);
 		sqlite3_bind_int(insert_file_stmt, 3, (int)st.st_mtim.tv_sec);
-		sqlite3_bind_int(insert_file_stmt, 4, (int)st.st_size);
+		sqlite3_bind_int64(insert_file_stmt, 4, (sqlite3_int64) st.st_size);
 		sqlite3_step(insert_file_stmt);
 	}
 

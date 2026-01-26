@@ -2,7 +2,7 @@
  * strreplace.c
  * Replace all occurrences of oldstr with newstr.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -10,6 +10,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <string.h>
 
@@ -19,29 +20,52 @@
 
 void strreplace(char *template, const char *oldstr, const char *newstr, size_t size)
 {
-	char   *p;
-	char    replbuf[BUFSIZ];
-	char    tempbuf[BUFSIZ];
-	size_t  oldlen = strlen(oldstr);
 	size_t  newlen = strlen(newstr);
+	size_t  oldlen = strlen(oldstr);
 	size_t  strlcat(char *, const char *, size_t);
 	size_t  strlcpy(char *, const char *, size_t);
 
-	if(IS_NULL(oldstr) || IS_NULL(newstr))
+	if(IS_NULL(oldstr) || IS_NULL(newstr) || oldlen == 0)
+		return;
+
+	char   *tempbuf = malloc(size);
+
+	if(!tempbuf)
 		return;
 
 	strlcpy(tempbuf, template, size);
-	p = tempbuf;
 
-	while((p = strstr(p, oldstr)) != NULL) {		/* clang warns */
-		strlcpy(replbuf, tempbuf, (p - tempbuf) + 1);
-		strlcat(replbuf, newstr, size);
-		strlcat(replbuf, p + oldlen, size);
-		strlcpy(tempbuf, replbuf, size);
-		p += newlen;
+	char   *result = malloc(size);
+
+	if(!result) {
+		free(tempbuf);
+		return;
 	}
 
-	strlcpy(template, tempbuf, size);
+	char   *src = tempbuf;
+	char   *dst = result;
+	char   *p;
+
+	while((p = strstr(src, oldstr)) != NULL) {
+		size_t  prefix_len = p - src;
+
+		if(dst + prefix_len + newlen >= result + size - 1)
+			break;
+
+		memcpy(dst, src, prefix_len);
+		dst += prefix_len;
+		memcpy(dst, newstr, newlen);
+		dst += newlen;
+		src = p + oldlen;
+	}
+
+	// Copy remaining
+
+	strlcpy(dst, src, (result + size) - dst);
+	strlcpy(template, result, size);
+
+	free(result);
+	free(tempbuf);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

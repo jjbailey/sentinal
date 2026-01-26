@@ -2,7 +2,7 @@
  * postcmd.c
  * Run command after the log closes or rotates.
  *
- * Copyright (c) 2021-2025 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -24,7 +24,7 @@ extern struct utsname utsbuf;						/* for host info */
 int postcmd(struct thread_info *ti, char *filename)
 {
 	char    cmdbuf[BUFSIZ];							/* command var */
-	char    homebuf[BUFSIZ];						/* hone env var */
+	char    homebuf[BUFSIZ];						/* home env var */
 	char    pathbuf[BUFSIZ];						/* path env var */
 	char    pcrebuf[BUFSIZ];						/* env convenience */
 	char    shellbuf[BUFSIZ];						/* shell env var */
@@ -105,11 +105,12 @@ int postcmd(struct thread_info *ti, char *filename)
 
 		umask(umask(0) | 022);						/* don't set less restrictive */
 		nice(1);
-		execl(ENV, "-S", "-", BASH, "--noprofile", "--norc", "-c", cmdbuf, NULL);
+		execl(ENV, "env", "-S", "-", BASH, "--noprofile", "--norc", "-c", cmdbuf, NULL);
 		exit(EXIT_FAILURE);
 
 	default:
-		waitpid(pid, &status, 0);
+		if(waitpid(pid, &status, 0) == -1)
+			return (-1);
 
 		if(ti->ti_truncate && NOT_NULL(filename)) {
 			/* slm only */
@@ -118,7 +119,7 @@ int postcmd(struct thread_info *ti, char *filename)
 				truncate(filename, (off_t) 0);
 		}
 
-		return (status == -1 ? status : 0);
+		return (WIFEXITED(status) ? WEXITSTATUS(status) : -1);
 	}
 }
 

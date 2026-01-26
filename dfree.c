@@ -2,7 +2,7 @@
  * dfree.c
  * grok wrote this based on the original dfree.sh script.
  *
- * Copyright (c) 2024-2025 jjb
+ * Copyright (c) 2024-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_PATH    256
+#define MAX_PATH    PATH_MAX
 #define MAX_LINE    1024
 #define MAX_MOUNTS  128
 
@@ -32,8 +32,9 @@ typedef struct {
 	unsigned long long f_bavail_bytes;
 } Filesystem;
 
-const char *allowed_types[] =
-	{ "ext4", "xfs", "ext2", "ext3", "nfs", "cifs", "ntfs3", "ntfs", NULL };
+const char *allowed_types[] = { "btrfs", "cifs", "exfat", "ext2", "ext3", "ext4",
+	"nfs", "ntfs", "ntfs3", "vfat", "xfs", "zfs", NULL
+};
 
 int is_allowed_type(const char *type)
 {
@@ -55,7 +56,10 @@ void human_readable(char *buf, size_t buflen, unsigned long long bytes)
 		val /= 1024;
 		unit++;
 	}
-	snprintf(buf, buflen, "%.1f%s", val, units[unit]);
+	if(unit == 0)
+		snprintf(buf, buflen, "%.0f%s", val, units[unit]);
+	else
+		snprintf(buf, buflen, "%.1f%s", val, units[unit]);
 }
 
 // Calculates '% used' in the way that `df` calculates it
@@ -209,7 +213,7 @@ int get_all_mounts(Filesystem *fs_list, int *fs_count)
 
 int main(int argc, char *argv[])
 {
-	Filesystem fs_list[MAX_MOUNTS];
+	static Filesystem fs_list[MAX_MOUNTS];
 	int     fs_count = 0;
 	int     i;
 

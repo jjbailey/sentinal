@@ -21,17 +21,17 @@
 
 #define RETRY_COUNT			3
 #define RETRY_DELAY_USEC	100000
-#define SQL_DIR_FMT			"DROP TABLE IF EXISTS %s_dir;"
-#define SQL_FILE_FMT		"DROP TABLE IF EXISTS %s_file;"
+#define SQL_DIR_FMT			"DROP TABLE IF EXISTS \"%s_dir\";"
+#define SQL_FILE_FMT		"DROP TABLE IF EXISTS \"%s_file\";"
 #define SQL_CREATE_DIR_FMT \
-	"CREATE TABLE IF NOT EXISTS %s_dir (db_id INT NOT NULL, db_dir VARCHAR(255) NOT NULL, db_empty BOOLEAN NOT NULL);"
+	"CREATE TABLE IF NOT EXISTS \"%s_dir\" (db_id INT NOT NULL, db_dir VARCHAR(255) NOT NULL, db_empty BOOLEAN NOT NULL);"
 #define SQL_CREATE_FILE_FMT \
-	"CREATE TABLE IF NOT EXISTS %s_file (db_dirid INT NOT NULL, db_file VARCHAR(255) NOT NULL, db_time INT NOT NULL, db_size UNSIGNED BIG INT NOT NULL);"
-#define SQL_INDEX_DIR_FMT	"CREATE INDEX IF NOT EXISTS idx_%s_dir ON %s_dir (db_id);"
-#define SQL_INDEX_FILE_FMT	"CREATE INDEX IF NOT EXISTS idx_%s_file ON %s_file (db_time);"
-#define SQL_COUNT_DIR_FMT	"SELECT COUNT(*) FROM %s_dir WHERE db_empty = 1;"
-#define SQL_COUNT_FILE_FMT	"SELECT COUNT(*) FROM %s_dir, %s_file WHERE db_dirid = db_id;"
-#define SQL_EMPTYDIRS_FMT	"SELECT db_dir FROM %s_dir WHERE db_empty = 1 ORDER BY db_dir DESC;"
+	"CREATE TABLE IF NOT EXISTS \"%s_file\" (db_dirid INT NOT NULL, db_file VARCHAR(255) NOT NULL, db_time INT NOT NULL, db_size BIGINT NOT NULL);"
+#define SQL_INDEX_DIR_FMT	"CREATE INDEX IF NOT EXISTS idx_%s_dir ON \"%s_dir\" (db_id);"
+#define SQL_INDEX_FILE_FMT	"CREATE INDEX IF NOT EXISTS idx_%s_file ON \"%s_file\" (db_time);"
+#define SQL_COUNT_DIR_FMT	"SELECT COUNT(*) FROM \"%s_dir\" WHERE db_empty = 1;"
+#define SQL_COUNT_FILE_FMT	"SELECT COUNT(*) FROM \"%s_dir\", \"%s_file\" WHERE db_dirid = db_id;"
+#define SQL_EMPTYDIRS_FMT	"SELECT db_dir FROM \"%s_dir\" WHERE db_empty = 1 ORDER BY db_dir DESC;"
 
 static bool execute_sql(const struct thread_info *ti, sqlite3 *db, const char *desc,
 						const char *format, va_list ap)
@@ -189,7 +189,7 @@ void process_dirs(struct thread_info *ti, sqlite3 *db)
 		const char *db_dir = (const char *)sqlite3_column_text(pstmt, 0);
 
 		if(db_dir && *db_dir) {
-			char    filename[PATH_MAX];
+			char    filename[BUFSIZ];
 
 			snprintf(filename, sizeof(filename), "%s/%s", ti->ti_dirname, db_dir);
 

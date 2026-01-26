@@ -20,11 +20,12 @@ struct ini_t {
 
 typedef struct ini_t ini_t;
 
-ini_t  *ini_load(char *filename);
+ini_t  *ini_load(const char *filename);
 void    ini_free(ini_t *ini);
-char   *ini_get(ini_t *ini, char *section, char *key);
+char   *ini_get(const ini_t *ini, const char *section, const char *key);
 # if 0												/* jjb */
-int     ini_sget(ini_t *ini, char *section, char *key, char *scanfmt, void *dst);
+int     ini_sget(const ini_t *ini, const char *section, const char *key,
+				 const char *scanfmt, void *dst);
 # endif
 
 #endif
