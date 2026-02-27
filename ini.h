@@ -23,10 +23,6 @@ typedef struct ini_t ini_t;
 ini_t  *ini_load(const char *filename);
 void    ini_free(ini_t *ini);
 char   *ini_get(const ini_t *ini, const char *section, const char *key);
-# if 0												/* jjb */
-int     ini_sget(const ini_t *ini, const char *section, const char *key,
-				 const char *scanfmt, void *dst);
-# endif
 
 #endif
 
