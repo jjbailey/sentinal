@@ -59,7 +59,7 @@ void human_readable(char *buf, size_t buflen, unsigned long long bytes)
 	if(unit == 0)
 		snprintf(buf, buflen, "%.0f%s", val, units[unit]);
 	else
-		snprintf(buf, buflen, "%.1f%s", val, units[unit]);
+		snprintf(buf, buflen, "%.2f%s", val, units[unit]);
 }
 
 // Calculates '% used' in the way that `df` calculates it
