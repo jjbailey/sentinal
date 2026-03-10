@@ -29,7 +29,8 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
     expiresiz: dfs and exp threads: remove file if it exceeds specified size
                default 0/any size
 
-    gid:       worker and `postcmd` groupname or gid; groupname root ok, gid 0 not ok
+    gid:       worker and `postcmd` groupname or gid; groupname
+               root ok, gid 0 not ok
                default nogroup
 
     inofree:   percent inodes free for unprivileged users; 0 = no monitor (off)
@@ -43,20 +44,24 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
 
     postcmd:   command to run after the log closes or rotates, %file = filename
                string passed to bash -c, optional, working directory is `dirname`
-               used when `command` is defined (log ingestion) or `template` is defined (slm)
+               used when `command` is defined (log ingestion) or
+               `template` is defined (slm)
                unused when `command` and `template` are not defined
                default none
 
-    retmax:    maximum number of logs to retain, regardless of expire time; 0 = no max (off)
+    retmax:    maximum number of logs to retain, regardless of
+               expire time; 0 = no max (off)
                default off
 
-    retmin:    minimum number of logs to retain, regardless of expire time; 0 = none (off)
+    retmin:    minimum number of logs to retain, regardless of
+               expire time; 0 = none (off)
                default off
 
     rmdir:     remove empty directories; true, false
                default 0/false
 
-    rotatesiz: wrk and slm threads: rotate size, units M = MiB, G = GiB; 0 = no rotate (off)
+    rotatesiz: wrk and slm threads: rotate size, units M = MiB,
+               G = GiB; 0 = no rotate (off)
                default off (no rotate)
 
     subdirs:   option to search subdirectories; true, false
@@ -68,13 +73,15 @@ INI files must contain a single Global section, and 1 to 16 Log sections.
     template:  output file name, date(1) sequences %F %Y %m %d %H %M %S %s
                relative to dirname, required when `command` is defined
 
-    terse:     file removal notification; true = quiet, false = record file/directory removal
+    terse:     file removal notification; true = quiet, false =
+               record file/directory removal
                default 0/false
 
     truncate:  truncate slm-managed files; true, false
                default 0/false
 
-    uid:       worker and `postcmd` username or uid; username root ok, uid 0 not ok
+    uid:       worker and `postcmd` username or uid; username
+               root ok, uid 0 not ok
                default nobody
 
 The keys `template` and `pcrestr` are available as postcmd environment variables.
