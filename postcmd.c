@@ -24,11 +24,6 @@ extern struct utsname utsbuf;						/* for host info */
 int postcmd(struct thread_info *ti, char *filename)
 {
 	char    cmdbuf[BUFSIZ];							/* command var */
-	char    homebuf[BUFSIZ];						/* home env var */
-	char    pathbuf[BUFSIZ];						/* path env var */
-	char    pcrebuf[BUFSIZ];						/* env convenience */
-	char    shellbuf[BUFSIZ];						/* shell env var */
-	char    tmplbuf[BUFSIZ];						/* env convenience */
 	char   *home;									/* from passwd file entry */
 	extern bool dryrun;								/* dry run flag */
 	int     i;
@@ -49,8 +44,10 @@ int postcmd(struct thread_info *ti, char *filename)
 
 	case 0:
 		if(geteuid() == (uid_t) 0) {
-			(void)setgid(ti->ti_gid);
-			(void)setuid(ti->ti_uid);
+			if(setgid(ti->ti_gid) == -1 || setuid(ti->ti_uid) == -1) {
+				fprintf(stderr, "%s: can't drop privileges\n", ti->ti_section);
+				exit(EXIT_FAILURE);
+			}
 		}
 
 		if(access(ti->ti_dirname, R_OK | W_OK | X_OK) == -1) {
@@ -88,20 +85,11 @@ int postcmd(struct thread_info *ti, char *filename)
 		/* execution environment */
 
 		home = (p = getpwuid(ti->ti_uid)) ? p->pw_dir : "/tmp";
-		if(snprintf(homebuf, BUFSIZ, "HOME=%s", home) < BUFSIZ)
-			putenv(homebuf);
-
-		if(snprintf(pathbuf, BUFSIZ, "PATH=%s", PATH) < BUFSIZ)
-			putenv(pathbuf);
-
-		if(snprintf(shellbuf, BUFSIZ, "SHELL=%s", BASH) < BUFSIZ)
-			putenv(shellbuf);
-
-		if(snprintf(tmplbuf, BUFSIZ, "TEMPLATE=%s", ti->ti_template) < BUFSIZ)
-			putenv(tmplbuf);
-
-		if(snprintf(pcrebuf, BUFSIZ, "PCRESTR=%s", ti->ti_pcrestr) < BUFSIZ)
-			putenv(pcrebuf);
+		setenv("HOME", home, 1);
+		setenv("PATH", PATH, 1);
+		setenv("SHELL", BASH, 1);
+		setenv("TEMPLATE", ti->ti_template, 1);
+		setenv("PCRESTR", ti->ti_pcrestr, 1);
 
 		umask(umask(0) | 022);						/* don't set less restrictive */
 		nice(1);
