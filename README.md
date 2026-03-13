@@ -1,5 +1,4 @@
-sentinal: Software for Logfile and Inode Management
-===================================================
+# sentinal: Software for Logfile and Inode Management
 
 System and application processes can create many files and large files,
 possibly causing disk partitions to run out of space. **sentinal** is a systemd
@@ -16,8 +15,7 @@ an adjunct or an alternative to logrotate.
 * Log ingestion, processing, and rotation
 * Monitor and process log files when they reach a given size
 
-Usage
------
+## Usage
 
 ```txt
 Usage: sentinal -f ini-file [-dsDvV]
@@ -30,8 +28,7 @@ Usage: sentinal -f ini-file [-dsDvV]
  -?, --help       this message
 ```
 
-Configuration
--------------
+## Configuration
 
 sentinal uses INI files for its runtime configuration. Each section in the
 INI file pertains to one resource: a directory, possibly a file template,
@@ -69,8 +66,8 @@ Section names must be unique in the INI file.
 * `diskfree`: percent blocks free, 0 = no monitor (off)
 * `inofree`: percent inodes free, 0 = no monitor (off)
 * `expire`: file retention time, units = m, H, D, W, M, Y, 0 = no expiration (off)
-* `retmin`: minimum number of files to retain, SI or non-SI units, 0 = none (off)
-* `retmax`: maximum number of files to retain, SI or non-SI units, 0 = no max (off)
+* `retmin`: minimum number of files to retain, 0 = none (off)
+* `retmax`: maximum number of files to retain, 0 = no max (off)
 * `terse`: option to record or suppress file removal notices (false)
 * `rmdir`: option to remove empty directories (false)
 * `symlinks`: option to follow symlinks (false)
@@ -82,14 +79,32 @@ or no units (literal value). Examples,
 1KB = 1000 bytes, 1K or 1KiB = 1024 bytes.
 1MF = 1000000 files, 1M or 1MiF = 1048576 files.
 
-| Unit          | Time          |     |     | Unit          | Value (Base 2)          |     |     | Unit          | Value (Base 10)          |
-| :------------ | :------------ | :-- | :-- | :------------ | :---------------------- | :-- | :-- | :------------ | :----------------------- |
-| m             | minutes       |     |     | KiB           | 2^10                    |     |     | KB            | 10^3                     |
-| H             | hours         |     |     | MiB           | 2^20                    |     |     | MB            | 10^6                     |
-| D             | days          |     |     | GiB           | 2^30                    |     |     | GB            | 10^9                     |
-| W             | weeks         |     |     | TiB           | 2^40                    |     |     | TB            | 10^12                    |
-| M             | months        |     |     | PiB           | 2^50                    |     |     | PB            | 10^15                    |
-| Y             | years         |     |     | EiB           | 2^60                    |     |     | EB            | 10^18                    |
+| Unit | Time    |
+| :--- | :------ |
+| m    | minutes |
+| H    | hours   |
+| D    | days    |
+| W    | weeks   |
+| M    | months  |
+| Y    | years   |
+
+| Unit | Value (Base 2) |
+| :--- | :------------- |
+| KiB  | 2^10           |
+| MiB  | 2^20           |
+| GiB  | 2^30           |
+| TiB  | 2^40           |
+| PiB  | 2^50           |
+| EiB  | 2^60           |
+
+| Unit | Value (Base 10) |
+| :--- | :-------------- |
+| KB   | 10^3            |
+| MB   | 10^6            |
+| GB   | 10^9            |
+| TB   | 10^12           |
+| PB   | 10^15           |
+| EB   | 10^18           |
 
 ### Thread Requirements
 
@@ -437,15 +452,15 @@ sentinal exports the following variables to `command` and `postcmd`:
 * `HOME`: home of uid, default `/tmp`
 * `PATH`: `/usr/bin:/usr/sbin:/bin`
 * `SHELL`: `/bin/bash`
-* `PWD`: `dirname` value from INI file
+* `PWD`: `dirname` value from INI file (set implicitly via `chdir`)
 * `TEMPLATE`: `template` value from INI file
 * `PCRESTR`: `pcrestr` value from INI file
 
-Sentinal Status
----------------
+## Sentinal Status
 
 The INI file `/opt/sentinal/etc/example2.ini` is used here as an example.
 
+<!-- markdownlint-disable MD013 -->
 ```shell
 # systemctl status sentinal
 * sentinal.service - sentinal service for example2.ini
@@ -470,9 +485,9 @@ Nov 24 13:01:47 loghost sentinal[13580]: example2: monitor file: example2- for s
 
 (In this example, /opt is in the / filesystem)
 ```
+<!-- markdownlint-enable MD013 -->
 
-Build and Install
------------------
+## Build and Install
 
 sentinal requires the `pcre2-devel` package for building the software.
 
@@ -496,8 +511,7 @@ Edit `/etc/systemd/system/sentinal.service` as necessary.
 # systemctl daemon-reload
 ```
 
-Test INI Files
---------------
+## Test INI Files
 
 sentinal provides two options for testing INI files:
 
@@ -506,8 +520,7 @@ sentinal provides two options for testing INI files:
   as they would be at runtime, including symlink resolution and
   relative-to-full pathname conversion.
 
-Run
----
+## Run
 
 ```shell
 # systemctl enable sentinal
@@ -534,15 +547,14 @@ Examples of on-demand log rotation:
 # kill -HUP $(cat /path/to/pidfile)
 ```
 
-Notes
------
+## Notes
 
 * Linux processes writing to pipes block when processes are not
   reading from them. systemd manages sentinal to ensure sentinal is
   always running. See `README.fifo` for additional information about
   FIFO behavior.
 * The default pipe size in Linux is either 64KB or 1MB. sentinal
-  increases its pipe sizes on 3.x.x and newer kernels to 64MiB.
+  increases its pipe sizes on 2.6.35 and newer kernels to 64MiB.
   Consider this a tuning parameter that can affect performance.
 * In the inline compression example, `zstd` can be changed to a
   different program, e.g., `gzip` or `(p)bzip2`, though they are
