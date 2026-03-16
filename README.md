@@ -15,6 +15,12 @@ an adjunct or an alternative to logrotate.
 * Log ingestion, processing, and rotation
 * Monitor and process log files when they reach a given size
 
+Additional documentation lives in `README.d/`:
+`README.d/README.inifile.md` covers key semantics and token expansion,
+`README.d/README.threads` shows minimal thread-specific INI stanzas,
+`README.d/README.fifo` explains FIFO behavior and `sentinalpipe`,
+and `README.d/README.pcretest.md` includes PCRE examples.
+
 ## Usage
 
 ```txt
@@ -40,19 +46,21 @@ An INI file must contain a section called `global`. This section must include
 a `pidfile` definition and an optional `SQLite3` database definition. The database
 name can be `:memory:`, or a pathname of a disk file.
 
-Section names can be up to 11 characters in length (kernel max), and characters
-must be alphanumeric or underscore (valid SQLite3 table name).
-Section names must be unique in the INI file.
+Section names must be unique in the INI file. For valid SQLite table names,
+start them with a letter and use only alphanumeric or underscore characters.
+For untruncated thread names and split-section output, keep section names to
+11 characters or fewer.
 
 **\[global\]**
 
-* `pidfile`: sentinal process ID and lock file, for manual logrotate
-* `database`: name of the SQLite3 database
+* `pidfile`: sentinal process ID and lock file, absolute path, required
+* `database`: name of the SQLite3 database, `:memory:` or file path,
+  default `:memory:`
 
 **\[section\]**
 
-* `command`: command to run
-* `dirname`: thread and postcmd working directory, file location
+* `command`: command to run, absolute path
+* `dirname`: thread and postcmd working directory, absolute path
 * `dirlimit`: maximum total size of matching files in a directory,
   SI or non-SI units, 0 = no max (off)
 * `subdirs`: option to search subdirectories for matching files (true)
@@ -71,7 +79,8 @@ Section names must be unique in the INI file.
 * `terse`: option to record or suppress file removal notices (false)
 * `rmdir`: option to remove empty directories (false)
 * `symlinks`: option to follow symlinks (false)
-* `postcmd`: command to run after log closes or rotates, %file = filename
+* `postcmd`: command to run after log closes or rotates;
+  tokens: `%file`, `%host`, `%path`, `%sect`
 * `truncate`: option to truncate slm-managed files (false)
 
 Sizes in bytes or files may be given in SI units {K,M,G,T}i{B,F}, non-SI units {K,M,G,T}{B,F},
@@ -279,7 +288,6 @@ dirname   = /sandbox
 expiresiz = 10G
 expire    = 1M
 pcrestr   = \.(bz2|gz|lz|zip|zst)
-rotatesiz = 10G
 subdirs   = true
 terse     = false
 ```
@@ -365,6 +373,11 @@ template  = chattyapp.log
 sentinal can ingest and process logs, rotate them on demand or when they reach a
 specified size, and optionally post-process logs after rotation. For logfile processing,
 replace the application's logfile with a FIFO, and set sentinal to read from it.
+
+The following examples show the per-section stanza only; a complete INI file still
+needs a `[global]` section. If the writer process must keep the FIFO open across
+sentinal restarts, use `sentinalpipe` with the same INI file. See
+`README.d/README.fifo` for details.
 
 ```mermaid
 sequenceDiagram
@@ -489,7 +502,9 @@ Nov 24 13:01:47 loghost sentinal[13580]: example2: monitor file: example2- for s
 
 ## Build and Install
 
-sentinal requires the `pcre2-devel` package for building the software.
+sentinal requires PCRE2 and SQLite3 development headers/libraries for building
+the software. A default build produces `sentinal`, `sentinalpipe`, `dfree`,
+`pcrefind`, and `pcretest`.
 
 ```shell
 # cd sentinal
@@ -503,7 +518,8 @@ Create a systemd unit file and add it to the local systemd directory, or run:
 # make systemd
 ```
 
-to install an example as a starting point.
+to install example `sentinal.service` and `sentinalpipe.service` unit files as a
+starting point.
 
 Edit `/etc/systemd/system/sentinal.service` as necessary.
 
@@ -513,9 +529,10 @@ Edit `/etc/systemd/system/sentinal.service` as necessary.
 
 ## Test INI Files
 
-sentinal provides two options for testing INI files:
+sentinal provides three options for testing INI files:
 
 * `-d` or `--debug` prints INI file sections as parsed, resembling the input.
+* `-s` or `--split` prints the INI file with thread-specific split sections.
 * `-v` or `--verbose` prints INI file sections with the keys evaluated
   as they would be at runtime, including symlink resolution and
   relative-to-full pathname conversion.
@@ -551,7 +568,7 @@ Examples of on-demand log rotation:
 
 * Linux processes writing to pipes block when processes are not
   reading from them. systemd manages sentinal to ensure sentinal is
-  always running. See `README.fifo` for additional information about
+  always running. See `README.d/README.fifo` for additional information about
   FIFO behavior.
 * The default pipe size in Linux is either 64KB or 1MB. sentinal
   increases its pipe sizes on 2.6.35 and newer kernels to 64MiB.
