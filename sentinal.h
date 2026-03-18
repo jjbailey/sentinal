@@ -32,7 +32,7 @@
 #endif
 
 #define	MAXARGS		32
-#define	MAXSECT		16								/* arbitrary, can be more */
+#define	MAXSECT		32								/* arbitrary, can be more */
 
 #define	MAXFILES	128								/* max open files */
 
