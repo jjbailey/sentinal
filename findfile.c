@@ -127,6 +127,12 @@ uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 				entries++;
 				continue;
 			}
+
+			if(stat(fullpath, &st) == -1)
+				continue;
+
+			if(S_ISDIR(st.st_mode))					/* never follow symlinks to dirs */
+				continue;
 		}
 
 		if(st.st_dev != ti->ti_dev)					/* never cross filesystems */

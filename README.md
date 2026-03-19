@@ -78,7 +78,7 @@ For untruncated thread names and split-section output, keep section names to
 * `retmax`: maximum number of files to retain, 0 = no max (off)
 * `terse`: option to record or suppress file removal notices (false)
 * `rmdir`: option to remove empty directories (false)
-* `symlinks`: option to follow symlinks (false)
+* `symlinks`: option to follow symlinks to files (false)
 * `postcmd`: command to run after log closes or rotates;
   tokens: `%file`, `%host`, `%path`, `%sect`
 * `truncate`: option to truncate slm-managed files (false)
