@@ -11,6 +11,7 @@
  * in the root directory of this source tree.
  */
 
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <sys/types.h>
 #include <fcntl.h>
