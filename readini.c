@@ -47,7 +47,7 @@ int readini(char *myname, char *inifile)
 	char    tbuf[PATH_MAX];							/* temp buffer */
 	DIR    *dirp;
 	int     i;
-	int     inifd;									/* for lstat() */
+	int     inifd;									/* file descriptor */
 	int     nsect;									/* number of sections found */
 	struct stat stbuf;								/* file status */
 	struct thread_info *ti;							/* thread settings */
@@ -72,7 +72,7 @@ int readini(char *myname, char *inifile)
 				return (0);
 			}
 
-			if(stbuf.st_mode & S_IWGRP || stbuf.st_mode & S_IWOTH) {
+			if((stbuf.st_mode & S_IWGRP) || (stbuf.st_mode & S_IWOTH)) {
 				fprintf(stderr, "%s: %s is writable by group or other\n", myname,
 						inipath);
 				close(inifd);
@@ -80,7 +80,10 @@ int readini(char *myname, char *inifile)
 			}
 
 			/* tighter */
-			fchmod(inifd, stbuf.st_mode & ~(S_IWGRP | S_IXGRP | S_IWOTH | S_IXOTH));
+			if(fchmod(inifd, stbuf.st_mode & ~(S_IWGRP | S_IXGRP | S_IWOTH | S_IXOTH)) ==
+			   -1)
+				fprintf(stderr, "%s: warning: can't restrict permissions on %s\n", myname,
+						inipath);
 		}
 		close(inifd);
 	}
@@ -97,11 +100,13 @@ int readini(char *myname, char *inifile)
 		return (0);
 	}
 
-	uname(&utsbuf);									/* for debug/token expansion */
+	if(uname(&utsbuf) == -1)						/* for debug/token expansion */
+		fprintf(stderr, "%s: uname failed\n", myname);
 
 	/* INI global settings */
 
-	pidfile = strndup(my_ini(inidata, "global", "pidfile"), PATH_MAX);
+	p = my_ini(inidata, "global", "pidfile");
+	pidfile = IS_NULL(p) ? NULL : strndup(p, PATH_MAX);
 
 	if(IS_NULL(pidfile) || *pidfile != '/') {
 		fprintf(stderr, "%s: pidfile is null or path not absolute\n", myname);
@@ -123,7 +128,8 @@ int readini(char *myname, char *inifile)
 
 		ti->ti_section = sections[i];
 
-		ti->ti_command = strndup(my_ini(inidata, ti->ti_section, "command"), PATH_MAX);
+		p = my_ini(inidata, ti->ti_section, "command");
+		ti->ti_command = IS_NULL(p) ? NULL : strndup(p, PATH_MAX);
 		ti->ti_argc = parsecmd(ti->ti_command, ti->ti_argv);
 
 		if(NOT_NULL(ti->ti_command) && ti->ti_argc) {
@@ -134,11 +140,14 @@ int readini(char *myname, char *inifile)
 			if(IS_NULL(ti->ti_path) || *ti->ti_path != '/') {
 				fprintf(stderr, "%s: command path is null or not absolute\n",
 						ti->ti_section);
+
 				return (0);
 			}
 
 			if(realpath(ti->ti_path, rpbuf) == NULL) {
-				fprintf(stderr, "%s: missing or bad command path\n", ti->ti_section);
+				fprintf(stderr, "%s: missing or bad command path: %s\n",
+						ti->ti_section, ti->ti_path);
+
 				return (0);
 			}
 		}
@@ -150,14 +159,26 @@ int readini(char *myname, char *inifile)
 		ti->ti_dirname = my_ini(inidata, ti->ti_section, "dirname");
 
 		if(IS_NULL(ti->ti_dirname) || *ti->ti_dirname != '/') {
-			fprintf(stderr, "%s: dirname is null or not absolute\n", ti->ti_section);
+			fprintf(stderr, "%s: dirname is null or not absolute: %s\n",
+					ti->ti_section, ti->ti_dirname);
+
 			return (0);
 		}
 
-		if(realpath(ti->ti_dirname, rpbuf) == NULL)
-			*rpbuf = '\0';
+		if(realpath(ti->ti_dirname, rpbuf) == NULL) {
+			fprintf(stderr, "%s: missing or bad dirname: %s\n",
+					ti->ti_section, ti->ti_dirname);
+
+			return (0);
+		}
 
 		ti->ti_dirname = strndup(rpbuf, PATH_MAX);
+
+		if(ti->ti_dirname == NULL) {
+			fprintf(stderr, "%s: strndup failed\n", ti->ti_section);
+			return (0);
+		}
+
 		ti->ti_mountdir = malloc(PATH_MAX);			/* for findmnt() */
 
 		if(ti->ti_mountdir == NULL) {
@@ -165,15 +186,19 @@ int readini(char *myname, char *inifile)
 			return (0);
 		}
 
-		if(IS_NULL(ti->ti_dirname) || strcmp(ti->ti_dirname, "/") == 0) {
-			fprintf(stderr, "%s: missing or bad dirname\n", ti->ti_section);
+		if(strcmp(ti->ti_dirname, "/") == 0) {
+			fprintf(stderr, "%s: missing or bad dirname: %s\n",
+					ti->ti_section, ti->ti_dirname);
+
 			return (0);
 		}
 
 		/* is ti_dirname a directory */
 
 		if((dirp = opendir(ti->ti_dirname)) == NULL) {
-			fprintf(stderr, "%s: dirname is not a directory\n", ti->ti_section);
+			fprintf(stderr, "%s: dirname is not a directory: %s\n",
+					ti->ti_section, ti->ti_dirname);
+
 			return (0);
 		}
 
@@ -232,8 +257,10 @@ int readini(char *myname, char *inifile)
 		}
 
 		memset(ti->ti_template, '\0', BUFSIZ);
-		strlcpy(ti->ti_template,
-				base(my_ini(inidata, ti->ti_section, "template")), PATH_MAX);
+		p = my_ini(inidata, ti->ti_section, "template");
+
+		if(NOT_NULL(p))
+			strlcpy(ti->ti_template, base(p), PATH_MAX);
 
 		ti->ti_pcrestr = my_ini(inidata, ti->ti_section, "pcrestr");
 		pcrecompile(ti);
@@ -262,8 +289,8 @@ int readini(char *myname, char *inifile)
 		ti->ti_expirestr = my_ini(inidata, ti->ti_section, "expiresiz");
 		ti->ti_expiresiz = logsize(ti->ti_expirestr);
 
-		ti->ti_diskfree = fabs(atof(my_ini(inidata, ti->ti_section, "diskfree")));
-		ti->ti_inofree = fabs(atof(my_ini(inidata, ti->ti_section, "inofree")));
+		ti->ti_diskfree = fabs(atof(my_ini(inidata, ti->ti_section, "diskfree") ? : "0"));
+		ti->ti_inofree = fabs(atof(my_ini(inidata, ti->ti_section, "inofree") ? : "0"));
 		ti->ti_expire = logretention(my_ini(inidata, ti->ti_section, "expire"));
 
 		ti->ti_retminstr = my_ini(inidata, ti->ti_section, "retmin");
@@ -280,7 +307,10 @@ int readini(char *myname, char *inifile)
 		}
 
 		memset(ti->ti_postcmd, '\0', BUFSIZ);
-		strlcpy(ti->ti_postcmd, my_ini(inidata, ti->ti_section, "postcmd"), BUFSIZ);
+		p = my_ini(inidata, ti->ti_section, "postcmd");
+
+		if(NOT_NULL(p))
+			strlcpy(ti->ti_postcmd, p, BUFSIZ);
 	}
 
 	return (nsect);
@@ -318,6 +348,9 @@ static int parsecmd(char *cmd, char *argv[])
 			argv[i++] = strdup(IS_NULL(ap) ? p : ap);
 		} else if(i < (MAXARGS - 1))
 			argv[i++] = strdup(p);
+
+		if(argv[i - 1] == NULL)
+			return (0);
 
 		p = strtok(NULL, " ");
 	}
