@@ -30,21 +30,8 @@
 #include <strings.h>
 #include "ini.h"
 
-#if 0												/* jjb */
-/* Case insensitive string compare */
-static int strcmpci(char *a, char *b)
-{
-	for(;;) {
-		int     d = tolower(*a) - tolower(*b);
-		if(d != 0 || !*a) {
-			return d;
-		}
-		a++, b++;
-	}
-}
-#endif
-
-#define	strcmpci	strcasecmp						/* jjb */
+/* Case insensitive string compare using strcasecmp */
+#define strcmpci strcasecmp
 
 /* Returns the next string in the split data */
 static char *next(const ini_t *ini, char *p)
@@ -111,7 +98,8 @@ static char *unescape_quoted_value(ini_t *ini, char *p)
 }
 
 /* Splits data in place into strings containing section-headers, keys and
- * values using one or more '\0' as a delimiter. Unescapes quoted values */
+ * values using one or more '\0' as a delimiter. Unescapes quoted values.
+ * This function modifies the data buffer directly for efficiency. */
 static void split_data(ini_t *ini)
 {
 	char   *value_start, *line_start;
@@ -124,22 +112,25 @@ static void split_data(ini_t *ini)
 		case '\t':
 		case ' ':
 			*p = '\0';
-			/* Fall through */
+			/* Fall through to skip whitespace/null */
 
 		case '\0':
 			p++;
 			break;
 
 		case '[':
+			/* Section header: skip to ']' or newline */
 			p += strcspn(p, "]\n");
 			*p = '\0';
 			break;
 
 		case ';':
+			/* Comment line: discard entire line */
 			p = discard_line(ini, p);
 			break;
 
 		default:
+			/* Potential key-value pair */
 			line_start = p;
 			p += strcspn(p, "=\n");
 
@@ -189,7 +180,8 @@ ini_t  *ini_load(const char *filename)
 {
 	ini_t  *ini = NULL;
 	FILE   *fp = NULL;
-	long    n, sz;
+	long    sz_long;
+	size_t  sz, n;
 
 	/* Init INI struct */
 	ini = malloc(sizeof(*ini));
@@ -206,11 +198,11 @@ ini_t  *ini_load(const char *filename)
 
 	/* Get file size */
 	fseek(fp, 0, SEEK_END);
-
-	/* CWE-125 */
-	if((sz = ftell(fp)) < 0)
-		sz = 0;
-
+	sz_long = ftell(fp);
+	if(sz_long < 0) {
+		goto fail;
+	}
+	sz = (size_t)sz_long;
 	rewind(fp);
 
 	/* Load file content into memory, null terminate, init end var */
@@ -249,6 +241,8 @@ void ini_free(ini_t *ini)
 	}
 }
 
+/* Retrieves the value associated with the given section and key.
+ * Returns NULL if not found. Section can be NULL to search all sections. */
 char   *ini_get(const ini_t *ini, const char *section, const char *key)
 {
 	char   *current_section = "";
@@ -280,21 +274,5 @@ char   *ini_get(const ini_t *ini, const char *section, const char *key)
 
 	return NULL;
 }
-
-#if 0												/* jjb */
-int ini_sget(const ini_t *ini, const char *section, const char *key, const char *scanfmt, void *dst)
-{
-	char   *val = ini_get(ini, section, key);
-	if(!val) {
-		return 0;
-	}
-	if(scanfmt) {
-		sscanf(val, scanfmt, dst);
-	} else {
-		*((char **)dst) = val;
-	}
-	return 1;
-}
-#endif
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

@@ -233,7 +233,11 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 
 	/* process all files */
 
-	snprintf(stmt, BUFSIZ, sql_selectfiles, ti->ti_task, ti->ti_task, QUERYLIM);
+	if(snprintf(stmt, BUFSIZ, sql_selectfiles,
+				ti->ti_task, ti->ti_task, QUERYLIM) >= BUFSIZ) {
+		fprintf(stderr, "%s: SQL statement truncated\n", ti->ti_section);
+		return;
+	}
 
 	if(sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL) != SQLITE_OK) {
 		fprintf(stderr, "%s: sqlite3_prepare_v2: %s\n", ti->ti_section,

@@ -3,7 +3,7 @@
  * Functions to read INI files.
  * Wrapper for rxi ini_get() along with a couple of utility functions.
  *
- * Copyright (c) 2021-2025 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -74,10 +74,12 @@ int get_sections(ini_t *inidata, int maxsect, char *sections[])
 			if(duplicate(i, p + 1, sections))		/* section already exists */
 				continue;
 
-			sections[i++] = strndup(p + 1, PATH_MAX);
+			if(i == maxsect) {
+				fprintf(stderr, "too many sections: max %d\n", maxsect);
+				return (-1);
+			}
 
-			if(i == maxsect)
-				break;
+			sections[i++] = strndup(p + 1, PATH_MAX);
 		}
 
 	return (i);

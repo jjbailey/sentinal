@@ -2,7 +2,7 @@
  * verifyids.c
  * Verify user and group ids.
  *
- * Copyright (c) 2021-2025 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -61,7 +61,7 @@ gid_t verifygid(const char *id)
 
 	if(isdigit(*id)) {								/* gid cannot be 0 */
 		gid = (gid_t) atoi(id);
-		return (gid == 0 ? NOBODY : gid);
+		return (gid == 0 ? NOGROUP : gid);
 	}
 
 	/* "root" ok past this point */

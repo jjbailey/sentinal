@@ -2,17 +2,18 @@
  * signals.c
  * Set signals for handling events.
  *
- * Copyright (c) 2021-2025 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
  * in the root directory of this source tree.
  */
 
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/wait.h>
 #include <signal.h>
 #include <string.h>
 #include <unistd.h>
@@ -31,6 +32,7 @@ void parentsignals(void)
 
 	struct sigaction saparent;						/* catch these */
 	struct sigaction sareject;						/* reject these */
+	struct sigaction sasigchld;						/* let threads reap their own children */
 	struct sigaction sasigsegv;						/* don't catch or reject */
 	struct sigaction sasigstp;						/* for testing */
 
@@ -44,6 +46,10 @@ void parentsignals(void)
 	sigemptyset(&sareject.sa_mask);
 	sareject.sa_flags = SA_RESTART;
 
+	memset(&sasigchld, 0, sizeof(sasigchld));
+	sasigchld.sa_handler = SIG_DFL;
+	sigemptyset(&sasigchld.sa_mask);
+
 	memset(&sasigsegv, 0, sizeof(sasigsegv));
 	sigaction(SIGSEGV, NULL, &sasigsegv);
 	memset(&sasigstp, 0, sizeof(sasigstp));
@@ -55,7 +61,7 @@ void parentsignals(void)
 	sigaction(SIGHUP, &saparent, NULL);
 	sigaction(SIGINT, &saparent, NULL);
 	sigaction(SIGTERM, &saparent, NULL);
-	sigaction(SIGCHLD, &saparent, NULL);
+	sigaction(SIGCHLD, &sasigchld, NULL);
 	sigaction(SIGSEGV, &sasigsegv, NULL);
 	sigaction(SIGTSTP, &sasigstp, NULL);
 }
@@ -65,19 +71,11 @@ static void sigparent(int sig)
 	/* parent signal handler */
 
 	int     i;
-	int     status;
 
 	signal(sig, sigparent);							/* reset */
 
 	if(sig == SIGINT || sig == SIGTERM)
 		_exit(EXIT_SUCCESS);
-
-	if(sig == SIGCHLD) {
-		while(waitpid(-1, &status, WNOHANG) > 0)
-			;
-
-		return;
-	}
 
 	/* mark the threads as signaled */
 	/* only workers use ti_wfd */

@@ -11,6 +11,8 @@
  * in the root directory of this source tree.
  */
 
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -77,7 +79,7 @@ int main(int argc, char *argv[])
 			exit(EXIT_SUCCESS);
 
 		case 'f':									/* INI file name */
-			strlcpy(inifile, optarg, PATH_MAX);
+			fullpath("/opt/sentinal/etc", optarg, inifile);
 			break;
 
 		case 'h':									/* print usage */

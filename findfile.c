@@ -62,7 +62,12 @@ uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 		ti->ti_dev = st.st_dev;						/* save mountpoint device */
 		rowid = *nextid = 1;						/* starting over */
 
-		sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
+		if(sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL) != SQLITE_OK) {
+			fprintf(stderr, "%s: sqlite3_exec BEGIN failed: %s\n",
+					ti->ti_section, sqlite3_errmsg(db));
+			closedir(dirp);
+			return (0);
+		}
 	}
 
 	snprintf(stmtbuf, sizeof(stmtbuf), INSERT_DIR_SQL, ti->ti_task);
@@ -84,7 +89,12 @@ uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 	sqlite3_bind_int(insert_dir_stmt, 1, rowid);
 	sqlite3_bind_text(insert_dir_stmt, 2, relpath, -1, SQLITE_TRANSIENT);
 	sqlite3_bind_int(insert_dir_stmt, 3, 0);
-	sqlite3_step(insert_dir_stmt);
+	if(sqlite3_step(insert_dir_stmt) != SQLITE_DONE) {
+		fprintf(stderr, "%s: sqlite3_step insert_dir failed: %s\n",
+				ti->ti_section, sqlite3_errmsg(db));
+		sqlite3_finalize(insert_dir_stmt);
+		goto cleanup;
+	}
 	sqlite3_finalize(insert_dir_stmt);
 	insert_dir_stmt = NULL;
 
@@ -117,6 +127,12 @@ uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 				entries++;
 				continue;
 			}
+
+			if(stat(fullpath, &st) == -1)
+				continue;
+
+			if(S_ISDIR(st.st_mode))					/* never follow symlinks to dirs */
+				continue;
 		}
 
 		if(st.st_dev != ti->ti_dev)					/* never cross filesystems */
@@ -141,7 +157,11 @@ uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 		sqlite3_bind_text(insert_file_stmt, 2, dp->d_name, -1, SQLITE_TRANSIENT);
 		sqlite3_bind_int(insert_file_stmt, 3, (int)st.st_mtim.tv_sec);
 		sqlite3_bind_int64(insert_file_stmt, 4, (sqlite3_int64) st.st_size);
-		sqlite3_step(insert_file_stmt);
+		if(sqlite3_step(insert_file_stmt) != SQLITE_DONE) {
+			fprintf(stderr, "%s: sqlite3_step insert_file failed: %s\n",
+					ti->ti_section, sqlite3_errmsg(db));
+			// Continue to next entry
+		}
 	}
 
   cleanup:
@@ -160,7 +180,10 @@ uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 
 		if(sqlite3_prepare_v2(db, stmtbuf, -1, &update_dir_stmt, NULL) == SQLITE_OK) {
 			sqlite3_bind_int(update_dir_stmt, 1, rowid);
-			sqlite3_step(update_dir_stmt);
+			if(sqlite3_step(update_dir_stmt) != SQLITE_DONE) {
+				fprintf(stderr, "%s: sqlite3_step update_dir failed: %s\n",
+						ti->ti_section, sqlite3_errmsg(db));
+			}
 			sqlite3_finalize(update_dir_stmt);
 		} else {
 			fprintf(stderr, "%s: sqlite3_prepare_v2 update_dir: %s\n",
@@ -170,7 +193,10 @@ uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 
 	if(top) {										/* indexes */
 		create_index(ti, db);
-		sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
+		if(sqlite3_exec(db, "COMMIT", NULL, NULL, NULL) != SQLITE_OK) {
+			fprintf(stderr, "%s: sqlite3_exec COMMIT failed: %s\n",
+					ti->ti_section, sqlite3_errmsg(db));
+		}
 	}
 
 	return (entries);

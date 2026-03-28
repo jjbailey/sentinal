@@ -299,17 +299,8 @@ static bool create_pid_file(char *pidfile)
 	int     fd;
 	FILE   *fp;
 
-	if((fp = fopen(pidfile, "r"))) {
-		int     locked = lockf(fileno(fp), F_TEST, (off_t) 0);
-
-		fclose(fp);
-
-		if(locked == -1)							/* not my lock */
-			return (false);
-	}
-
 	if((fd = open(pidfile, O_RDWR | O_CREAT, 0640)) != -1) {
-		if(lockf(fd, F_LOCK, (off_t) 0) == -1) {
+		if(lockf(fd, F_TLOCK, (off_t) 0) == -1) {	/* non-blocking: already running */
 			close(fd);
 			return (false);
 		}

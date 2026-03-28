@@ -134,7 +134,10 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 		return;
 
 	if(ti->ti_dirlimit) {							/* count bytes in dir */
-		snprintf(stmt, BUFSIZ, sql_selectbytes, ti->ti_task);
+		if(snprintf(stmt, BUFSIZ, sql_selectbytes, ti->ti_task) >= BUFSIZ) {
+			fprintf(stderr, "%s: SQL statement truncated\n", ti->ti_section);
+			return;
+		}
 
 		if(sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL) != SQLITE_OK) {
 			fprintf(stderr, "%s: sqlite3_prepare_v2: %s\n", ti->ti_section,
@@ -150,7 +153,11 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 
 	/* process expired files */
 
-	snprintf(stmt, BUFSIZ, sql_selectfiles, ti->ti_task, ti->ti_task, QUERYLIM);
+	if(snprintf(stmt, BUFSIZ, sql_selectfiles,
+				ti->ti_task, ti->ti_task, QUERYLIM) >= BUFSIZ) {
+		fprintf(stderr, "%s: SQL statement truncated\n", ti->ti_section);
+		return;
+	}
 
 	if(sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL) != SQLITE_OK) {
 		fprintf(stderr, "%s: sqlite3_prepare_v2: %s\n", ti->ti_section,

@@ -8,7 +8,7 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"2.2.5"
+#define	VERSION_STRING	"2.2.6"
 
 #ifndef _STDBOOL_H
 # include <stdbool.h>
@@ -32,7 +32,7 @@
 #endif
 
 #define	MAXARGS		32
-#define	MAXSECT		16								/* arbitrary, can be more */
+#define	MAXSECT		32								/* arbitrary, can be more */
 
 #define	MAXFILES	128								/* max open files */
 
