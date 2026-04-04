@@ -48,8 +48,7 @@ char   *pidfile;									/* sentinal pid */
 char   *sections[MAXSECT];							/* section names */
 ini_t  *inidata;									/* loaded ini data */
 int     dryrun = false;								/* dry run flag */
-pthread_mutex_t dfslock;							/* thread lock */
-pthread_mutex_t explock;							/* thread lock */
+pthread_mutex_t dblock;								/* sqlite lock */
 sqlite3 *db;										/* db handle */
 struct thread_info tinfo[MAXSECT];					/* our threads */
 struct utsname utsbuf;								/* for host info */
@@ -203,8 +202,7 @@ int main(int argc, char *argv[])
 
 	/* initialize thread locks */
 
-	pthread_mutex_init(&dfslock, NULL);
-	pthread_mutex_init(&explock, NULL);
+	pthread_mutex_init(&dblock, NULL);
 
 	/*
 	 * start threads
