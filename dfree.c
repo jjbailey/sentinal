@@ -151,11 +151,11 @@ int is_directory(const char *path)
 void show_usage(const char *progname)
 {
 	printf("Usage: %s [mount_point1] [mount_point2] ...\n", progname);
-	printf("       %s                 # Show all mounted filesystems\n", progname);
+	printf("       %s               # Show all mounted filesystems\n", progname);
 	printf("\nExamples:\n");
-	printf("  %s                      # Show all filesystems\n", progname);
-	printf("  %s /home                # Show only /home filesystem\n", progname);
-	printf("  %s / /home /var         # Show root, home, and var filesystems\n", progname);
+	printf("  %s                    # Show all filesystems\n", progname);
+	printf("  %s /home              # Show only /home filesystem\n", progname);
+	printf("  %s / /home /var       # Show root, home, and var filesystems\n", progname);
 }
 
 // Get size stats for a mount
@@ -186,12 +186,20 @@ int get_fs_info(const char *mount_point,
 // Get mount for each user-specified path
 int get_specific_mounts(int argc, char *argv[], Filesystem *fs_list, int *fs_count)
 {
-	MountEntry mounts[MAX_MOUNT_ENTRIES];
+	MountEntry *mounts;
 	int     mount_count = 0;
 	int     i;
 
-	if(load_mount_table(mounts, &mount_count) != 0)
+	mounts = calloc(MAX_MOUNT_ENTRIES, sizeof(*mounts));
+	if(!mounts) {
+		perror("Error allocating mount table");
 		return (1);
+	}
+
+	if(load_mount_table(mounts, &mount_count) != 0) {
+		free(mounts);
+		return (1);
+	}
 
 	for(i = 1; i < argc; i++) {
 		char    best_match_device[PATH_MAX] = "";
@@ -256,6 +264,7 @@ int get_specific_mounts(int argc, char *argv[], Filesystem *fs_list, int *fs_cou
 		}
 	}
 
+	free(mounts);
 	return (0);
 }
 
