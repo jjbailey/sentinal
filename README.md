@@ -8,12 +8,12 @@ an adjunct or an alternative to logrotate.
 
 **Monitoring and management capabilities:**
 
-* Available filesystem disk space by percentage
-* Available filesystem inode usage by percentage or count
-* Expire files by size, age, or retention settings
-* Inodes by age or retention settings
-* Log ingestion, processing, and rotation
-* Monitor and process log files when they reach a given size
+- Available filesystem disk space by percentage
+- Available filesystem inode usage by percentage or count
+- Expire files by size, age, or retention settings
+- Inodes by age or retention settings
+- Log ingestion, processing, and rotation
+- Monitor and process log files when they reach a given size
 
 Additional documentation lives in `README.d/`:
 `README.d/README.inifile.md` covers key semantics and token expansion,
@@ -53,35 +53,35 @@ For untruncated thread names and split-section output, keep section names to
 
 **\[global\]**
 
-* `pidfile`: sentinal process ID and lock file, absolute path, required
-* `database`: name of the SQLite3 database, `:memory:` or file path,
+- `pidfile`: sentinal process ID and lock file, absolute path, required
+- `database`: name of the SQLite3 database, `:memory:` or file path,
   default `:memory:`
 
 **\[section\]**
 
-* `command`: command to run, absolute path
-* `dirname`: thread and postcmd working directory, absolute path
-* `dirlimit`: maximum total size of matching files in a directory,
+- `command`: command to run, absolute path
+- `dirname`: thread and postcmd working directory, absolute path
+- `dirlimit`: maximum total size of matching files in a directory,
   SI or non-SI units, 0 = no max (off)
-* `subdirs`: option to search subdirectories for matching files (true)
-* `pipename`: named pipe/fifo file, full path or relative to dirname
-* `template`: output file name, date(1) sequences %F %Y %m %d %H %M %S %s
-* `pcrestr`: perl-compatible regex naming files to manage
-* `uid`: username or uid for command/postcmd, default = nobody
-* `gid`: groupname or gid for command/postcmd, default = nogroup
-* `rotatesiz`: size in SI or non-SI units, 0 = no rotate
-* `expiresiz`: size in SI or non-SI units, 0 = no expiration by size
-* `diskfree`: percent blocks free, 0 = no monitor (off)
-* `inofree`: percent inodes free, 0 = no monitor (off)
-* `expire`: file retention time, units = m, H, D, W, M, Y, 0 = no expiration (off)
-* `retmin`: minimum number of files to retain, 0 = none (off)
-* `retmax`: maximum number of files to retain, 0 = no max (off)
-* `terse`: option to record or suppress file removal notices (false)
-* `rmdir`: option to remove empty directories (false)
-* `symlinks`: option to follow symlinks to files (false)
-* `postcmd`: command to run after log closes or rotates;
+- `subdirs`: option to search subdirectories for matching files (true)
+- `pipename`: named pipe/fifo file, full path or relative to dirname
+- `template`: output file name, date(1) sequences %F %Y %m %d %H %M %S %s
+- `pcrestr`: perl-compatible regex naming files to manage
+- `uid`: username or uid for command/postcmd, default = nobody
+- `gid`: groupname or gid for command/postcmd, default = nogroup
+- `rotatesiz`: size in SI or non-SI units, 0 = no rotate
+- `expiresiz`: size in SI or non-SI units, 0 = no expiration by size
+- `diskfree`: percent blocks free, 0 = no monitor (off)
+- `inofree`: percent inodes free, 0 = no monitor (off)
+- `expire`: file retention time, units = m, H, D, W, M, Y, 0 = no expiration (off)
+- `retmin`: minimum number of files to retain, 0 = none (off)
+- `retmax`: maximum number of files to retain, 0 = no max (off)
+- `terse`: option to record or suppress file removal notices (false)
+- `rmdir`: option to remove empty directories (false)
+- `symlinks`: option to follow symlinks to files (false)
+- `postcmd`: command to run after log closes or rotates;
   tokens: `%file`, `%host`, `%path`, `%sect`
-* `truncate`: option to truncate slm-managed files (false)
+- `truncate`: option to truncate slm-managed files (false)
 
 Sizes in bytes or files may be given in SI units {K,M,G,T}i{B,F}, non-SI units {K,M,G,T}{B,F},
 or no units (literal value). Examples,
@@ -119,66 +119,66 @@ or no units (literal value). Examples,
 
 #### Diskfree (DFS) Thread
 
-* `pcrestr`
-* One or more of the following:
-  * `diskfree`
-  * `inofree`
-* Optional:
-  * `retmin`
+- `pcrestr`
+- One or more of the following:
+  - `diskfree`
+  - `inofree`
+- Optional:
+  - `retmin`
 
 #### Expire (EXP) Thread
 
-* `pcrestr`
-* One or more of the following:
-  * `dirlimit`
-  * `expire`
-  * `retmax`
-* Optional:
-  * `retmin`
+- `pcrestr`
+- One or more of the following:
+  - `dirlimit`
+  - `expire`
+  - `retmax`
+- Optional:
+  - `retmin`
 
 #### Simple Log Monitor (SLM) Thread
 
-* `command` unset (null)
-* `template`
-* `postcmd`
-* `rotatesiz`
-* Optional, likely required by use case:
-  * `uid`
-  * `gid`
+- `command` unset (null)
+- `template`
+- `postcmd`
+- `rotatesiz`
+- Optional, likely required by use case:
+  - `uid`
+  - `gid`
 
 #### Work (log ingestion, WRK) Thread
 
-* `command`
-* `pipename`
-* `template`
-* Optional, but recommended:
-  * `rotatesiz`
-* Optional:
-  * `postcmd`
-* Optional, likely required by use case:
-  * `uid`
-  * `gid`
+- `command`
+- `pipename`
+- `template`
+- Optional, but recommended:
+  - `rotatesiz`
+- Optional:
+  - `postcmd`
+- Optional, likely required by use case:
+  - `uid`
+  - `gid`
 
 Note the following conditions:
 
-* If `command` is set, `template` must be set.
-* If `rotatesiz` is set, rotate the file after it reaches the specified size.
-* If `expiresiz` is set, remove files larger than the specified size
+- If `command` is set, `template` must be set.
+- If `rotatesiz` is set, rotate the file after it reaches the specified size.
+- If `expiresiz` is set, remove files larger than the specified size
   at expiration time.
-* If `diskfree` is set, create a thread to discard the oldest files
+- If `diskfree` is set, create a thread to discard the oldest files
   to free disk space.
-* If `inofree` is set, create a thread to discard the oldest files to free inodes.
-* If `expire` is set, remove files older than the expiration time.
-* If `retmin` is set, retain `n` number of files, regardless of
+- If `inofree` is set, create a thread to discard the oldest files to free inodes.
+- If `expire` is set, remove files older than the expiration time.
+- If `retmin` is set, retain `n` number of files, regardless of
   expiration or available disk space.
-* If `retmax` is set, retain a maximum number of `n` files, regardless of expiration.
-* If `postcmd` is specified, the value is passed as a command to
+- If `retmax` is set, retain a maximum number of `n` files, regardless of expiration.
+- If `postcmd` is specified, the value is passed as a command to
   `bash -c` after the file closes or rotates. (Optional.)
 
 #### Precedence of Keys
 
-* `retmin`, `retmax` take precedence over `dirlimit`, `diskfree`, `inofree`, `expire`.
-* `dirlimit`, `diskfree`, `inofree` take precedence over `expire`.
+- `retmin`, `retmax` take precedence over `dirlimit`, `diskfree`, `inofree`, `expire`.
+- `dirlimit`, `diskfree`, `inofree` take precedence over `expire`.
 
 ### Free Disk Space
 
@@ -220,11 +220,11 @@ constraints: `retmin`, `retmax`, `expire`, `expiresiz`, `dirlimit`.
 The combinations of `expire` and `expiresiz` settings affect
 expiration behavior. If:
 
-* `expire` is set and `expiresiz` is unset, remove files older than
+- `expire` is set and `expiresiz` is unset, remove files older than
   the expiration time.
-* Both `expire` and `expiresiz` are set, remove files larger than
+- Both `expire` and `expiresiz` are set, remove files larger than
   `expiresiz` at the expiration time.
-* `expiresiz` is set and `expire` is unset, take no action.
+- `expiresiz` is set and `expire` is unset, take no action.
 
 ```mermaid
 flowchart TB
@@ -449,31 +449,32 @@ WantedBy=multi-user.target
 
 ### User/Group ID Notes
 
-* User/Group ID applies only to `command` and `postcmd`; otherwise,
+- User/Group ID applies only to `command` and `postcmd`; otherwise,
   sentinal runs as the calling user.
-* If an application never needs root privileges to run and process
+- If an application never needs root privileges to run and process
   logs, consider setting and using the application's user and group
   IDs in the unit file.
-* Running sentinal as root is likely necessary when a single sentinal
+- Running sentinal as root is likely necessary when a single sentinal
   instance monitors several different applications.
-* When unspecified, the user and group IDs are set to `nobody` and `nogroup`.
+- When unspecified, the user and group IDs are set to `nobody` and `nogroup`.
 
 ### Exported Environment Variables
 
 sentinal exports the following variables to `command` and `postcmd`:
 
-* `HOME`: home of uid, default `/tmp`
-* `PATH`: `/usr/bin:/usr/sbin:/bin`
-* `SHELL`: `/bin/bash`
-* `PWD`: `dirname` value from INI file (set implicitly via `chdir`)
-* `TEMPLATE`: `template` value from INI file
-* `PCRESTR`: `pcrestr` value from INI file
+- `HOME`: home of uid, default `/tmp`
+- `PATH`: `/usr/bin:/usr/sbin:/bin`
+- `SHELL`: `/bin/bash`
+- `PWD`: `dirname` value from INI file (set implicitly via `chdir`)
+- `TEMPLATE`: `template` value from INI file
+- `PCRESTR`: `pcrestr` value from INI file
 
 ## Sentinal Status
 
 The INI file `/opt/sentinal/etc/example2.ini` is used here as an example.
 
 <!-- markdownlint-disable MD013 -->
+
 ```shell
 # systemctl status sentinal
 * sentinal.service - sentinal service for example2.ini
@@ -498,6 +499,7 @@ Nov 24 13:01:47 loghost sentinal[13580]: example2: monitor file: example2- for s
 
 (In this example, /opt is in the / filesystem)
 ```
+
 <!-- markdownlint-enable MD013 -->
 
 ## Build and Install
@@ -531,9 +533,9 @@ Edit `/etc/systemd/system/sentinal.service` as necessary.
 
 sentinal provides three options for testing INI files:
 
-* `-d` or `--debug` prints INI file sections as parsed, resembling the input.
-* `-s` or `--split` prints the INI file with thread-specific split sections.
-* `-v` or `--verbose` prints INI file sections with the keys evaluated
+- `-d` or `--debug` prints INI file sections as parsed, resembling the input.
+- `-s` or `--split` prints the INI file with thread-specific split sections.
+- `-v` or `--verbose` prints INI file sections with the keys evaluated
   as they would be at runtime, including symlink resolution and
   relative-to-full pathname conversion.
 
@@ -566,27 +568,27 @@ Examples of on-demand log rotation:
 
 ## Notes
 
-* Linux processes writing to pipes block when processes are not
+- Linux processes writing to pipes block when processes are not
   reading from them. systemd manages sentinal to ensure sentinal is
   always running. See `README.d/README.fifo` for additional information about
   FIFO behavior.
-* The default pipe size in Linux is either 64KB or 1MB. sentinal
+- The default pipe size in Linux is either 64KB or 1MB. sentinal
   increases its pipe sizes on 2.6.35 and newer kernels to 64MiB.
   Consider this a tuning parameter that can affect performance.
-* In the inline compression example, `zstd` can be changed to a
+- In the inline compression example, `zstd` can be changed to a
   different program, e.g., `gzip` or `(p)bzip2`, though they are
   slower and may impact the performance of the writer application.
-* For inode management, sentinal counts inodes in `dirname`, not
+- For inode management, sentinal counts inodes in `dirname`, not
   inodes in the filesystem.
-* sentinal reports free space for unprivileged users, which may be
+- sentinal reports free space for unprivileged users, which may be
   less than privileged users' values reported by disk utility programs.
-* The `rotatesiz` key represents bytes written to disk. When `command`
+- The `rotatesiz` key represents bytes written to disk. When `command`
   is a compression program, log rotation occurs after sentinal writes
   `rotatesiz` bytes post-compression. If `rotatesiz` is unset or zero,
   the thread requires manual or cron-based log rotation.
-* sentinal removes empty directories within `dirname` when `rmdir` is
+- sentinal removes empty directories within `dirname` when `rmdir` is
   true. To preserve a single directory, create a file in the directory
   with a file name that does not match `pcrestr`, for example,
   `.persist`.
-* sentinal does not descend into directories in other filesystems,
+- sentinal does not descend into directories in other filesystems,
   similar to `find dir -xdev`.
