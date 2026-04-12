@@ -41,6 +41,8 @@ PCFOBJS := pcrefind.o fullpath.o pcrecompile.o pcrematch.o strlcpy.o
 PCTOBJS := pcretest.o pcrecompile.o pcrematch.o
 PCRESO := pcre2.so
 
+DFOBJS := dfree.o strlcpy.o
+
 # Default target
 all: sentinal sentinalpipe dfree pcrefind pcretest $(PCRESO)
 
@@ -48,7 +50,7 @@ sentinal: $(SENOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 sentinalpipe: $(SPMOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
-dfree: dfree.o
+dfree: $(DFOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 pcrefind: $(PCFOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)

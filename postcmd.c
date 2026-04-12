@@ -93,7 +93,7 @@ int postcmd(struct thread_info *ti, char *filename)
 
 		umask(umask(0) | 022);						/* don't set less restrictive */
 		nice(1);
-		execl(ENV, "env", "-S", "-", BASH, "--noprofile", "--norc", "-c", cmdbuf, NULL);
+		execl(BASH, "bash", "--noprofile", "--norc", "-c", cmdbuf, NULL);
 		exit(EXIT_FAILURE);
 
 	default:

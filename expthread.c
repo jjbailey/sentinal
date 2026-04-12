@@ -35,7 +35,7 @@ static char *sql_selectbytes = "SELECT SUM(db_size)\n \
 	FROM  %s_file;";
 
 /* externals */
-extern pthread_mutex_t explock;						/* thread lock */
+extern pthread_mutex_t dblock;						/* sqlite lock */
 
 void   *expthread(void *arg)
 {
@@ -87,7 +87,7 @@ void   *expthread(void *arg)
 	usleep((useconds_t) rand() & 0xffff);
 
 	for(;;) {
-		pthread_mutex_lock(&explock);
+		pthread_mutex_lock(&dblock);
 
 		if(findfile(ti, true, &nextid, ti->ti_dirname, db) > 0) {
 			/* process directories emptied by previous run */
@@ -100,7 +100,7 @@ void   *expthread(void *arg)
 			process_files(ti, db);
 		}
 
-		pthread_mutex_unlock(&explock);
+		pthread_mutex_unlock(&dblock);
 		sleep(dryrun ? DRYSCAN : SCANRATE);
 	}
 

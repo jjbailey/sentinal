@@ -44,13 +44,15 @@ static char *sql_selectfiles = "SELECT db_dir, db_file\n \
     LIMIT %d;";
 
 /* externals */
-extern pthread_mutex_t dfslock;						/* thread lock */
+extern pthread_mutex_t dblock;						/* sqlite lock */
 
 void   *dfsthread(void *arg)
 {
+	bool    firstrun = true;						/* initial status report */
 	bool    lowres = false;							/* low resources flag */
+	bool    prev_lowres = false;					/* from prior loop */
+	bool    recovered = false;						/* previous run was low */
 	bool    runreport = true;						/* for resource_report */
-	bool    save_lowres = false;					/* from prior loop */
 	extern bool dryrun;								/* dry run flag */
 	extern sqlite3 *db;								/* db handle */
 	float   pc_bfree = 0;							/* blocks free */
@@ -135,18 +137,22 @@ void   *dfsthread(void *arg)
 
 		lowres = LOW_RES(ti->ti_diskfree, pc_bfree) || LOW_RES(ti->ti_inofree, pc_ffree);
 
-		/* report changes >= 1% */
+		recovered = prev_lowres && !lowres;			/* report low -> healthy */
+
+		/* report changes >= 1% from last status report */
 
 		runreport = (fabsf(pc_bfree - save_pc_bfree) >= 1.0f ||
 					 fabsf(pc_ffree - save_pc_ffree) >= 1.0f);
 
-		if(lowres || runreport || save_lowres) {
+		if(firstrun || lowres || runreport || recovered) {
 			resource_report(ti, lowres, pc_bfree, pc_ffree);
+			firstrun = false;
 			runreport = false;
-			save_lowres = false;
 			save_pc_bfree = pc_bfree;
 			save_pc_ffree = pc_ffree;
 		}
+
+		prev_lowres = lowres;
 
 		if(lowres) {
 			/*
@@ -156,14 +162,7 @@ void   *dfsthread(void *arg)
 
 			usleep(rand_r(&seed) & 0xFFFFF);
 
-			pthread_mutex_lock(&dfslock);
-
-			/*
-			 * previous run
-			 * adequate free space can become available and be less than 1% changed
-			 */
-
-			save_lowres = true;
+			pthread_mutex_lock(&dblock);
 
 			if(findfile(ti, true, &nextid, ti->ti_dirname, db) > 0) {
 				/* process directories emptied by previous run */
@@ -177,7 +176,7 @@ void   *dfsthread(void *arg)
 				runreport = true;
 			}
 
-			pthread_mutex_unlock(&dfslock);
+			pthread_mutex_unlock(&dblock);
 			continue;
 		}
 
