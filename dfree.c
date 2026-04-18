@@ -1,6 +1,7 @@
 /*
  * dfree.c
  * grok wrote this based on the original dfree.sh script.
+ * codex rewrote it.
  *
  * Copyright (c) 2024-2026 jjb
  * All rights reserved.
@@ -48,6 +49,10 @@ size_t  strlcpy(char *dst, const char *src, size_t size);
 int is_allowed_type(const char *type)
 {
 	const char **p;
+
+	if(strncmp(type, "nfs", 3) == 0)
+		return (1);
+
 	for(p = allowed_types; *p; p++) {
 		if(strcmp(type, *p) == 0)
 			return (1);
@@ -83,11 +88,13 @@ int load_mount_table(MountEntry *mounts, int *mount_count)
 	while((ent = getmntent(mnt))) {
 		if(*mount_count >= MAX_MOUNT_ENTRIES)
 			break;
+
 		strlcpy(mounts[*mount_count].fsname, ent->mnt_fsname,
 				sizeof(mounts[*mount_count].fsname));
 		strlcpy(mounts[*mount_count].dir, ent->mnt_dir, sizeof(mounts[*mount_count].dir));
 		strlcpy(mounts[*mount_count].type, ent->mnt_type,
 				sizeof(mounts[*mount_count].type));
+
 		(*mount_count)++;
 	}
 
@@ -257,6 +264,7 @@ int get_specific_mounts(int argc, char *argv[], Filesystem *fs_list, int *fs_cou
 						sizeof(fs_list[*fs_count].device));
 				strlcpy(fs_list[*fs_count].mount_point, best_match_mount,
 						sizeof(fs_list[*fs_count].mount_point));
+
 				(*fs_count)++;
 			}
 		} else {
@@ -283,6 +291,7 @@ int get_all_mounts(Filesystem *fs_list, int *fs_count)
 		if(!is_allowed_type(ent->mnt_type)) {
 			continue;
 		}
+
 		// Exclude loop devices and snap mounts
 		if(strncmp(ent->mnt_fsname, "/dev/loop", 9) == 0)
 			continue;
@@ -296,6 +305,7 @@ int get_all_mounts(Filesystem *fs_list, int *fs_count)
 					sizeof(fs_list[*fs_count].device));
 			strlcpy(fs_list[*fs_count].mount_point, ent->mnt_dir,
 					sizeof(fs_list[*fs_count].mount_point));
+
 			(*fs_count)++;
 		}
 	}
@@ -366,6 +376,7 @@ int main(int argc, char *argv[])
 		fs_list[i].f_bavail_bytes = f_bavail_bytes;
 
 		char    total_human[32], used_human[32], avail_human[32], use_percent[16];
+
 		human_readable(total_human, sizeof(total_human), fs_list[i].total_bytes);
 		human_readable(used_human, sizeof(used_human), fs_list[i].used_bytes);
 		human_readable(avail_human, sizeof(avail_human), fs_list[i].avail_bytes);
