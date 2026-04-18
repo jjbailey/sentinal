@@ -15,12 +15,15 @@
 
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <libgen.h>
 #include <limits.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include "sentinal.h"
 #include "basename.h"
@@ -32,6 +35,7 @@ struct pipeinfo {
 };
 
 static struct pipeinfo pipelist[MAXSECT];			/* list of pipes and open fds */
+static volatile sig_atomic_t stop_requested;		/* delayed exit on service restart */
 
 static void help(char *);
 static void pipeopen(int);
@@ -104,6 +108,11 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	if(nsect < 0) {
+		fprintf(stderr, "%s: too many sections\n", myname);
+		exit(EXIT_FAILURE);
+	}
+
 	rlimit(MAXFILES);								/* limit the number of open files */
 
 	for(i = 0; i < nsect; i++) {
@@ -117,6 +126,12 @@ int main(int argc, char *argv[])
 			 * either way, skip
 			 */
 
+			fprintf(stderr, "%s: missing dirname or pipename\n", sections[i]);
+			continue;
+		}
+
+		if(strstr(p2, "..")) {
+			fprintf(stderr, "%s: bad pipename\n", sections[i]);
 			continue;
 		}
 
@@ -130,6 +145,12 @@ int main(int argc, char *argv[])
 
 		fullpath(rbuf, base(p2), filename);
 		pipelist[i].pi_pipename = strndup(filename, PATH_MAX - 1);
+
+		if(IS_NULL(pipelist[i].pi_pipename)) {
+			fprintf(stderr, "%s: out of memory\n", myname);
+			exit(EXIT_FAILURE);
+		}
+
 		pipelist[i].pi_fd = EOF;
 
 		fprintf(stderr, "monitor %s\n", pipelist[i].pi_pipename);
@@ -138,8 +159,17 @@ int main(int argc, char *argv[])
 	systemd_signals();
 
 	for(;;) {
+		if(stop_requested) {
+			fprintf(stderr, "exiting in 10s...\n");
+			sleep(10);								/* give sentinal 10s */
+			exit(EXIT_SUCCESS);
+		}
+
 		for(i = 0; i < nsect; i++)
 			pipeopen(i);
+
+		if(stop_requested)
+			continue;
 
 		sleep(ONE_MINUTE);
 	}
@@ -153,23 +183,33 @@ static void pipeopen(int i)
 	/* keep pipes open by opening a new fd before closing the old fd */
 
 	int     savefd = pipelist[i].pi_fd;				/* save open fd */
+	int     newfd;
+	struct stat st;
 
 	if(IS_NULL(pipelist[i].pi_pipename))			/* INI file error */
 		return;
 
-	if(access(pipelist[i].pi_pipename, R_OK) == -1) {
+	if(lstat(pipelist[i].pi_pipename, &st) == -1 || !S_ISFIFO(st.st_mode)) {
 		/* not yet created or gone missing */
 
 		if(savefd != EOF)
 			close(savefd);
 
 		pipelist[i].pi_fd = EOF;
-	} else {										/* open a second fd */
-		pipelist[i].pi_fd = open(pipelist[i].pi_pipename, O_RDONLY | O_NONBLOCK);
-
-		if(savefd != EOF)							/* close saved fd */
-			close(savefd);
+		return;
 	}
+
+	newfd = open(pipelist[i].pi_pipename, O_RDONLY | O_NONBLOCK);
+	if(newfd == -1) {
+		/* keep the existing reader if a replacement open fails */
+		pipelist[i].pi_fd = savefd;
+		return;
+	}
+
+	pipelist[i].pi_fd = newfd;
+
+	if(savefd != EOF)								/* close saved fd */
+		close(savefd);
 }
 
 static void systemd_signals(void)
@@ -182,10 +222,10 @@ static void systemd_signals(void)
 	memset(&sacatch, 0, sizeof(sacatch));
 	sacatch.sa_handler = sigcatch;
 	sigemptyset(&sacatch.sa_mask);
-	sacatch.sa_flags = (int)SA_RESETHAND;
+	sacatch.sa_flags = 0;
 
-	for(i = 1; i < NSIG; i++)
-		sigaction(i, &sacatch, NULL);
+	for(i = 0; i < 2; i++)
+		sigaction((i == 0) ? SIGHUP : SIGTERM, &sacatch, NULL);
 }
 
 static void sigcatch(int sig)
@@ -196,14 +236,8 @@ static void sigcatch(int sig)
 	 * give sentinal time to restart
 	 */
 
-	signal(sig, sigcatch);
-
-	if(sig == SIGHUP || sig == SIGTERM) {			/* systemd reload/restart */
-		signal(sig, SIG_IGN);
-		fprintf(stderr, "exiting in 10s...\n");
-		sleep(10);									/* give sentinal 10s */
-		exit(EXIT_SUCCESS);
-	}
+	if(sig == SIGHUP || sig == SIGTERM)				/* systemd reload/restart */
+		stop_requested = sig;
 }
 
 static void help(char *prog)
