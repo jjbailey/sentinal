@@ -2,18 +2,18 @@
 # systemd example unit file
 
 [Unit]
-Description=sentinal service for example.ini
-StartLimitIntervalSec=0
+Description=sentinal service for /opt/sentinal/etc/example.ini
+StartLimitIntervalSec=30
 StartLimitBurst=10
-After=network.target network-online.target systemd-networkd.service
 
 [Service]
 Type=simple
 Nice=10
-Restart=always
-RestartSec=2
-User=root
-ExecStart=/opt/sentinal/bin/sentinal -f INI_FILE/example.ini
+Restart=on-failure
+RestartSec=5
+# Use root only when a single sentinal instance must monitor across users.
+User=sentinal
+ExecStart=/opt/sentinal/bin/sentinal -f /opt/sentinal/etc/example.ini
 ExecReload=/bin/kill -s HUP $MAINPID
 
 [Install]
