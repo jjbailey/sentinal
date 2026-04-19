@@ -49,6 +49,7 @@ int readini(char *myname, char *inifile)
 	int     i;
 	int     inifd;									/* file descriptor */
 	int     nsect;									/* number of sections found */
+	int     openflags = O_RDONLY;
 	struct stat stbuf;								/* file status */
 	struct thread_info *ti;							/* thread settings */
 	int     get_sections(ini_t *, int, char **);
@@ -64,27 +65,29 @@ int readini(char *myname, char *inifile)
 		return (0);
 	}
 
-	if((inifd = open(inipath, O_RDONLY)) != -1) {
-		if(lstat(inipath, &stbuf) == 0) {
-			if(S_ISLNK(stbuf.st_mode)) {
-				fprintf(stderr, "%s: %s is a symlink\n", myname, inipath);
-				close(inifd);
-				return (0);
-			}
+#ifdef O_NOFOLLOW
+	openflags |= O_NOFOLLOW;
+#endif
 
-			if((stbuf.st_mode & S_IWGRP) || (stbuf.st_mode & S_IWOTH)) {
-				fprintf(stderr, "%s: %s is writable by group or other\n", myname,
-						inipath);
-				close(inifd);
-				return (0);
-			}
-
-			/* tighter */
-			if(fchmod(inifd, stbuf.st_mode & ~(S_IWGRP | S_IXGRP | S_IWOTH | S_IXOTH)) ==
-			   -1)
-				fprintf(stderr, "%s: warning: can't restrict permissions on %s\n", myname,
-						inipath);
+	if((inifd = open(inipath, openflags)) != -1) {
+		if(fstat(inifd, &stbuf) == -1) {
+			fprintf(stderr, "%s: can't stat %s\n", myname, inipath);
+			close(inifd);
+			return (0);
 		}
+
+		if(!S_ISREG(stbuf.st_mode)) {
+			fprintf(stderr, "%s: %s is not a regular file\n", myname, inipath);
+			close(inifd);
+			return (0);
+		}
+
+		if((stbuf.st_mode & 07777) & ~(S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) {
+			fprintf(stderr, "%s: %s permissions exceed 0644\n", myname, inipath);
+			close(inifd);
+			return (0);
+		}
+
 		close(inifd);
 	}
 
