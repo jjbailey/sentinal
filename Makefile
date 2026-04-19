@@ -27,12 +27,11 @@ SEN_ETC := $(SEN_HOME)/etc
 SEN_DOC := $(SEN_HOME)/doc
 PCRE_DIR := /usr/lib/sqlite3
 
-SENOBJS := sentinal.o convexpire.o dfsthread.o expthread.o findfile.o \
-	findmnt.o fullpath.o iniget.o ini.o logname.o logretention.o \
-	logsize.o namematch.o outputs.o pcrecompile.o postcmd.o \
-	readini.o rlimit.o rmfile.o signals.o slmthread.o sql.o \
-	strdel.o strlcat.o strlcpy.o strreplace.o threadname.o \
-	threadtype.o validdbname.o verifyids.o workcmd.o workthread.o
+SENOBJS := sentinal.o convexpire.o dfsthread.o droppriv.o expthread.o findfile.o \
+	findmnt.o fullpath.o iniget.o ini.o logname.o logretention.o logsize.o \
+	namematch.o outputs.o pcrecompile.o postcmd.o readini.o rlimit.o rmfile.o \
+	signals.o slmthread.o sql.o strdel.o strlcat.o strlcpy.o strreplace.o \
+	threadname.o threadtype.o validdbname.o verifyids.o workcmd.o workthread.o
 
 SPMOBJS := sentinalpipe.o fullpath.o iniget.o ini.o rlimit.o \
 	strlcpy.o validdbname.o
