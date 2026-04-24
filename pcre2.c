@@ -22,6 +22,14 @@
 #include <pcre2.h>
 #include <sqlite3ext.h>
 
+/*
+ * Older SQLite headers do not define SQLITE_DETERMINISTIC
+ */
+
+#ifndef SQLITE_DETERMINISTIC
+#define SQLITE_DETERMINISTIC 0
+#endif
+
 SQLITE_EXTENSION_INIT1 typedef struct {
 	pcre2_code *pattern_code;
 	pcre2_match_data *match_data;
