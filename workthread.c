@@ -121,11 +121,9 @@ void   *workthread(void *arg)
 			 * application -> FIFO -> sentinal -> IPC pipe -> command -> logfile
 			 */
 
-			if(geteuid() == (uid_t) 0) {
-				if(setgid(ti->ti_gid) == -1 || setuid(ti->ti_uid) == -1) {
-					fprintf(stderr, "%s: can't drop privileges\n", ti->ti_section);
-					SLOWEXIT(EXIT_FAILURE);
-				}
+			if(droppriv(ti) == -1) {
+				fprintf(stderr, "%s: can't drop privileges\n", ti->ti_section);
+				SLOWEXIT(EXIT_FAILURE);
 			}
 
 			if(access(ti->ti_dirname, R_OK | W_OK | X_OK) == -1) {
@@ -287,11 +285,9 @@ static int fifoopen(struct thread_info *ti)
 		/* fork to set ids */
 
 		if((pid = fork()) == 0) {
-			if(geteuid() == (uid_t) 0) {
-				if(setgid(ti->ti_gid) == -1 || setuid(ti->ti_uid) == -1) {
-					fprintf(stderr, "%s: can't drop privileges\n", ti->ti_section);
-					exit(EXIT_FAILURE);
-				}
+			if(droppriv(ti) == -1) {
+				fprintf(stderr, "%s: can't drop privileges\n", ti->ti_section);
+				exit(EXIT_FAILURE);
 			}
 
 			if(mkfifo(ti->ti_pipename, 0600) == -1) {
@@ -322,6 +318,7 @@ static int fifoopen(struct thread_info *ti)
 
 		fprintf(stderr, "%s: can't open %s: %s\n", ti->ti_section,
 				base(ti->ti_pipename), strerror(errno));
+
 		break;
 	}
 

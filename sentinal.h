@@ -8,7 +8,7 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"2.2.7"
+#define	VERSION_STRING	"2.2.8"
 
 #ifndef _STDBOOL_H
 # include <stdbool.h>
@@ -143,6 +143,7 @@ char   *fullpath(const char *, const char *, char *);
 char   *logname(char *, char *);
 char   *threadname(struct thread_info *, char *);
 gid_t   verifygid(const char *);
+int     droppriv(struct thread_info *);
 int     logretention(char *);
 int     postcmd(struct thread_info *, char *);
 int     workcmd(int, char **, char **);

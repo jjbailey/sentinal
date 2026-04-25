@@ -43,11 +43,9 @@ int postcmd(struct thread_info *ti, char *filename)
 		return (-1);
 
 	case 0:
-		if(geteuid() == (uid_t) 0) {
-			if(setgid(ti->ti_gid) == -1 || setuid(ti->ti_uid) == -1) {
-				fprintf(stderr, "%s: can't drop privileges\n", ti->ti_section);
-				exit(EXIT_FAILURE);
-			}
+		if(droppriv(ti) == -1) {
+			fprintf(stderr, "%s: can't drop privileges\n", ti->ti_section);
+			exit(EXIT_FAILURE);
 		}
 
 		if(access(ti->ti_dirname, R_OK | W_OK | X_OK) == -1) {

@@ -7,50 +7,80 @@
 # make install
 # make rpm
 
-# Copyright (c) 2021-2024 jjb
+# Copyright (c) 2021-2026 jjb
 # All rights reserved.
 #
 # This source code is licensed under the MIT license found
 # in the root directory of this source tree.
 
 unset CDPATH
+set -euo pipefail
 
-[ -x /opt/sentinal/bin/sentinal ] || {
-    echo "sentinal is not installed"
+die()
+{
+    echo "$*" 1>&2
     exit 1
 }
 
-SCRIPT_PATH=${0%/*}
-if [ -d "$SCRIPT_PATH" ] ; then
-    cd $(realpath $SCRIPT_PATH) || exit 1
-fi
+require_commands()
+{
+    local cmd
 
-VERSION=$(/opt/sentinal/bin/sentinal -V 2>&1 | awk '{ print $3 }')
-read MAJOR MINOR <<< $(echo $VERSION | sed 's/\./ /')
-BUILDIR=sentinal-$MAJOR
-RPMFILE=sentinal-$MAJOR-$MINOR.x86_64.rpm
+    for cmd in "$@" ; do
+        command -v "$cmd" > /dev/null 2>&1 || die "missing command: $cmd"
+    done
+}
+
+[ -x /opt/sentinal/bin/sentinal ] || {
+    die "sentinal is not installed"
+}
+
+require_commands awk cp find rpm rpmbuild rpmdev-setuptree sed sort tar
+
+SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd -P)
+cd "$SCRIPT_DIR" || exit 1
+
+VERSION=$(/opt/sentinal/bin/sentinal -V 2>&1 | awk 'NF { print $NF; exit }')
+[ -n "$VERSION" ] || die "cannot determine sentinal version"
+
+VERSION_RPM=${VERSION%%-*}
+RELEASE_RPM=1
+if [ "$VERSION_RPM" != "$VERSION" ] ; then
+    RELEASE_RPM=${VERSION#"$VERSION_RPM"-}
+fi
+RELEASE_RPM=$(echo "$RELEASE_RPM" | sed 's/[^A-Za-z0-9._]/_/g')
+[ -n "$VERSION_RPM" ] || die "cannot determine rpm version"
+[ -n "$RELEASE_RPM" ] || die "cannot determine rpm release"
+
+BUILDIR=sentinal-$VERSION
+TARBALL=sentinal-$VERSION.tar.gz
+RPMARCH=$(rpm --eval '%{_arch}')
+SPECFILE=sentinal.spec
+RPMFILE=sentinal-$VERSION_RPM-$RELEASE_RPM.$RPMARCH.rpm
 
 # rpmdev-setuptree?
-export HOME=$PWD
+export HOME="$PWD"
 
-mkdir -p $HOME/rpmbuild $BUILDIR || exit 1
-(cd $HOME/rpmbuild && rpmdev-setuptree)
-cp -pr --parents /opt/sentinal $BUILDIR
-find $BUILDIR -name '*~' -delete
-find $BUILDIR -type p -delete
-tar czvf $HOME/rpmbuild/SOURCES/sentinal-$MAJOR.$MINOR.tar.gz $BUILDIR
+mkdir -p "$HOME/rpmbuild" || exit 1
+(cd "$HOME/rpmbuild" && rpmdev-setuptree)
+rm -rf -- "$BUILDIR"
+mkdir -p "$BUILDIR"
+cp -pr --parents /opt/sentinal "$BUILDIR"
+find "$BUILDIR" -name '*~' -delete
+find "$BUILDIR" -type p -delete
+tar czf "$HOME/rpmbuild/SOURCES/$TARBALL" "$BUILDIR"
 
 (
 
     cat << EOF
 Name:           sentinal
-Version:        $MAJOR
-Release:        $MINOR
+Version:        $VERSION_RPM
+Release:        $RELEASE_RPM
 Summary:        Software for Logfile and Inode Management
 
 License:        MIT
 URL:            https://github.com/jjbailey/sentinal.git
-Source0:        %{name}-%{version}.%{release}.tar.gz
+Source0:        $TARBALL
 
 Requires:       pcre2
 
@@ -59,38 +89,41 @@ Group:          System Management
 
 %description
 Software for Logfile and Inode Management
-Copyright (c) 2021-2024 jjb
+Copyright (c) 2021-2026 jjb
 
 %prep
-%setup -q
+%setup -q -n $BUILDIR
 
 %install
 EOF
 
-    cd $BUILDIR || exit 1
+    cd "$BUILDIR" || exit 1
 
-    for d in $(find opt/sentinal/* -type d | sort); do
-        echo "install -m 755 -d \$RPM_BUILD_ROOT/$d"
-    done
+    while IFS= read -r -d '' d ; do
+        printf 'install -m 755 -d "$RPM_BUILD_ROOT/%s"\n' "$d"
+    done < <(find opt/sentinal -type d -print0 | sort -z)
 
-    for f in $(find opt/sentinal/* -type f | sort); do
+    while IFS= read -r -d '' f ; do
         [[ $f == */bin/* ]] && mode=755 || mode=644
-        echo "install -m $mode $f \$RPM_BUILD_ROOT/$f"
-    done
+        printf 'install -m %s "%s" "$RPM_BUILD_ROOT/%s"\n' "$mode" "$f" "$f"
+    done < <(find opt/sentinal -type f -print0 | sort -z)
 
     echo 'chown -R root:root $RPM_BUILD_ROOT/opt/sentinal'
 
     echo
     echo "%files"
-    find /opt/sentinal/* -type d | sort
+    echo /opt/sentinal
 
-) > $HOME/rpmbuild/SPECS/sentinal.spec
+) > "$HOME/rpmbuild/SPECS/$SPECFILE"
 
-rpmbuild -bb $HOME/rpmbuild/SPECS/sentinal.spec
+rpmbuild -bb "$HOME/rpmbuild/SPECS/$SPECFILE"
 
-[ -f $HOME/rpmbuild/RPMS/x86_64/$RPMFILE ] && {
-    rpm -Vp $HOME/rpmbuild/RPMS/x86_64/$RPMFILE
-    ls -o $HOME/rpmbuild/RPMS/x86_64/$RPMFILE
-}
+RPMPATH="$HOME/rpmbuild/RPMS/$RPMARCH/$RPMFILE"
+[ -f "$RPMPATH" ] || die "rpm build finished but package was not found: $RPMPATH"
+
+# Verify the package archive itself. `rpm -Vp` compares packaged files to the
+# current filesystem and can fail after normal rpmbuild post-processing.
+rpm -K "$RPMPATH"
+ls -o "$RPMPATH"
 
 exit 0
