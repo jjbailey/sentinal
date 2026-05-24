@@ -62,7 +62,10 @@ void   *expthread(void *arg)
 	 *  - ti_symlinks
 	 */
 
-	pthread_setname_np(pthread_self(), threadname(ti, _EXP_THR));
+	if(ti->ti_task == NULL && threadname(ti, _EXP_THR) == NULL)
+		return ((void *)0);
+
+	pthread_setname_np(pthread_self(), ti->ti_task);
 
 	if(ti->ti_dirlimit)
 		fprintf(stderr, "%s: monitor directory: %s for dirlimit %s\n",
