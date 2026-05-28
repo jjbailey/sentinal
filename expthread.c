@@ -44,6 +44,7 @@ void   *expthread(void *arg)
 	extern sqlite3 *db;								/* db handle */
 	struct thread_info *ti = arg;					/* thread settings */
 	uint32_t nextid = 1;							/* db_id, db_dirid */
+	uint32_t seed;									/* random */
 
 	/*
 	 * this thread requires:
@@ -86,8 +87,9 @@ void   *expthread(void *arg)
 	/* monitor expiration times */
 	/* let's not start all the same thread types at once */
 
-	srand(pthread_self());
-	usleep((useconds_t) rand() & 0xffff);
+	seed = (uint32_t) ((uintptr_t) pthread_self() ^ (uintptr_t) time(NULL));
+	srand(seed);
+	usleep((useconds_t) (rand() & 0xffff));
 
 	for(;;) {
 		pthread_mutex_lock(&dblock);

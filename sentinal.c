@@ -317,7 +317,12 @@ static bool create_pid_file(char *pidfile)
 		}
 
 		ftruncate(fd, (off_t) 0);
-		fp = fdopen(fd, "w");
+
+		if((fp = fdopen(fd, "w")) == NULL) {
+			close(fd);
+			return (false);
+		}
+
 		fprintf(fp, "%d\n", getpid());
 		fflush(fp);
 		return (true);

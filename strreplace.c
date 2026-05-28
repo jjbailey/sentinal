@@ -25,7 +25,7 @@ void strreplace(char *template, const char *oldstr, const char *newstr, size_t s
 	size_t  strlcat(char *, const char *, size_t);
 	size_t  strlcpy(char *, const char *, size_t);
 
-	if(IS_NULL(oldstr) || IS_NULL(newstr) || oldlen == 0)
+	if(IS_NULL(oldstr) || newstr == NULL || oldlen == 0)
 		return;
 
 	char   *tempbuf = malloc(size);

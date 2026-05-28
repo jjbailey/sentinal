@@ -2,7 +2,7 @@
  * sql.c
  * Most, but not all of the sqlite work.
  *
- * Copyright (c) 2021-2025 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -45,7 +45,7 @@ static bool execute_sql(const struct thread_info *ti, sqlite3 *db, const char *d
 	for(tries = 0; tries < RETRY_COUNT; ++tries) {
 		rc = sqlite3_exec(db, stmtbuf, NULL, NULL, NULL);
 
-		if(rc == SQLITE_OK || rc == SQLITE_ABORT)
+		if(rc == SQLITE_OK)
 			return (true);
 
 		if(rc == SQLITE_LOCKED) {
