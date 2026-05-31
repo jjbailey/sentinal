@@ -26,13 +26,13 @@
 static void process_files(struct thread_info *, sqlite3 *);
 
 static char *sql_selectfiles = "SELECT db_dir, db_file, db_size\n \
-	FROM  %s_dir, %s_file\n \
+	FROM  \"%s_dir\", \"%s_file\"\n \
 	WHERE db_dirid = db_id\n \
 	ORDER BY db_time\n \
 	LIMIT %d;";
 
 static char *sql_selectbytes = "SELECT SUM(db_size)\n \
-	FROM  %s_file;";
+	FROM  \"%s_file\";";
 
 /* externals */
 extern pthread_mutex_t dblock;						/* sqlite lock */

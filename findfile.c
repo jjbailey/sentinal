@@ -22,9 +22,9 @@
 #include <errno.h>
 #include "sentinal.h"
 
-#define INSERT_DIR_SQL	"INSERT INTO %s_dir VALUES(?, ?, ?);"
-#define INSERT_FILE_SQL	"INSERT INTO %s_file VALUES(?, ?, ?, ?);"
-#define UPDATE_DIR_SQL	"UPDATE %s_dir SET db_empty = 1 WHERE db_id = ?;"
+#define INSERT_DIR_SQL	"INSERT INTO \"%s_dir\" VALUES(?, ?, ?);"
+#define INSERT_FILE_SQL	"INSERT INTO \"%s_file\" VALUES(?, ?, ?, ?);"
+#define UPDATE_DIR_SQL	"UPDATE \"%s_dir\" SET db_empty = 1 WHERE db_id = ?;"
 
 uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 				  char *dir, sqlite3 *db)

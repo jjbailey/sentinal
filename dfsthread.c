@@ -38,7 +38,7 @@ static void process_files(struct thread_info *, sqlite3 *);
 static void resource_report(struct thread_info *, bool, float, float);
 
 static char *sql_selectfiles = "SELECT db_dir, db_file\n \
-    FROM  %s_dir, %s_file\n \
+    FROM  \"%s_dir\", \"%s_file\"\n \
     WHERE db_dirid = db_id\n \
     ORDER BY db_time\n \
     LIMIT %d;";
