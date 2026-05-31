@@ -20,13 +20,14 @@
 
 void strreplace(char *template, const char *oldstr, const char *newstr, size_t size)
 {
-	size_t  newlen = strlen(newstr);
-	size_t  oldlen = strlen(oldstr);
 	size_t  strlcat(char *, const char *, size_t);
 	size_t  strlcpy(char *, const char *, size_t);
 
-	if(IS_NULL(oldstr) || newstr == NULL || oldlen == 0)
+	if(IS_NULL(template) || IS_NULL(oldstr) || newstr == NULL)
 		return;
+
+	size_t  newlen = strlen(newstr);
+	size_t  oldlen = strlen(oldstr);
 
 	char   *tempbuf = malloc(size);
 

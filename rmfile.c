@@ -17,15 +17,14 @@
 
 bool rmfile(struct thread_info *ti, const char *obj, const char *remark)
 {
-	char    errbuf[BUFSIZ];
 	extern bool dryrun;
 
 	if(!dryrun && remove(obj) != 0) {
+		int     errnum = errno;
+
 		if(!ti->ti_terse)
-			if(strerror_r(errno, errbuf, sizeof(errbuf)) != 0) {
-				snprintf(errbuf, sizeof(errbuf), "errno %d", errno);
-				fprintf(stderr, "%s: error %s %s: %s\n", ti->ti_section, remark, obj, errbuf);
-			}
+			fprintf(stderr, "%s: error %s %s: %s\n",
+					ti->ti_section, remark, obj, strerror(errnum));
 
 		sleep(1);
 		return (false);

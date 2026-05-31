@@ -309,6 +309,10 @@ static bool create_pid_file(char *pidfile)
 {
 	int     fd;
 	FILE   *fp;
+	static FILE *pidfp;
+
+	if(pidfp != NULL)
+		return (false);
 
 	if((fd = open(pidfile, O_RDWR | O_CREAT, 0640)) != -1) {
 		if(lockf(fd, F_TLOCK, (off_t) 0) == -1) {	/* non-blocking: already running */
@@ -325,6 +329,7 @@ static bool create_pid_file(char *pidfile)
 
 		fprintf(fp, "%d\n", getpid());
 		fflush(fp);
+		pidfp = fp;
 		return (true);
 	}
 

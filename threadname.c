@@ -2,7 +2,7 @@
  * threadname.c
  * Name the thread for use with shell utils.
  *
- * Copyright (c) 2021-2025 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -10,6 +10,7 @@
  */
 
 #include <stdio.h>
+#include <ctype.h>
 #include "sentinal.h"
 
 char   *threadname(struct thread_info *ti, char *tname)
@@ -17,6 +18,7 @@ char   *threadname(struct thread_info *ti, char *tname)
 	/* strict format: <section name>_<thread name> */
 
 	char    delbuf[BUFSIZ];							/* delete string */
+	char   *p;
 	char    secbuf[BUFSIZ];							/* for copy of ti->ti_section */
 	size_t  strdel(char *, const char *, char *, size_t);
 
@@ -29,6 +31,11 @@ char   *threadname(struct thread_info *ti, char *tname)
 
 	/* add tname to the section name and call it the task name */
 	snprintf(ti->ti_task, TASK_COMM_LEN, "%.11s_%.3s", secbuf, tname);
+
+	for(p = ti->ti_task; *p; p++)
+		if(!isalnum((unsigned char)*p) && *p != '_')
+			*p = '_';
+
 	return (ti->ti_task);
 }
 
