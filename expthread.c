@@ -26,13 +26,13 @@
 static void process_files(struct thread_info *, sqlite3 *);
 
 static char *sql_selectfiles = "SELECT db_dir, db_file, db_size\n \
-	FROM  %s_dir, %s_file\n \
+	FROM  \"%s_dir\", \"%s_file\"\n \
 	WHERE db_dirid = db_id\n \
 	ORDER BY db_time\n \
 	LIMIT %d;";
 
 static char *sql_selectbytes = "SELECT SUM(db_size)\n \
-	FROM  %s_file;";
+	FROM  \"%s_file\";";
 
 /* externals */
 extern pthread_mutex_t dblock;						/* sqlite lock */
@@ -44,6 +44,7 @@ void   *expthread(void *arg)
 	extern sqlite3 *db;								/* db handle */
 	struct thread_info *ti = arg;					/* thread settings */
 	uint32_t nextid = 1;							/* db_id, db_dirid */
+	uint32_t seed;									/* random */
 
 	/*
 	 * this thread requires:
@@ -62,7 +63,10 @@ void   *expthread(void *arg)
 	 *  - ti_symlinks
 	 */
 
-	pthread_setname_np(pthread_self(), threadname(ti, _EXP_THR));
+	if(ti->ti_task == NULL && threadname(ti, _EXP_THR) == NULL)
+		return ((void *)0);
+
+	pthread_setname_np(pthread_self(), ti->ti_task);
 
 	if(ti->ti_dirlimit)
 		fprintf(stderr, "%s: monitor directory: %s for dirlimit %s\n",
@@ -83,8 +87,9 @@ void   *expthread(void *arg)
 	/* monitor expiration times */
 	/* let's not start all the same thread types at once */
 
-	srand(pthread_self());
-	usleep((useconds_t) rand() & 0xffff);
+	seed = (uint32_t) ((uintptr_t) pthread_self() ^ (uintptr_t) time(NULL));
+	srand(seed);
+	usleep((useconds_t) (rand() & 0xffff));
 
 	for(;;) {
 		pthread_mutex_lock(&dblock);

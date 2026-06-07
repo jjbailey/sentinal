@@ -2,7 +2,7 @@
  * namematch.c
  * Return true if this is a file we're watching.
  *
- * Copyright (c) 2021-2024 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -22,7 +22,8 @@ bool namematch(struct thread_info *ti, char *f)
 	if(IS_NULL(f) || *f == '.' || ti->ti_pcrecmp == NULL)
 		return (false);
 
-	mdata = pcre2_match_data_create_from_pattern(ti->ti_pcrecmp, NULL);
+	if((mdata = pcre2_match_data_create_from_pattern(ti->ti_pcrecmp, NULL)) == NULL)
+		return (false);
 
 	rc = pcre2_match(ti->ti_pcrecmp, (PCRE2_SPTR) f, strlen(f), (PCRE2_SIZE) 0, options,
 					 mdata, NULL);

@@ -61,6 +61,11 @@ int is_allowed_type(const char *type)
 	return (0);
 }
 
+int is_excluded_mount_point(const char *mount_point)
+{
+	return (strcmp(mount_point, "/proc") == 0 || strncmp(mount_point, "/proc/", 6) == 0);
+}
+
 int mount_already_selected(Filesystem *fs_list, int fs_count, const char *mount_point)
 {
 	int     i;
@@ -249,6 +254,13 @@ int get_specific_mounts(int argc, char *argv[], Filesystem *fs_list, int *fs_cou
 		}
 
 		if(found) {
+			if(is_excluded_mount_point(best_match_mount)) {
+				fprintf(stderr,
+						"Warning: Filesystem for '%s' is mounted under /proc: %s\n",
+						argv[i], best_match_mount);
+				continue;
+			}
+
 			if(!is_allowed_type(best_match_type)) {
 				fprintf(stderr,
 						"Warning: Filesystem type '%s' for '%s' is not allowed\n",
@@ -291,6 +303,9 @@ int get_all_mounts(Filesystem *fs_list, int *fs_count)
 		if(!is_allowed_type(ent->mnt_type)) {
 			continue;
 		}
+
+		if(is_excluded_mount_point(ent->mnt_dir))
+			continue;
 
 		// Exclude loop devices and snap mounts
 		if(strncmp(ent->mnt_fsname, "/dev/loop", 9) == 0)

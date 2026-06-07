@@ -2,7 +2,7 @@
  * sql.c
  * Most, but not all of the sqlite work.
  *
- * Copyright (c) 2021-2025 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -27,8 +27,8 @@
 	"CREATE TABLE IF NOT EXISTS \"%s_dir\" (db_id INT NOT NULL, db_dir VARCHAR(255) NOT NULL, db_empty BOOLEAN NOT NULL);"
 #define SQL_CREATE_FILE_FMT \
 	"CREATE TABLE IF NOT EXISTS \"%s_file\" (db_dirid INT NOT NULL, db_file VARCHAR(255) NOT NULL, db_time INT NOT NULL, db_size BIGINT NOT NULL);"
-#define SQL_INDEX_DIR_FMT	"CREATE INDEX IF NOT EXISTS idx_%s_dir ON \"%s_dir\" (db_id);"
-#define SQL_INDEX_FILE_FMT	"CREATE INDEX IF NOT EXISTS idx_%s_file ON \"%s_file\" (db_time);"
+#define SQL_INDEX_DIR_FMT	"CREATE INDEX IF NOT EXISTS \"idx_%s_dir\" ON \"%s_dir\" (db_id);"
+#define SQL_INDEX_FILE_FMT	"CREATE INDEX IF NOT EXISTS \"idx_%s_file\" ON \"%s_file\" (db_time);"
 #define SQL_COUNT_DIR_FMT	"SELECT COUNT(*) FROM \"%s_dir\" WHERE db_empty = 1;"
 #define SQL_COUNT_FILE_FMT	"SELECT COUNT(*) FROM \"%s_dir\", \"%s_file\" WHERE db_dirid = db_id;"
 #define SQL_EMPTYDIRS_FMT	"SELECT db_dir FROM \"%s_dir\" WHERE db_empty = 1 ORDER BY db_dir DESC;"
@@ -45,7 +45,7 @@ static bool execute_sql(const struct thread_info *ti, sqlite3 *db, const char *d
 	for(tries = 0; tries < RETRY_COUNT; ++tries) {
 		rc = sqlite3_exec(db, stmtbuf, NULL, NULL, NULL);
 
-		if(rc == SQLITE_OK || rc == SQLITE_ABORT)
+		if(rc == SQLITE_OK)
 			return (true);
 
 		if(rc == SQLITE_LOCKED) {

@@ -21,6 +21,81 @@
 
 extern struct utsname utsbuf;						/* for host info */
 
+static bool appendstr(char *dst, size_t dstsize, size_t *dstlen, const char *src)
+{
+	while(src && *src) {
+		if(*dstlen >= dstsize - 1)
+			return (false);
+
+		dst[(*dstlen)++] = *src++;
+	}
+
+	dst[*dstlen] = '\0';
+	return (true);
+}
+
+/* append src in single-quotes, escaping embedded single-quotes as '\'' */
+static bool shellquote(char *dst, size_t dstsize, size_t *dstlen, const char *src)
+{
+	if(!src)
+		return (true);
+
+	if(!appendstr(dst, dstsize, dstlen, "'"))
+		return (false);
+
+	while(*src) {
+		if(*src == '\'') {
+			if(!appendstr(dst, dstsize, dstlen, "'\\''"))
+				return (false);
+		} else {
+			if(*dstlen >= dstsize - 1)
+				return (false);
+
+			dst[(*dstlen)++] = *src;
+			dst[*dstlen] = '\0';
+		}
+
+		src++;
+	}
+
+	return (appendstr(dst, dstsize, dstlen, "'"));
+}
+
+static void expandpostcmd(struct thread_info *ti, char *filename, char *cmd,
+						  size_t cmdsize)
+{
+	const char *src = ti->ti_postcmd;
+	size_t  dstlen = 0;
+
+	*cmd = '\0';
+
+	while(src && *src) {
+		if(strncmp(src, _HOST_TOK, strlen(_HOST_TOK)) == 0) {
+			if(!shellquote(cmd, cmdsize, &dstlen, utsbuf.nodename))
+				break;
+			src += strlen(_HOST_TOK);
+		} else if(strncmp(src, _PATH_TOK, strlen(_PATH_TOK)) == 0) {
+			if(!shellquote(cmd, cmdsize, &dstlen, ti->ti_dirname))
+				break;
+			src += strlen(_PATH_TOK);
+		} else if(strncmp(src, _FILE_TOK, strlen(_FILE_TOK)) == 0) {
+			if(!shellquote(cmd, cmdsize, &dstlen, filename))
+				break;
+			src += strlen(_FILE_TOK);
+		} else if(strncmp(src, _SECT_TOK, strlen(_SECT_TOK)) == 0) {
+			if(!shellquote(cmd, cmdsize, &dstlen, ti->ti_section))
+				break;
+			src += strlen(_SECT_TOK);
+		} else {
+			if(dstlen >= cmdsize - 1)
+				break;
+
+			cmd[dstlen++] = *src++;
+			cmd[dstlen] = '\0';
+		}
+	}
+}
+
 int postcmd(struct thread_info *ti, char *filename)
 {
 	char    cmdbuf[BUFSIZ];							/* command var */
@@ -30,6 +105,7 @@ int postcmd(struct thread_info *ti, char *filename)
 	int     status;									/* postcmd child exit */
 	pid_t   pid;									/* postcmd pid */
 	struct passwd *p;
+	size_t  tasklen;
 
 	if(IS_NULL(ti->ti_postcmd)) {
 		/* should not be here */
@@ -48,26 +124,14 @@ int postcmd(struct thread_info *ti, char *filename)
 			exit(EXIT_FAILURE);
 		}
 
-		if(access(ti->ti_dirname, R_OK | W_OK | X_OK) == -1) {
-			fprintf(stderr, "%s: insufficient permissions for %s\n",
-					ti->ti_section, ti->ti_dirname);
-
-			exit(EXIT_FAILURE);
-		}
-
 		if(chdir(ti->ti_dirname) == -1) {
 			fprintf(stderr, "%s: can't cd to %s\n", ti->ti_section, ti->ti_dirname);
 			exit(EXIT_FAILURE);
 		}
 
-		strlcpy(cmdbuf, ti->ti_postcmd, BUFSIZ);
+		/* postcmd tokens -- values are single-quoted to prevent shell injection */
 
-		/* postcmd tokens */
-
-		strreplace(cmdbuf, _HOST_TOK, utsbuf.nodename, BUFSIZ);
-		strreplace(cmdbuf, _PATH_TOK, ti->ti_dirname, BUFSIZ);
-		strreplace(cmdbuf, _FILE_TOK, filename, BUFSIZ);
-		strreplace(cmdbuf, _SECT_TOK, ti->ti_section, BUFSIZ);
+		expandpostcmd(ti, filename, cmdbuf, BUFSIZ);
 
 		fprintf(stderr, "%s: %s\n", ti->ti_section, cmdbuf);
 		fflush(stderr);
@@ -98,10 +162,13 @@ int postcmd(struct thread_info *ti, char *filename)
 		if(waitpid(pid, &status, 0) == -1)
 			return (-1);
 
-		if(ti->ti_truncate && NOT_NULL(filename)) {
+		if(ti->ti_truncate && NOT_NULL(filename) && NOT_NULL(ti->ti_task)) {
 			/* slm only */
 
-			if(strcmp(strrchr(ti->ti_task, '\0') - 3, _SLM_THR) == 0)
+			tasklen = strlen(ti->ti_task);
+
+			if(tasklen >= strlen(_SLM_THR) &&
+			   strcmp(ti->ti_task + tasklen - strlen(_SLM_THR), _SLM_THR) == 0)
 				truncate(filename, (off_t) 0);
 		}
 

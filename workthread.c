@@ -284,7 +284,12 @@ static int fifoopen(struct thread_info *ti)
 	if(pflag) {										/* need a FIFO */
 		/* fork to set ids */
 
-		if((pid = fork()) == 0) {
+		if((pid = fork()) == -1) {
+			fprintf(stderr, "%s: can't fork for mkfifo\n", ti->ti_section);
+			return (-1);
+		}
+
+		if(pid == 0) {
 			if(droppriv(ti) == -1) {
 				fprintf(stderr, "%s: can't drop privileges\n", ti->ti_section);
 				exit(EXIT_FAILURE);

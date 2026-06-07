@@ -38,7 +38,7 @@ static void process_files(struct thread_info *, sqlite3 *);
 static void resource_report(struct thread_info *, bool, float, float);
 
 static char *sql_selectfiles = "SELECT db_dir, db_file\n \
-    FROM  %s_dir, %s_file\n \
+    FROM  \"%s_dir\", \"%s_file\"\n \
     WHERE db_dirid = db_id\n \
     ORDER BY db_time\n \
     LIMIT %d;";
@@ -79,7 +79,10 @@ void   *dfsthread(void *arg)
 	 *  - ti_symlinks
 	 */
 
-	pthread_setname_np(pthread_self(), threadname(ti, _DFS_THR));
+	if(ti->ti_task == NULL && threadname(ti, _DFS_THR) == NULL)
+		return ((void *)0);
+
+	pthread_setname_np(pthread_self(), ti->ti_task);
 
 	findmnt(ti->ti_dirname, ti->ti_mountdir);		/* actual mountpoint */
 	memset(&svbuf, '\0', sizeof(svbuf));

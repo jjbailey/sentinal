@@ -36,6 +36,7 @@
 
 static bool create_pid_file(char *);
 static void help(char *);
+static bool init_thread_database(struct thread_info *);
 static void threadwait(char *, pthread_t, bool *, char *, bool);
 
 static int debug = false;
@@ -220,6 +221,12 @@ int main(int argc, char *argv[])
 
 			usleep((useconds_t) 400000);
 
+			if(threadname(ti, _DFS_THR) == NULL || !init_thread_database(ti)) {
+				fprintf(stderr, "%s: can't initialize %s database\n",
+						ti->ti_section, _DFS_THR);
+				exit(EXIT_FAILURE);
+			}
+
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _DFS_THR,
 					ti->ti_dirname);
 
@@ -241,6 +248,12 @@ int main(int argc, char *argv[])
 			}
 
 			usleep((useconds_t) 400000);
+
+			if(threadname(ti, _EXP_THR) == NULL || !init_thread_database(ti)) {
+				fprintf(stderr, "%s: can't initialize %s database\n",
+						ti->ti_section, _EXP_THR);
+				exit(EXIT_FAILURE);
+			}
 
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _EXP_THR,
 					ti->ti_dirname);
@@ -296,6 +309,10 @@ static bool create_pid_file(char *pidfile)
 {
 	int     fd;
 	FILE   *fp;
+	static FILE *pidfp;
+
+	if(pidfp != NULL)
+		return (false);
 
 	if((fd = open(pidfile, O_RDWR | O_CREAT, 0640)) != -1) {
 		if(lockf(fd, F_TLOCK, (off_t) 0) == -1) {	/* non-blocking: already running */
@@ -304,13 +321,24 @@ static bool create_pid_file(char *pidfile)
 		}
 
 		ftruncate(fd, (off_t) 0);
-		fp = fdopen(fd, "w");
+
+		if((fp = fdopen(fd, "w")) == NULL) {
+			close(fd);
+			return (false);
+		}
+
 		fprintf(fp, "%d\n", getpid());
 		fflush(fp);
+		pidfp = fp;
 		return (true);
 	}
 
 	return (false);
+}
+
+static bool init_thread_database(struct thread_info *ti)
+{
+	return (create_table(ti, db) && create_index(ti, db));
 }
 
 static void threadwait(char *section, pthread_t tid,
