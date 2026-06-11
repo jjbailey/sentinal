@@ -11,6 +11,8 @@
 #ifndef INI_H
 # define	INI_H
 
+# include <stdio.h>									/* FILE */
+
 # define	INI_VERSION	"0.1.1"
 
 struct ini_t {
@@ -21,6 +23,7 @@ struct ini_t {
 typedef struct ini_t ini_t;
 
 ini_t  *ini_load(const char *filename);
+ini_t  *ini_load_fp(FILE * fp);						/* takes ownership; fcloses fp */
 void    ini_free(ini_t *ini);
 char   *ini_get(const ini_t *ini, const char *section, const char *key);
 

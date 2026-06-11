@@ -1,6 +1,23 @@
 # Description of INI files
 
-INI files must contain a single Global section, and 1 to 16 Log sections.
+INI files must contain a single Global section, and 1 to 32 Log sections.
+
+## File Ownership and Permissions
+
+The INI file dictates which commands sentinal runs and the uid/gid they run
+as, so sentinal treats the file's owner as fully trusted and validates the
+file before loading it. The INI file must:
+
+- be a regular file (not a symlink, FIFO, device, etc.),
+- be owned by `root` (uid 0) or by the user running sentinal, and
+- have permissions no broader than `0644` (no group/other write,
+  no execute or set-id bits).
+
+sentinal refuses to start if any of these conditions is not met. The
+recommended setup is `root`-owned, mode `0640` or `0644`:
+
+    # chown root:root /opt/sentinal/etc/sentinal.ini
+    # chmod 0644 /opt/sentinal/etc/sentinal.ini
 
 ## Global Section Keys
 

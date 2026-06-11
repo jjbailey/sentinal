@@ -46,6 +46,7 @@ int readini(char *myname, char *inifile)
 	char    rpbuf[PATH_MAX];						/* real path buffer */
 	char    tbuf[PATH_MAX];							/* temp buffer */
 	DIR    *dirp;
+	FILE   *inifp;									/* stream over inifd */
 	int     i;
 	int     inifd;									/* file descriptor */
 	int     nsect;									/* number of sections found */
@@ -64,36 +65,52 @@ int readini(char *myname, char *inifile)
 		fprintf(stderr, "%s: can't resolve %s\n", myname, inifile);
 		return (0);
 	}
-
 #ifdef O_NOFOLLOW
 	openflags |= O_NOFOLLOW;
 #endif
 
-	if((inifd = open(inipath, openflags)) != -1) {
-		if(fstat(inifd, &stbuf) == -1) {
-			fprintf(stderr, "%s: can't stat %s\n", myname, inipath);
-			close(inifd);
-			return (0);
-		}
+	if((inifd = open(inipath, openflags)) == -1) {
+		fprintf(stderr, "%s: can't open %s\n", myname, inipath);
+		return (0);
+	}
 
-		if(!S_ISREG(stbuf.st_mode)) {
-			fprintf(stderr, "%s: %s is not a regular file\n", myname, inipath);
-			close(inifd);
-			return (0);
-		}
-
-		if((stbuf.st_mode & 07777) & ~(S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) {
-			fprintf(stderr, "%s: %s permissions exceed 0644\n", myname, inipath);
-			close(inifd);
-			return (0);
-		}
-
+	if(fstat(inifd, &stbuf) == -1) {
+		fprintf(stderr, "%s: can't stat %s\n", myname, inipath);
 		close(inifd);
+		return (0);
+	}
+
+	if(!S_ISREG(stbuf.st_mode)) {
+		fprintf(stderr, "%s: %s is not a regular file\n", myname, inipath);
+		close(inifd);
+		return (0);
+	}
+
+	/* must be owned by root or by the invoking user -- the INI dictates */
+	/* what commands run and as which uid, so its owner is fully trusted */
+
+	if(stbuf.st_uid != 0 && stbuf.st_uid != geteuid()) {
+		fprintf(stderr, "%s: %s not owned by root or self\n", myname, inipath);
+		close(inifd);
+		return (0);
+	}
+
+	if((stbuf.st_mode & 07777) & ~(S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) {
+		fprintf(stderr, "%s: %s permissions exceed 0644\n", myname, inipath);
+		close(inifd);
+		return (0);
 	}
 
 	/* configure the threads */
+	/* parse the descriptor we just validated -- do not reopen by name */
 
-	if((inidata = ini_load(inipath)) == NULL) {
+	if((inifp = fdopen(inifd, "rb")) == NULL) {
+		fprintf(stderr, "%s: can't load %s\n", myname, inipath);
+		close(inifd);
+		return (0);
+	}
+
+	if((inidata = ini_load_fp(inifp)) == NULL) {	/* closes inifp */
 		fprintf(stderr, "%s: can't load %s\n", myname, inipath);
 		return (0);
 	}

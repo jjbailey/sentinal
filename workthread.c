@@ -250,7 +250,7 @@ static void fifosize(struct thread_info *ti, int size)
 
 	int     fd;
 
-	if((fd = open(ti->ti_pipename, O_RDONLY | O_NONBLOCK)) == -1)
+	if((fd = open(ti->ti_pipename, O_RDONLY | O_NONBLOCK | O_NOFOLLOW)) == -1)
 		return;
 
 	if(fcntl(fd, F_GETPIPE_SZ) != size)
@@ -317,7 +317,9 @@ static int fifoopen(struct thread_info *ti)
 		}
 	}
 
-	while((fd = open(ti->ti_pipename, O_RDONLY)) == -1) {
+	/* O_NOFOLLOW: refuse to follow a symlink swapped in for the FIFO */
+
+	while((fd = open(ti->ti_pipename, O_RDONLY | O_NOFOLLOW)) == -1) {
 		if(errno == EINTR)
 			continue;
 
@@ -328,10 +330,22 @@ static int fifoopen(struct thread_info *ti)
 	}
 
 	if(fd != -1) {
-		/* reinforce in case these were changed externally */
+		/*
+		 * confirm we opened a FIFO (not a regular file swapped in after
+		 * the lstat above), then reinforce ownership/mode on the open fd
+		 * so a path race cannot redirect chown/chmod to another target
+		 */
 
-		chown(ti->ti_pipename, ti->ti_uid, ti->ti_gid);
-		chmod(ti->ti_pipename, 0600);
+		if(fstat(fd, &stbuf) == -1 || !S_ISFIFO(stbuf.st_mode)) {
+			fprintf(stderr, "%s: not a FIFO: %s\n", ti->ti_section,
+					base(ti->ti_pipename));
+
+			close(fd);
+			return (-1);
+		}
+
+		fchown(fd, ti->ti_uid, ti->ti_gid);
+		fchmod(fd, 0600);
 	}
 
 	return (fd);

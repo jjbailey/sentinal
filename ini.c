@@ -178,8 +178,21 @@ static void split_data(ini_t *ini)
 
 ini_t  *ini_load(const char *filename)
 {
+	FILE   *fp = fopen(filename, "rb");
+
+	if(!fp) {
+		return NULL;
+	}
+
+	return ini_load_fp(fp);							/* closes fp */
+}
+
+/* Load INI data from an already-open stream. Takes ownership of fp and
+ * fcloses it. Lets the caller validate the file (owner, mode, type) on a
+ * descriptor and then parse that same descriptor, avoiding a reopen race. */
+ini_t  *ini_load_fp(FILE *fp)
+{
 	ini_t  *ini = NULL;
-	FILE   *fp = NULL;
 	long    sz_long;
 	size_t  sz, n;
 
@@ -189,12 +202,6 @@ ini_t  *ini_load(const char *filename)
 		goto fail;
 	}
 	memset(ini, 0, sizeof(*ini));
-
-	/* Open file */
-	fp = fopen(filename, "rb");
-	if(!fp) {
-		goto fail;
-	}
 
 	/* Get file size */
 	fseek(fp, 0, SEEK_END);
