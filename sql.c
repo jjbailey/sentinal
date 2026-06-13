@@ -188,10 +188,14 @@ void process_dirs(struct thread_info *ti, sqlite3 *db)
 
 		const char *db_dir = (const char *)sqlite3_column_text(pstmt, 0);
 
-		if(db_dir && *db_dir) {
-			char    filename[BUFSIZ];
+		if(NOT_NULL(db_dir)) {
+			char    filename[PATH_MAX];
 
-			snprintf(filename, sizeof(filename), "%s/%s", ti->ti_dirname, db_dir);
+			if(snprintf(filename, PATH_MAX, "%s/%s", ti->ti_dirname, db_dir) >= PATH_MAX) {
+				/* truncated name is wrong name */
+				fprintf(stderr, "%s: pathname truncated\n", ti->ti_section);
+				continue;
+			}
 
 			if(rmfile(ti, filename, "rmdir"))
 				removed++;
