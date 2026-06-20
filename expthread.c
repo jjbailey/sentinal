@@ -123,6 +123,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	extern bool dryrun;								/* dry run flag */
 	int     dfd;									/* dirname fd */
 	int     drcount = 0;							/* dry run count */
+	int     namelen;								/* assembled pathname length */
 	bool    expbysize;								/* consider expire size */
 	bool    expbytime;								/* consider expire time */
 	sqlite3_stmt *pstmt = NULL;						/* prepared statement */
@@ -194,9 +195,15 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 		/* assemble filename: ti_dirname + / + db_dir + / + db_file */
 
 		if(NOT_NULL(db_dir))
-			snprintf(filename, PATH_MAX, "%s/%s/%s", ti->ti_dirname, db_dir, db_file);
+			namelen = snprintf(filename, PATH_MAX, "%s/%s/%s",
+							   ti->ti_dirname, db_dir, db_file);
 		else
-			snprintf(filename, PATH_MAX, "%s/%s", ti->ti_dirname, db_file);
+			namelen = snprintf(filename, PATH_MAX, "%s/%s", ti->ti_dirname, db_file);
+
+		if(namelen >= PATH_MAX) {					/* truncated name is wrong name */
+			fprintf(stderr, "%s: pathname truncated\n", ti->ti_section);
+			continue;
+		}
 
 		if(stat(filename, &stbuf) == -1)			/* check for changes since db load */
 			continue;

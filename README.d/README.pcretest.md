@@ -7,11 +7,11 @@
     match:    /var/log/syslog.1
     no match: /var/log/syslog.2.gz
 
-## Negative lookahead for pid files
+## Positive lookahead for pid files
 
-    $ pcretest '^(?!.*\.(?:pid)$)' notapidfile pidfile.pid
-    match:    notapidfile
-    no match: pidfile.pid
+    $ pcretest '^(?=.*\.pid$)' notapidfile pidfile.pid
+    no match: notapidfile
+    match:    pidfile.pid
 
 ## Negative lookbehind for pid files
 

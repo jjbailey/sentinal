@@ -224,6 +224,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	float   pc_ffree = 0;							/* files free */
 	int     dfd;									/* dirname fd */
 	int     drcount = 0;							/* dry run count */
+	int     namelen;								/* assembled pathname length */
 	sqlite3_stmt *pstmt = NULL;						/* prepared statement */
 	uint32_t filecount;								/* matching files */
 	uint32_t removed = 0;							/* matching files removed */
@@ -290,9 +291,15 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 		}
 
 		if(NOT_NULL(db_dir))
-			snprintf(filename, PATH_MAX, "%s/%s/%s", ti->ti_dirname, db_dir, db_file);
+			namelen = snprintf(filename, PATH_MAX, "%s/%s/%s",
+							   ti->ti_dirname, db_dir, db_file);
 		else
-			snprintf(filename, PATH_MAX, "%s/%s", ti->ti_dirname, db_file);
+			namelen = snprintf(filename, PATH_MAX, "%s/%s", ti->ti_dirname, db_file);
+
+		if(namelen >= PATH_MAX) {					/* truncated name is wrong name */
+			fprintf(stderr, "%s: pathname truncated\n", ti->ti_section);
+			continue;
+		}
 
 		if(rmfile(ti, filename, "remove")) {
 			removed++;

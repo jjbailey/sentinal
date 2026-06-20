@@ -11,13 +11,30 @@
 
 #include <sys/types.h>
 #include <ctype.h>
+#include <errno.h>
 #include <pwd.h>
 #include <grp.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include "sentinal.h"
 
 #define	NOBODY	((uid_t) 65534)
 #define	NOGROUP	((gid_t) 65534)
+
+/* parse a fully numeric id; return -1 on malformed/out-of-range input */
+static long parsenumid(const char *id)
+{
+	char   *endptr;
+	long    val;
+
+	errno = 0;
+	val = strtol(id, &endptr, 10);
+
+	if(errno != 0 || *endptr != '\0' || val < 0 || val > 0x7fffffffL)
+		return (-1);								/* not a clean, in-range number */
+
+	return (val);
+}
 
 uid_t verifyuid(const char *id)
 {
@@ -31,9 +48,10 @@ uid_t verifyuid(const char *id)
 	if(IS_NULL(id))
 		return (NOBODY);
 
-	if(isdigit(*id)) {								/* uid cannot be 0 */
-		uid = (uid_t) atoi(id);
-		return (uid == 0 ? NOBODY : uid);
+	if(isdigit((unsigned char)*id)) {				/* numeric uid, cannot be 0 */
+		long    val = parsenumid(id);
+
+		return (val <= 0 ? NOBODY : (uid_t) val);
 	}
 
 	/* "root" ok past this point */
@@ -59,9 +77,10 @@ gid_t verifygid(const char *id)
 	if(IS_NULL(id))
 		return (NOGROUP);
 
-	if(isdigit(*id)) {								/* gid cannot be 0 */
-		gid = (gid_t) atoi(id);
-		return (gid == 0 ? NOGROUP : gid);
+	if(isdigit((unsigned char)*id)) {				/* numeric gid, cannot be 0 */
+		long    val = parsenumid(id);
+
+		return (val <= 0 ? NOGROUP : (gid_t) val);
 	}
 
 	/* "root" ok past this point */

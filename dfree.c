@@ -242,7 +242,9 @@ int get_specific_mounts(int argc, char *argv[], Filesystem *fs_list, int *fs_cou
 			if((strcmp(mounts[j].dir, "/") == 0 && resolved_path[0] == '/') ||
 			   (strncmp(resolved_path, mounts[j].dir, mlen) == 0 &&
 				(resolved_path[mlen] == '\0' || resolved_path[mlen] == '/'))) {
-				if(mlen > best_match_len) {
+				if(mlen > best_match_len ||
+				   (mlen == best_match_len && !is_allowed_type(best_match_type) &&
+					is_allowed_type(mounts[j].type))) {
 					strlcpy(best_match_mount, mounts[j].dir, sizeof(best_match_mount));
 					strlcpy(best_match_device, mounts[j].fsname,
 							sizeof(best_match_device));
