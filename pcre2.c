@@ -27,7 +27,7 @@
  */
 
 #ifndef SQLITE_DETERMINISTIC
-#define SQLITE_DETERMINISTIC 0
+# define SQLITE_DETERMINISTIC 0
 #endif
 
 SQLITE_EXTENSION_INIT1 typedef struct {
