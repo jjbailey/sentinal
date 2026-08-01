@@ -29,6 +29,7 @@
 #include <sys/utsname.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include "sentinal.h"
 #include "basename.h"
@@ -37,6 +38,7 @@
 static bool create_pid_file(char *);
 static void help(char *);
 static bool init_thread_database(struct thread_info *);
+static struct thread_info *threadcopy(struct thread_info *, char *);
 static void threadwait(char *, pthread_t, bool *, char *, bool);
 
 static int debug = false;
@@ -140,8 +142,8 @@ int main(int argc, char *argv[])
 
 	/* check the INI file for unsafe permissions */
 
-	if((nsect = readini(myname, inifile)) == 0) {
-		/* nothing to do */
+	if((nsect = readini(myname, inifile)) <= 0) {
+		/* nothing to do or too many sections */
 		SLOWEXIT(EXIT_FAILURE);
 	}
 
@@ -221,7 +223,9 @@ int main(int argc, char *argv[])
 
 			usleep((useconds_t) 400000);
 
-			if(threadname(ti, _DFS_THR) == NULL || !init_thread_database(ti)) {
+			struct thread_info *thr = threadcopy(ti, _DFS_THR);
+
+			if(thr == NULL || !init_thread_database(thr)) {
 				fprintf(stderr, "%s: can't initialize %s database\n",
 						ti->ti_section, _DFS_THR);
 				exit(EXIT_FAILURE);
@@ -230,7 +234,7 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _DFS_THR,
 					ti->ti_dirname);
 
-			ti->dfs_active = pthread_create(&ti->dfs_tid, NULL, &dfsthread, ti) == 0;
+			ti->dfs_active = pthread_create(&ti->dfs_tid, NULL, &dfsthread, thr) == 0;
 		}
 
 		if(threadtype(ti, _EXP_THR)) {				/* file expiration, retention, dirlimit */
@@ -249,7 +253,9 @@ int main(int argc, char *argv[])
 
 			usleep((useconds_t) 400000);
 
-			if(threadname(ti, _EXP_THR) == NULL || !init_thread_database(ti)) {
+			struct thread_info *thr = threadcopy(ti, _EXP_THR);
+
+			if(thr == NULL || !init_thread_database(thr)) {
 				fprintf(stderr, "%s: can't initialize %s database\n",
 						ti->ti_section, _EXP_THR);
 				exit(EXIT_FAILURE);
@@ -258,25 +264,41 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _EXP_THR,
 					ti->ti_dirname);
 
-			ti->exp_active = pthread_create(&ti->exp_tid, NULL, &expthread, ti) == 0;
+			ti->exp_active = pthread_create(&ti->exp_tid, NULL, &expthread, thr) == 0;
 		}
 
 		if(threadtype(ti, _SLM_THR)) {				/* simple log monitor */
 			usleep((useconds_t) 400000);
 
+			struct thread_info *thr = threadcopy(ti, _SLM_THR);
+
+			if(thr == NULL) {
+				fprintf(stderr, "%s: can't initialize %s thread\n",
+						ti->ti_section, _SLM_THR);
+				exit(EXIT_FAILURE);
+			}
+
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _SLM_THR,
 					ti->ti_dirname);
 
-			ti->slm_active = pthread_create(&ti->slm_tid, NULL, &slmthread, ti) == 0;
+			ti->slm_active = pthread_create(&ti->slm_tid, NULL, &slmthread, thr) == 0;
 		}
 
 		if(threadtype(ti, _WRK_THR)) {				/* worker (log ingestion) thread */
 			usleep((useconds_t) 400000);
 
+			struct thread_info *thr = threadcopy(ti, _WRK_THR);
+
+			if(thr == NULL) {
+				fprintf(stderr, "%s: can't initialize %s thread\n",
+						ti->ti_section, _WRK_THR);
+				exit(EXIT_FAILURE);
+			}
+
 			fprintf(stderr, "%s: start %s thread: %s\n", ti->ti_section, _WRK_THR,
 					ti->ti_dirname);
 
-			ti->wrk_active = pthread_create(&ti->wrk_tid, NULL, &workthread, ti) == 0;
+			ti->wrk_active = pthread_create(&ti->wrk_tid, NULL, &workthread, thr) == 0;
 		}
 	}
 
@@ -339,6 +361,26 @@ static bool create_pid_file(char *pidfile)
 static bool init_thread_database(struct thread_info *ti)
 {
 	return (create_table(ti, db) && create_index(ti, db));
+}
+
+static struct thread_info *threadcopy(struct thread_info *ti, char *tname)
+{
+	struct thread_info *copy;
+
+	copy = malloc(sizeof(struct thread_info));
+	if(copy == NULL)
+		return (NULL);
+
+	*copy = *ti;
+	copy->ti_task = NULL;
+	copy->ti_sig = 0;
+
+	if(threadname(copy, tname) == NULL) {
+		free(copy);
+		return (NULL);
+	}
+
+	return (copy);
 }
 
 static void threadwait(char *section, pthread_t tid,

@@ -2,7 +2,7 @@
  * slmthread.c
  * Simple log monitor thread.
  *
- * Copyright (c) 2021-2025 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -33,6 +33,7 @@ void   *slmthread(void *arg)
 {
 	char    filename[PATH_MAX];						/* full pathname */
 	int     status;									/* postcmd child exit */
+	sig_atomic_t sig_seen = 0;						/* parent signal generation */
 	struct stat stbuf;								/* file status */
 	struct thread_info *ti = arg;					/* thread settings */
 
@@ -49,7 +50,10 @@ void   *slmthread(void *arg)
 	 *  - ti_truncate
 	 */
 
-	pthread_setname_np(pthread_self(), threadname(ti, _SLM_THR));
+	if(ti->ti_task == NULL && threadname(ti, _SLM_THR) == NULL)
+		return ((void *)0);
+
+	pthread_setname_np(pthread_self(), ti->ti_task);
 
 	/* for slm, ti->ti_template is the logname */
 
@@ -62,6 +66,9 @@ void   *slmthread(void *arg)
 	ti->ti_sig = 0;									/* reset */
 
 	for(;;) {
+		if((status = parentsigcheck(&sig_seen)) != 0)
+			ti->ti_sig = status;
+
 		if(ROTATE(ti->ti_rotatesiz, STAT(filename, stbuf), ti->ti_sig)) {
 			/* ti->ti_rotatesiz or signaled to post-process */
 
@@ -108,6 +115,9 @@ static bool inotify_watch(char *section, char *filename)
 
 			if(event->mask & IN_MOVE_SELF)
 				fprintf(stderr, "%s: %s moved\n", section, filename);
+
+			if(event->mask & IN_DELETE_SELF)
+				fprintf(stderr, "%s: %s deleted\n", section, filename);
 		}
 
 	inotify_rm_watch(fd, wd);
