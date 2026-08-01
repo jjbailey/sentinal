@@ -10,11 +10,11 @@
  */
 
 #include <stdio.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
-#include <pwd.h>
 #include <string.h>
 #include <unistd.h>
 #include "sentinal.h"
@@ -24,8 +24,10 @@ extern struct utsname utsbuf;						/* for host info */
 static bool appendstr(char *dst, size_t dstsize, size_t *dstlen, const char *src)
 {
 	while(src && *src) {
-		if(*dstlen >= dstsize - 1)
+		if(*dstlen >= dstsize - 1) {
+			dst[*dstlen] = '\0';					/* keep dst a valid C string */
 			return (false);
+		}
 
 		dst[(*dstlen)++] = *src++;
 	}
@@ -48,8 +50,10 @@ static bool shellquote(char *dst, size_t dstsize, size_t *dstlen, const char *sr
 			if(!appendstr(dst, dstsize, dstlen, "'\\''"))
 				return (false);
 		} else {
-			if(*dstlen >= dstsize - 1)
+			if(*dstlen >= dstsize - 1) {
+				dst[*dstlen] = '\0';				/* keep dst a valid C string */
 				return (false);
+			}
 
 			dst[(*dstlen)++] = *src;
 			dst[*dstlen] = '\0';
@@ -99,16 +103,20 @@ static void expandpostcmd(struct thread_info *ti, char *filename, char *cmd,
 int postcmd(struct thread_info *ti, char *filename)
 {
 	char    cmdbuf[BUFSIZ];							/* command var */
-	char   *home;									/* from passwd file entry */
+	struct dropinfo di;								/* prepared privilege drop */
 	extern bool dryrun;								/* dry run flag */
 	int     i;
 	int     status;									/* postcmd child exit */
 	pid_t   pid;									/* postcmd pid */
-	struct passwd *p;
 	size_t  tasklen;
 
 	if(IS_NULL(ti->ti_postcmd)) {
 		/* should not be here */
+		return (-1);
+	}
+
+	if(!preparedrop(ti, &di)) {
+		fprintf(stderr, "%s: can't look up uid %d\n", ti->ti_section, ti->ti_uid);
 		return (-1);
 	}
 
@@ -119,7 +127,7 @@ int postcmd(struct thread_info *ti, char *filename)
 		return (-1);
 
 	case 0:
-		if(droppriv(ti) == -1) {
+		if(droppriv(&di) == -1) {
 			fprintf(stderr, "%s: can't drop privileges\n", ti->ti_section);
 			exit(EXIT_FAILURE);
 		}
@@ -146,8 +154,7 @@ int postcmd(struct thread_info *ti, char *filename)
 
 		/* execution environment */
 
-		home = (p = getpwuid(ti->ti_uid)) ? p->pw_dir : "/tmp";
-		setenv("HOME", home, 1);
+		setenv("HOME", di.di_home, 1);
 		setenv("PATH", PATH, 1);
 		setenv("SHELL", BASH, 1);
 		setenv("TEMPLATE", ti->ti_template, 1);
@@ -169,7 +176,9 @@ int postcmd(struct thread_info *ti, char *filename)
 
 			if(tasklen >= strlen(_SLM_THR) &&
 			   strcmp(ti->ti_task + tasklen - strlen(_SLM_THR), _SLM_THR) == 0)
-				truncate(filename, (off_t) 0);
+				if(truncate(filename, (off_t) 0) == -1)
+					fprintf(stderr, "%s: truncate failed: %s: %s\n",
+							ti->ti_section, filename, strerror(errno));
 		}
 
 		return (WIFEXITED(status) ? WEXITSTATUS(status) : -1);

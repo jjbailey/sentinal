@@ -18,7 +18,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
-#include <pwd.h>
 #include <unistd.h>
 #include "sentinal.h"
 #include "basename.h"
@@ -29,13 +28,14 @@
 #define	STAT(file,buf)		(stat(file, &buf) == -1 ? -1 : buf.st_size)
 
 static int fifoopen(struct thread_info *);
-static void fifosize(struct thread_info *, int);
+static void fifosize(int, int);
+static bool pipewrite(struct thread_info *, char *, ssize_t);
 
 void   *workthread(void *arg)
 {
 	char    filename[PATH_MAX];						/* full pathname */
-	char    pipebuf[PIPEBUFSIZ];					/* pipe read buffer */
-	char   *home;									/* from passwd file entry */
+	char   *pipebuf;								/* pipe read buffer, heap-allocated:
+													   too large for a thread stack */
 	char   *zargv[MAXARGS];							/* arglist for fifo reader */
 	int     holdfd = 0;								/* fd to hold FIFO open */
 	int     i;
@@ -43,7 +43,8 @@ void   *workthread(void *arg)
 	int     pipefd[2];								/* pipe readers and writers */
 	int     status;									/* child status codes */
 	ssize_t n;										/* FIFO read */
-	struct passwd *p;
+	sig_atomic_t sig_seen = 0;						/* parent signal generation */
+	struct dropinfo di;								/* prepared privilege drop */
 	struct stat stbuf;								/* file status */
 	struct thread_info *ti = arg;					/* thread settings */
 
@@ -64,13 +65,22 @@ void   *workthread(void *arg)
 	 *  - ti_gid
 	 */
 
-	pthread_setname_np(pthread_self(), threadname(ti, _WRK_THR));
+	if(ti->ti_task == NULL && threadname(ti, _WRK_THR) == NULL)
+		return ((void *)0);
+
+	pthread_setname_np(pthread_self(), ti->ti_task);
 
 	fprintf(stderr, "%s: command: %s\n", ti->ti_section, ti->ti_command);
 
 	if(workcmd(ti->ti_argc, ti->ti_argv, zargv) == 0) {
 		/* shouldn't happen */
 		fprintf(stderr, "%s: no work\n", ti->ti_section);
+		return ((void *)0);
+	}
+
+	if((pipebuf = malloc(PIPEBUFSIZ)) == NULL) {
+		fprintf(stderr, "%s: can't allocate %d byte pipe buffer\n",
+				ti->ti_section, PIPEBUFSIZ);
 		return ((void *)0);
 	}
 
@@ -105,6 +115,15 @@ void   *workthread(void *arg)
 
 		/* get going */
 
+		if(!preparedrop(ti, &di)) {
+			fprintf(stderr, "%s: can't look up uid %d\n", ti->ti_section, ti->ti_uid);
+			close(logfd);
+			close(pipefd[0]);
+			close(pipefd[1]);
+			sleep(ONE_MINUTE);
+			continue;
+		}
+
 		switch (ti->ti_pid = fork()) {
 
 		case -1:
@@ -121,7 +140,7 @@ void   *workthread(void *arg)
 			 * application -> FIFO -> sentinal -> IPC pipe -> command -> logfile
 			 */
 
-			if(droppriv(ti) == -1) {
+			if(droppriv(&di) == -1) {
 				fprintf(stderr, "%s: can't drop privileges\n", ti->ti_section);
 				SLOWEXIT(EXIT_FAILURE);
 			}
@@ -155,8 +174,7 @@ void   *workthread(void *arg)
 
 				/* execution environment */
 
-				home = (p = getpwuid(ti->ti_uid)) ? p->pw_dir : "/tmp";
-				setenv("HOME", home, 1);
+				setenv("HOME", di.di_home, 1);
 				setenv("PATH", PATH, 1);
 				setenv("SHELL", BASH, 1);
 				setenv("TEMPLATE", ti->ti_template, 1);
@@ -192,12 +210,11 @@ void   *workthread(void *arg)
 				if((n = read(logfd, pipebuf, PIPEBUFSIZ)) <= 0)
 					break;
 
-				if(write(ti->ti_wfd, pipebuf, (size_t)n) == -1) {
-					fprintf(stderr, "%s: write failed %s\n", ti->ti_section,
-							ti->ti_filename);
-
+				if(pipewrite(ti, pipebuf, n) == false)
 					break;
-				}
+
+				if((i = parentsigcheck(&sig_seen)) != 0)
+					ti->ti_sig = i;
 
 				if(ROTATE(ti->ti_rotatesiz, STAT(filename, stbuf), ti->ti_sig)) {
 					/* ti_rotatesiz or signaled to logrotate */
@@ -241,24 +258,42 @@ void   *workthread(void *arg)
 	return ((void *)0);
 }
 
-static void fifosize(struct thread_info *ti, int size)
+static void fifosize(int fd, int size)
 {
 	/* max pipesize is in /proc/sys/fs/pipe-max-size */
 	/* kernels 2.6.35 and newer */
 
 #ifdef	F_SETPIPE_SZ								/* undefined in < 2.6.35 kernels */
 
-	int     fd;
-
-	if((fd = open(ti->ti_pipename, O_RDONLY | O_NONBLOCK | O_NOFOLLOW)) == -1)
-		return;
-
 	if(fcntl(fd, F_GETPIPE_SZ) != size)
 		fcntl(fd, F_SETPIPE_SZ, size);
 
-	close(fd);
-
 #endif												/* F_SETPIPE_SZ */
+}
+
+static bool pipewrite(struct thread_info *ti, char *buf, ssize_t len)
+{
+	ssize_t n;
+	ssize_t off = 0;
+
+	while(off < len) {
+		n = write(ti->ti_wfd, buf + off, (size_t)(len - off));
+		if(n == -1) {
+			if(errno == EINTR)
+				continue;
+
+			fprintf(stderr, "%s: write failed %s: %s\n", ti->ti_section,
+					ti->ti_filename, strerror(errno));
+			return (false);
+		}
+
+		if(n == 0)
+			return (false);
+
+		off += n;
+	}
+
+	return (true);
 }
 
 static int fifoopen(struct thread_info *ti)
@@ -282,6 +317,13 @@ static int fifoopen(struct thread_info *ti)
 		pflag = true;
 
 	if(pflag) {										/* need a FIFO */
+		struct dropinfo di;							/* prepared privilege drop */
+
+		if(!preparedrop(ti, &di)) {
+			fprintf(stderr, "%s: can't look up uid %d\n", ti->ti_section, ti->ti_uid);
+			return (-1);
+		}
+
 		/* fork to set ids */
 
 		if((pid = fork()) == -1) {
@@ -290,7 +332,7 @@ static int fifoopen(struct thread_info *ti)
 		}
 
 		if(pid == 0) {
-			if(droppriv(ti) == -1) {
+			if(droppriv(&di) == -1) {
 				fprintf(stderr, "%s: can't drop privileges\n", ti->ti_section);
 				exit(EXIT_FAILURE);
 			}
@@ -302,7 +344,6 @@ static int fifoopen(struct thread_info *ti)
 				exit(EXIT_FAILURE);
 			}
 
-			fifosize(ti, FIFOSIZ);
 			exit(EXIT_SUCCESS);
 		}
 
@@ -344,6 +385,7 @@ static int fifoopen(struct thread_info *ti)
 			return (-1);
 		}
 
+		fifosize(fd, FIFOSIZ);
 		fchown(fd, ti->ti_uid, ti->ti_gid);
 		fchmod(fd, 0600);
 	}
