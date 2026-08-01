@@ -53,17 +53,20 @@ int main(int argc, char *argv[])
 {
 	char    filename[PATH_MAX];						/* full pathname */
 	char    inifile[PATH_MAX];						/* ini file name */
+	char    inipath[PATH_MAX];						/* real path to file */
 	char   *my_ini(ini_t *, char *, char *);
 	char   *myname;
 	char   *p1, *p2;
 	char    rbuf[PATH_MAX];
 	char   *sections[MAXSECT];						/* section names */
 	char    tbuf[PATH_MAX];
+	FILE   *inifp;									/* stream over inifd */
 	ini_t  *inidata;								/* loaded ini data */
 	int     c;
 	int     get_sections(ini_t *, int, char **);
 	int     i;
 	int     index = 0;
+	int     inifd;									/* file descriptor */
 	int     nsect;									/* number of sections found */
 
 	myname = base(argv[0]);
@@ -98,8 +101,22 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	if((inidata = ini_load(inifile)) == NULL) {
-		fprintf(stderr, "%s: can't load %s\n", myname, inifile);
+	/*
+	 * same trust rules as sentinal: the two read the same INI file
+	 * parse the descriptor we just validated -- do not reopen by name
+	 */
+
+	if((inifd = openini(myname, inifile, inipath)) == -1)
+		exit(EXIT_FAILURE);
+
+	if((inifp = fdopen(inifd, "rb")) == NULL) {
+		fprintf(stderr, "%s: can't load %s\n", myname, inipath);
+		close(inifd);
+		exit(EXIT_FAILURE);
+	}
+
+	if((inidata = ini_load_fp(inifp)) == NULL) {	/* closes inifp */
+		fprintf(stderr, "%s: can't load %s\n", myname, inipath);
 		exit(EXIT_FAILURE);
 	}
 
@@ -200,6 +217,7 @@ static void pipeopen(int i)
 	}
 
 	newfd = open(pipelist[i].pi_pipename, O_RDONLY | O_NONBLOCK);
+
 	if(newfd == -1) {
 		/* keep the existing reader if a replacement open fails */
 		pipelist[i].pi_fd = savefd;

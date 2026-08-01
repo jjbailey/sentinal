@@ -8,7 +8,7 @@
  * in the root directory of this source tree.
  */
 
-#define	VERSION_STRING	"2.2.10"
+#define	VERSION_STRING	"2.3.0"
 
 #ifndef _STDBOOL_H
 # include <stdbool.h>
@@ -18,8 +18,20 @@
 # include <sys/types.h>
 #endif
 
+#ifndef _STDINT_H
+# include <stdint.h>
+#endif
+
+#ifndef _TIME_H
+# include <time.h>
+#endif
+
 #ifndef _PTHREAD_H
 # include <pthread.h>
+#endif
+
+#ifndef _SIGNAL_H
+# include <signal.h>
 #endif
 
 #ifndef SQLITE3_H
@@ -112,18 +124,18 @@ struct thread_info {
 	uid_t   ti_uid;									/* thread uid */
 	gid_t   ti_gid;									/* thread gid */
 	int     ti_wfd;									/* worker stdin or EOF */
-	int     ti_sig;									/* signal number received */
+	volatile sig_atomic_t ti_sig;					/* signal number received */
 	char   *ti_rotatestr;							/* logfile rotate size string */
 	off_t   ti_rotatesiz;							/* logfile rotate size */
 	char   *ti_expirestr;							/* logfile expire size string */
 	off_t   ti_expiresiz;							/* logfile expire size */
 	float   ti_diskfree;							/* desired percent blocks free */
 	float   ti_inofree;								/* desired percent inodes free */
-	int     ti_expire;								/* file expiration */
+	time_t  ti_expire;								/* file expiration */
 	char   *ti_retminstr;							/* file retention minimum string */
-	int     ti_retmin;								/* file retention minimum */
+	uint32_t ti_retmin;								/* file retention minimum */
 	char   *ti_retmaxstr;							/* file retention maximum string */
-	int     ti_retmax;								/* file retention maximum */
+	uint32_t ti_retmax;								/* file retention maximum */
 	bool    ti_terse;								/* notify file removal flag */
 	bool    ti_rmdir;								/* remove empty dirs */
 	bool    ti_symlinks;							/* follow symlinks */
@@ -131,25 +143,41 @@ struct thread_info {
 	bool    ti_truncate;							/* truncate slm-managed files */
 };
 
+#define	MAXGROUPS	128								/* supplementary group list cap */
+
+/* privilege drop, split into an unsafe NSS-lookup phase */
+
+struct dropinfo {
+	uid_t   di_uid;
+	gid_t   di_gid;
+	int     di_ngroups;
+	gid_t   di_groups[MAXGROUPS];
+	bool    di_dodrop;								/* euid was 0 in the parent */
+	char    di_home[PATH_MAX];						/* pw_dir, for $HOME */
+};
+
 bool    namematch(struct thread_info *, char *);
 bool    pcrecompile(struct thread_info *);
 bool    pcrematch(struct thread_info *, char *);
+bool    preparedrop(struct thread_info *, struct dropinfo *);
 bool    rmfile(struct thread_info *, const char *, const char *);
 bool    threadtype(struct thread_info *, char *);
 bool    validdbname(char *);
-char   *convexpire(int, char *);
+char   *convexpire(time_t, char *);
 char   *findmnt(char *, char *);
 char   *fullpath(const char *, const char *, char *);
 char   *logname(char *, char *);
 char   *threadname(struct thread_info *, char *);
 gid_t   verifygid(const char *);
-int     droppriv(struct thread_info *);
-int     logretention(char *);
+int     droppriv(struct dropinfo *);
+int     openini(char *, char *, char *);
+int     parentsigcheck(sig_atomic_t *);
 int     postcmd(struct thread_info *, char *);
 int     workcmd(int, char **, char **);
 off_t   logsize(char *);
 size_t  strlcat(char *, const char *, size_t);
 size_t  strlcpy(char *, const char *, size_t);
+time_t  logretention(char *);
 uid_t   verifyuid(const char *);
 uint32_t findfile(struct thread_info *, bool, uint32_t *, char *, sqlite3 *);
 void    activethreads(struct thread_info *);
