@@ -14,27 +14,27 @@
 
 #define	EVEN_UNIT(e,u)	(e % u == 0)
 
-char   *convexpire(int expire, char *str)
+char   *convexpire(time_t expire, char *str)
 {
 	/* returns the largest non-fraction unit possible */
 
 	if(expire >= ONE_YEAR && EVEN_UNIT(expire, ONE_YEAR))
-		snprintf(str, BUFSIZ, "%dY", (int)(expire / ONE_YEAR));
+		snprintf(str, BUFSIZ, "%lldY", (long long)(expire / ONE_YEAR));
 
 	else if(expire >= ONE_MONTH && EVEN_UNIT(expire, ONE_MONTH))
-		snprintf(str, BUFSIZ, "%dM", (int)(expire / ONE_MONTH));
+		snprintf(str, BUFSIZ, "%lldM", (long long)(expire / ONE_MONTH));
 
 	else if(expire >= ONE_WEEK && EVEN_UNIT(expire, ONE_WEEK))
-		snprintf(str, BUFSIZ, "%dW", (int)(expire / ONE_WEEK));
+		snprintf(str, BUFSIZ, "%lldW", (long long)(expire / ONE_WEEK));
 
 	else if(expire >= ONE_DAY && EVEN_UNIT(expire, ONE_DAY))
-		snprintf(str, BUFSIZ, "%dD", (int)(expire / ONE_DAY));
+		snprintf(str, BUFSIZ, "%lldD", (long long)(expire / ONE_DAY));
 
 	else if(expire >= ONE_HOUR && EVEN_UNIT(expire, ONE_HOUR))
-		snprintf(str, BUFSIZ, "%dH", (int)(expire / ONE_HOUR));
+		snprintf(str, BUFSIZ, "%lldH", (long long)(expire / ONE_HOUR));
 
 	else
-		snprintf(str, BUFSIZ, "%dm", (int)(expire / ONE_MINUTE));
+		snprintf(str, BUFSIZ, "%lldm", (long long)(expire / ONE_MINUTE));
 
 	return (str);
 }

@@ -34,7 +34,7 @@ static inline bool LOW_RES(float target, float avail)
 #define	PADDING			0.295f
 
 static bool getvfsstats(struct thread_info *, float *, float *);
-static void process_files(struct thread_info *, sqlite3 *);
+static bool process_files(struct thread_info *, sqlite3 *);
 static void resource_report(struct thread_info *, bool, float, float);
 
 static char *sql_selectfiles = "SELECT db_dir, db_file\n \
@@ -122,14 +122,13 @@ void   *dfsthread(void *arg)
 	}
 
 	if(ti->ti_retmin)
-		fprintf(stderr, "%s: monitor file: %s for retmin %d\n",
+		fprintf(stderr, "%s: monitor file: %s for retmin %u\n",
 				ti->ti_section, ti->ti_pcrestr, ti->ti_retmin);
 
 	/* monitor filesystem usage */
 	/* let's not start all the same thread types at once */
 
 	seed = (unsigned int)(time(NULL) ^ (uintptr_t) pthread_self());
-	srand(seed);
 	usleep(rand_r(&seed) & 0xFFFFF);
 
 	for(;;) {
@@ -158,6 +157,8 @@ void   *dfsthread(void *arg)
 		prev_lowres = lowres;
 
 		if(lowres) {
+			bool    throttle = false;				/* retmin blocked cleanup */
+
 			/*
 			 * for multiple threads monitoring the same filesystem
 			 * give the other thread(s) a chance to run first
@@ -175,11 +176,22 @@ void   *dfsthread(void *arg)
 
 				/* process matching files */
 
-				process_files(ti, db);
+				throttle = process_files(ti, db);
 				runreport = true;
 			}
 
 			pthread_mutex_unlock(&dblock);
+
+			/*
+			 * sleep outside the lock: dblock is shared by every
+			 * section's dfs/exp thread, so holding it across this
+			 * delay would stall unrelated, healthy filesystems for
+			 * as long as this one stays low on space
+			 */
+
+			if(throttle)
+				sleep(SCANRATE);
+
 			continue;
 		}
 
@@ -213,7 +225,7 @@ static void resource_report(struct thread_info *ti, bool lowres, float blk, floa
 	fflush(stderr);
 }
 
-static void process_files(struct thread_info *ti, sqlite3 *db)
+static bool process_files(struct thread_info *ti, sqlite3 *db)
 {
 	char   *db_dir;									/* sql data */
 	char   *db_file;								/* sql data */
@@ -228,25 +240,26 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	sqlite3_stmt *pstmt = NULL;						/* prepared statement */
 	uint32_t filecount;								/* matching files */
 	uint32_t removed = 0;							/* matching files removed */
+	bool    throttle = false;						/* caller should sleep before retry */
 
 	/* count all files */
 
 	if((filecount = count_files(ti, db)) < 1)
-		return;
+		return (false);
 
 	/* process all files */
 
 	if(snprintf(stmt, BUFSIZ, sql_selectfiles,
 				ti->ti_task, ti->ti_task, QUERYLIM) >= BUFSIZ) {
 		fprintf(stderr, "%s: SQL statement truncated\n", ti->ti_section);
-		return;
+		return (false);
 	}
 
 	if(sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL) != SQLITE_OK) {
 		fprintf(stderr, "%s: sqlite3_prepare_v2: %s\n", ti->ti_section,
 				sqlite3_errmsg(db));
 
-		return;
+		return (false);
 	}
 
 	for(;;) {
@@ -265,10 +278,10 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 			break;
 
 		if(ti->ti_retmin && ti->ti_retmin >= filecount) {
-			fprintf(stderr, "%s: cannot clear space: retmin >= filecount: %d >= %d\n",
+			fprintf(stderr, "%s: cannot clear space: retmin >= filecount: %u >= %u\n",
 					ti->ti_section, ti->ti_retmin, filecount);
 
-			sleep(SCANRATE);
+			throttle = true;
 			break;
 		}
 
@@ -319,6 +332,8 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 	if(removed > 0)
 		fprintf(stderr, "%s: %u %s removed\n", ti->ti_section,
 				removed, removed == 1 ? "file" : "files");
+
+	return (throttle);
 }
 
 static inline double percent(double x, double y)
