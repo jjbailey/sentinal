@@ -77,19 +77,18 @@ void   *expthread(void *arg)
 				ti->ti_section, ti->ti_pcrestr, convexpire(ti->ti_expire, ebuf));
 
 	if(ti->ti_retmin)
-		fprintf(stderr, "%s: monitor file: %s for retmin %d\n",
+		fprintf(stderr, "%s: monitor file: %s for retmin %u\n",
 				ti->ti_section, ti->ti_pcrestr, ti->ti_retmin);
 
 	if(ti->ti_retmax)
-		fprintf(stderr, "%s: monitor file: %s for retmax %d\n",
+		fprintf(stderr, "%s: monitor file: %s for retmax %u\n",
 				ti->ti_section, ti->ti_pcrestr, ti->ti_retmax);
 
 	/* monitor expiration times */
 	/* let's not start all the same thread types at once */
 
 	seed = (uint32_t) ((uintptr_t) pthread_self() ^ (uintptr_t) time(NULL));
-	srand(seed);
-	usleep((useconds_t) (rand() & 0xffff));
+	usleep((useconds_t) (rand_r(&seed) & 0xffff));
 
 	for(;;) {
 		pthread_mutex_lock(&dblock);
@@ -221,7 +220,7 @@ static void process_files(struct thread_info *ti, sqlite3 *db)
 		if(ti->ti_retmax && filecount > ti->ti_retmax)
 			reason = "retmax";						/* too many */
 
-		else if(ti->ti_dirlimit && dirbytes > ti->ti_dirlimit)
+		else if(ti->ti_dirlimit && dirbytes > (unsigned long long)ti->ti_dirlimit)
 			reason = "dirlimit";					/* too much */
 
 		else if(expbysize && expbytime)

@@ -20,6 +20,7 @@
 #include <libgen.h>
 #include <limits.h>
 #include <math.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -29,6 +30,7 @@
 
 static int parsecmd(char *, char **);
 static bool setiniflag(ini_t *, char *, char *);
+static uint32_t logcount(char *);
 
 extern char database[PATH_MAX];						/* database file name */
 extern char *pidfile;								/* sentinal pid */
@@ -50,56 +52,11 @@ int readini(char *myname, char *inifile)
 	int     i;
 	int     inifd;									/* file descriptor */
 	int     nsect;									/* number of sections found */
-	int     openflags = O_RDONLY;
-	struct stat stbuf;								/* file status */
 	struct thread_info *ti;							/* thread settings */
 	int     get_sections(ini_t *, int, char **);
 
-	if(lstat(inifile, &stbuf) == 0)
-		if(S_ISLNK(stbuf.st_mode)) {
-			fprintf(stderr, "%s: %s is a symlink\n", myname, inifile);
-			return (0);
-		}
-
-	if(realpath(inifile, inipath) == NULL) {
-		fprintf(stderr, "%s: can't resolve %s\n", myname, inifile);
+	if((inifd = openini(myname, inifile, inipath)) == -1)
 		return (0);
-	}
-#ifdef O_NOFOLLOW
-	openflags |= O_NOFOLLOW;
-#endif
-
-	if((inifd = open(inipath, openflags)) == -1) {
-		fprintf(stderr, "%s: can't open %s\n", myname, inipath);
-		return (0);
-	}
-
-	if(fstat(inifd, &stbuf) == -1) {
-		fprintf(stderr, "%s: can't stat %s\n", myname, inipath);
-		close(inifd);
-		return (0);
-	}
-
-	if(!S_ISREG(stbuf.st_mode)) {
-		fprintf(stderr, "%s: %s is not a regular file\n", myname, inipath);
-		close(inifd);
-		return (0);
-	}
-
-	/* must be owned by root or by the invoking user -- the INI dictates */
-	/* what commands run and as which uid, so its owner is fully trusted */
-
-	if(stbuf.st_uid != 0 && stbuf.st_uid != geteuid()) {
-		fprintf(stderr, "%s: %s not owned by root or self\n", myname, inipath);
-		close(inifd);
-		return (0);
-	}
-
-	if((stbuf.st_mode & 07777) & ~(S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) {
-		fprintf(stderr, "%s: %s permissions exceed 0644\n", myname, inipath);
-		close(inifd);
-		return (0);
-	}
 
 	/* configure the threads */
 	/* parse the descriptor we just validated -- do not reopen by name */
@@ -314,10 +271,10 @@ int readini(char *myname, char *inifile)
 		ti->ti_expire = logretention(my_ini(inidata, ti->ti_section, "expire"));
 
 		ti->ti_retminstr = my_ini(inidata, ti->ti_section, "retmin");
-		ti->ti_retmin = logsize(ti->ti_retminstr);
+		ti->ti_retmin = logcount(ti->ti_retminstr);
 
 		ti->ti_retmaxstr = my_ini(inidata, ti->ti_section, "retmax");
-		ti->ti_retmax = logsize(ti->ti_retmaxstr);
+		ti->ti_retmax = logcount(ti->ti_retmaxstr);
 
 		ti->ti_postcmd = malloc(BUFSIZ);
 
@@ -334,6 +291,20 @@ int readini(char *myname, char *inifile)
 	}
 
 	return (nsect);
+}
+
+static uint32_t logcount(char *str)
+{
+	off_t   count;
+
+	count = logsize(str);
+
+	if(count > UINT32_MAX) {
+		fprintf(stderr, "%s: retention count out of range, ignored\n", str);
+		return (0);
+	}
+
+	return ((uint32_t) count);
 }
 
 static bool setiniflag(ini_t *ini, char *section, char *key)

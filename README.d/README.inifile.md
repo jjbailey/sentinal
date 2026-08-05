@@ -13,8 +13,8 @@ file before loading it. The INI file must:
 - have permissions no broader than `0644` (no group/other write,
   no execute or set-id bits).
 
-sentinal refuses to start if any of these conditions is not met. The
-recommended setup is `root`-owned, mode `0640` or `0644`:
+Both sentinal and sentinalpipe refuse to start if any of these conditions
+is not met. The recommended setup is `root`-owned, mode `0640` or `0644`:
 
     # chown root:root /opt/sentinal/etc/sentinal.ini
     # chmod 0644 /opt/sentinal/etc/sentinal.ini

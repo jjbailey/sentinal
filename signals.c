@@ -22,7 +22,8 @@
 static void sigparent(int);
 static void sigreject(int);
 
-extern struct thread_info tinfo[MAXSECT];			/* our threads */
+static volatile sig_atomic_t parent_sig;
+static volatile sig_atomic_t parent_sig_gen;
 
 void parentsignals(void)
 {
@@ -66,28 +67,29 @@ void parentsignals(void)
 	sigaction(SIGTSTP, &sasigstp, NULL);
 }
 
+int parentsigcheck(sig_atomic_t *seen)
+{
+	if(*seen == parent_sig_gen)
+		return (0);
+
+	*seen = parent_sig_gen;
+	return (parent_sig);
+}
+
 static void sigparent(int sig)
 {
 	/* parent signal handler */
 
-	int     i;
-
-	signal(sig, sigparent);							/* reset */
-
 	if(sig == SIGINT || sig == SIGTERM)
 		_exit(EXIT_SUCCESS);
 
-	/* mark the threads as signaled */
-	/* only workers use ti_wfd */
-
-	for(i = 0; i < MAXSECT; i++)
-		if(NOT_NULL(tinfo[i].ti_section))
-			tinfo[i].ti_sig = tinfo[i].ti_wfd != EOF ? sig : 0;
+	parent_sig = sig;
+	parent_sig_gen++;
 }
 
 static void sigreject(int sig)
 {
-	signal(sig, sigreject);
+	(void)sig;
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */

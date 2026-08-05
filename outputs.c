@@ -115,8 +115,8 @@ void debug_verbose(struct thread_info *ti)
 	DPRINTNUM(stdout, "inofree   = %.2f\n", ti->ti_inofree);
 	DPRINTSTR(stdout, "pcrestr   = %s\n", ti->ti_pcrestr);
 	DPRINTSTR(stdout, "pipename  = %s\n", ti->ti_pipename);
-	DPRINTNUM(stdout, "retmax    = %d\n", ti->ti_retmax);
-	DPRINTNUM(stdout, "retmin    = %d\n", ti->ti_retmin);
+	DPRINTNUM(stdout, "retmax    = %u\n", ti->ti_retmax);
+	DPRINTNUM(stdout, "retmin    = %u\n", ti->ti_retmin);
 	DPRINTNUM(stdout, "rmdir     = %d\n", ti->ti_rmdir);
 	DPRINTSTR(stdout, "rotatesiz = %s\n", ti->ti_rotatestr);
 

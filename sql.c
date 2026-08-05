@@ -26,7 +26,7 @@
 #define SQL_CREATE_DIR_FMT \
 	"CREATE TABLE IF NOT EXISTS \"%s_dir\" (db_id INT NOT NULL, db_dir VARCHAR(255) NOT NULL, db_empty BOOLEAN NOT NULL);"
 #define SQL_CREATE_FILE_FMT \
-	"CREATE TABLE IF NOT EXISTS \"%s_file\" (db_dirid INT NOT NULL, db_file VARCHAR(255) NOT NULL, db_time INT NOT NULL, db_size BIGINT NOT NULL);"
+	"CREATE TABLE IF NOT EXISTS \"%s_file\" (db_dirid INT NOT NULL, db_file VARCHAR(255) NOT NULL, db_time BIGINT NOT NULL, db_size BIGINT NOT NULL);"
 #define SQL_INDEX_DIR_FMT	"CREATE INDEX IF NOT EXISTS \"idx_%s_dir\" ON \"%s_dir\" (db_id);"
 #define SQL_INDEX_FILE_FMT	"CREATE INDEX IF NOT EXISTS \"idx_%s_file\" ON \"%s_file\" (db_time);"
 #define SQL_COUNT_DIR_FMT	"SELECT COUNT(*) FROM \"%s_dir\" WHERE db_empty = 1;"
@@ -48,7 +48,7 @@ static bool execute_sql(const struct thread_info *ti, sqlite3 *db, const char *d
 		if(rc == SQLITE_OK)
 			return (true);
 
-		if(rc == SQLITE_LOCKED) {
+		if(rc == SQLITE_LOCKED || rc == SQLITE_BUSY) {
 			usleep(RETRY_DELAY_USEC);
 			continue;
 		}

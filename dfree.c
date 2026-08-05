@@ -1,7 +1,6 @@
 /*
  * dfree.c
- * grok wrote this based on the original dfree.sh script.
- * codex rewrote it.
+ * Print disk usage ala df -h, with two decimal places.
  *
  * Copyright (c) 2024-2026 jjb
  * All rights reserved.
@@ -115,17 +114,26 @@ int compare_by_mount_point(const void *a, const void *b)
 	return (strcmp(fa->mount_point, fb->mount_point));
 }
 
+// Scales val down until it fits its unit without rounding up to "1024.00"
+// at two decimal places; returns the resulting unit index (0 == bytes)
+static inline int scale_to_unit(double *val)
+{
+	int     unit = 0;
+
+	while(*val >= 1023.995 && unit < 6) {
+		*val /= 1024;
+		unit++;
+	}
+
+	return (unit);
+}
+
 // Converts bytes into human readable format into buf (thread-safe)
 void human_readable(char *buf, size_t buflen, unsigned long long bytes)
 {
 	const char *units[] = { "B", "K", "M", "G", "T", "P", "E" };
-	int     unit = 0;
 	double  val = (double)bytes;
-
-	while(val >= 1024 && unit < 6) {
-		val /= 1024;
-		unit++;
-	}
+	int     unit = scale_to_unit(&val);
 
 	if(unit == 0)
 		snprintf(buf, buflen, "%.0f%s", val, units[unit]);

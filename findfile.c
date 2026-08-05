@@ -154,8 +154,8 @@ uint32_t findfile(struct thread_info *ti, bool top, uint32_t *nextid,
 
 		sqlite3_reset(insert_file_stmt);
 		sqlite3_bind_int(insert_file_stmt, 1, rowid);
-		sqlite3_bind_text(insert_file_stmt, 2, dp->d_name, -1, SQLITE_TRANSIENT);
-		sqlite3_bind_int(insert_file_stmt, 3, (int)st.st_mtim.tv_sec);
+		sqlite3_bind_text(insert_file_stmt, 2, dp->d_name, -1, SQLITE_STATIC);
+		sqlite3_bind_int64(insert_file_stmt, 3, (sqlite3_int64) st.st_mtim.tv_sec);
 		sqlite3_bind_int64(insert_file_stmt, 4, (sqlite3_int64) st.st_size);
 		if(sqlite3_step(insert_file_stmt) != SQLITE_DONE) {
 			fprintf(stderr, "%s: sqlite3_step insert_file failed: %s\n",

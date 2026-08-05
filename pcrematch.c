@@ -2,7 +2,7 @@
  * pcrematch.c
  * Run the pcre2_match function to test a string.
  *
- * Copyright (c) 2021-2025 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found
@@ -25,6 +25,9 @@ bool pcrematch(struct thread_info *ti, char *s)
 		return (false);
 
 	mdata = pcre2_match_data_create_from_pattern(ti->ti_pcrecmp, NULL);
+
+	if(mdata == NULL)
+		return (false);
 
 	rc = pcre2_match(ti->ti_pcrecmp, (PCRE2_SPTR) s, strlen(s), (PCRE2_SIZE) 0, options,
 					 mdata, NULL);

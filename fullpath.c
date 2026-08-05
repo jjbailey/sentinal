@@ -2,7 +2,7 @@
  * fullpath.c
  * Return the full path of a file.
  *
- * Copyright (c) 2021-2025 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found

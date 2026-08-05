@@ -35,52 +35,67 @@ char   *my_ini(ini_t *ini, char *section, char *key)
 {
 	char   *p;
 	char   *sp;
+	size_t  len;
 
 	if((p = ini_get(ini, section, key)) == NULL)
 		return (EmptyStr);
 
-	/* remove trailing slash */
+	len = strlen(p);
 
-	sp = (p + strlen(p)) - 1;
+	if(len > 1) {
+		sp = (p + len) - 1;
 
-	if(*sp == '/')
-		*sp = '\0';
+		if(*sp == '/')
+			*sp = '\0';
+	}
 
 	return (p);
+}
+
+/* advance to the next '\0'-delimited token, same rule ini_get() uses */
+static char *sections_next(char *end, char *p)
+{
+	p += strlen(p);
+
+	while(p < end && *p == '\0')
+		p++;
+
+	return p;
 }
 
 int get_sections(ini_t *inidata, int maxsect, char *sections[])
 {
 	/* returns a list of INI sections */
 
-	char   *p;
+	char   *end = inidata->end;
+	char   *p = inidata->data;
 	int     i = 0;
 	bool    validdbname(char *);
 
-	for(p = inidata->data; p < inidata->end; p++)
+	if(p < end && *p == '\0')
+		p = sections_next(end, p);
+
+	while(p < end) {
 		if(*p == '[') {
-			if(p > inidata->data && *(p - 1))		/* line does not start with [ */
-				continue;
+			if(!STREQ(p + 1, "global") &&			/* global is not a thread */
+			   validdbname(p + 1) &&				/* for sqlite3 */
+			   !duplicate(i, p + 1, sections)) {	/* section already exists */
 
-			if(strchr(p, ']'))						/* parser bug: not a real section name */
-				continue;
+				if(i == maxsect) {
+					fprintf(stderr, "too many sections: max %d\n", maxsect);
+					return (-1);
+				}
 
-			if(STREQ(p + 1, "global"))				/* global is not a thread */
-				continue;
-
-			if(validdbname(p + 1) == false)			/* for sqlite3 */
-				continue;
-
-			if(duplicate(i, p + 1, sections))		/* section already exists */
-				continue;
-
-			if(i == maxsect) {
-				fprintf(stderr, "too many sections: max %d\n", maxsect);
-				return (-1);
+				sections[i++] = strndup(p + 1, PATH_MAX);
 			}
 
-			sections[i++] = strndup(p + 1, PATH_MAX);
+			p = sections_next(end, p);
+		} else {
+			/* key: skip both the key and its paired value token */
+			p = sections_next(end, p);
+			p = sections_next(end, p);
 		}
+	}
 
 	return (i);
 }

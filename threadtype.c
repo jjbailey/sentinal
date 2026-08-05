@@ -2,7 +2,7 @@
  * threadtype.c
  * Considering the config data given, test if threads should run.
  *
- * Copyright (c) 2021-2025 jjb
+ * Copyright (c) 2021-2026 jjb
  * All rights reserved.
  *
  * This source code is licensed under the MIT license found

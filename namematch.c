@@ -15,20 +15,30 @@
 
 bool namematch(struct thread_info *ti, char *f)
 {
+	static __thread pcre2_match_data *mdata = NULL;
+	static __thread pcre2_code *mdata_code = NULL;
 	int     rc;
-	pcre2_match_data *mdata;
 	uint32_t options = 0;
 
 	if(IS_NULL(f) || *f == '.' || ti->ti_pcrecmp == NULL)
 		return (false);
 
-	if((mdata = pcre2_match_data_create_from_pattern(ti->ti_pcrecmp, NULL)) == NULL)
-		return (false);
+	if(mdata == NULL || mdata_code != ti->ti_pcrecmp) {
+		if(mdata != NULL)
+			pcre2_match_data_free(mdata);
+
+		mdata_code = ti->ti_pcrecmp;
+		mdata = pcre2_match_data_create_from_pattern(mdata_code, NULL);
+
+		if(mdata == NULL) {
+			mdata_code = NULL;
+			return (false);
+		}
+	}
 
 	rc = pcre2_match(ti->ti_pcrecmp, (PCRE2_SPTR) f, strlen(f), (PCRE2_SIZE) 0, options,
 					 mdata, NULL);
 
-	pcre2_match_data_free(mdata);
 	return (rc >= 0);
 }
 

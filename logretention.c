@@ -11,53 +11,76 @@
 
 #include <stdio.h>
 #include <ctype.h>
+#include <limits.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include "sentinal.h"
 
-int logretention(char *str)
+#define	TIME_T_MAX	((time_t)((((uintmax_t)1) << (sizeof(time_t) * CHAR_BIT - 1)) - 1))
+
+time_t logretention(char *str)
 {
 	/* default unit is ONE_DAY */
 
-	char   *p;
-	int     n;
+	char   *endptr;
+	long long n;
+	time_t  mult = ONE_DAY;
 
 	if(IS_NULL(str))
 		return (0);
 
-	n = abs(atoi(str));
+	n = strtoll(str, &endptr, 10);
+	if(endptr == str)
+		return (0);
 
-	for(p = str; *p; p++)
-		if(isalpha(*p))
-			break;
+	if(n < 0) {
+		if(n == LLONG_MIN) {
+			fprintf(stderr, "%s: retention out of range, ignored\n", str);
+			return (0);
+		}
 
-	if(IS_NULL(p))
-		return (n * ONE_DAY);
-
-	switch (*p) {
-
-	case 'm':
-		return (n * ONE_MINUTE);
-
-	case 'H':
-	case 'h':
-		return (n * ONE_HOUR);
-
-	case 'D':
-	case 'd':
-		return (n * ONE_DAY);
-
-	case 'W':
-	case 'w':
-		return (n * ONE_WEEK);
-
-	case 'M':
-		return (n * ONE_MONTH);
-
-	case 'Y':
-	case 'y':
-		return (n * ONE_YEAR);
+		n = -n;
 	}
 
-	return (n * ONE_DAY);
+	if(*endptr) {
+		switch (*endptr) {
+
+		case 'm':
+			mult = ONE_MINUTE;
+			break;
+
+		case 'H':
+		case 'h':
+			mult = ONE_HOUR;
+			break;
+
+		case 'D':
+		case 'd':
+			mult = ONE_DAY;
+			break;
+
+		case 'W':
+		case 'w':
+			mult = ONE_WEEK;
+			break;
+
+		case 'M':
+			mult = ONE_MONTH;
+			break;
+
+		case 'Y':
+		case 'y':
+			mult = ONE_YEAR;
+			break;
+		}
+	}
+
+	if(n > (long long)(TIME_T_MAX / mult)) {
+		fprintf(stderr, "%s: retention out of range, ignored\n", str);
+		return (0);
+	}
+
+	return ((time_t) n * mult);
 }
 
 /* vim: set tabstop=4 shiftwidth=4 noexpandtab: */
