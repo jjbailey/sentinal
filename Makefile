@@ -84,6 +84,9 @@ systemd:
 	sed "s,INI_FILE,$(SEN_ETC)," services/sentinalpipe.systemd > sentinalpipe.service
 	install -o root -g root -m 644 sentinalpipe.service -t /etc/systemd/system
 
+tests: all
+	bash tests/run-tests.sh
+
 deb:
 	bash packaging/debian/debian.sh
 
@@ -95,6 +98,6 @@ clean:
 	$(RM) sentinal.service sentinalpipe.service
 	$(RM) -fr packaging/debian/sentinal_* packaging/redhat/sentinal-* packaging/redhat/rpmbuild
 
-.PHONY: all install clean systemd deb rpm
+.PHONY: all install clean systemd tests deb rpm
 
 # vim: set tabstop=4 shiftwidth=4 noexpandtab:
