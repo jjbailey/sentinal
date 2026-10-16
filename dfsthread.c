@@ -157,7 +157,7 @@ void   *dfsthread(void *arg)
 		prev_lowres = lowres;
 
 		if(lowres) {
-			bool    throttle = false;				/* retmin blocked cleanup */
+			bool    throttle = true;				/* nothing removed, back off */
 
 			/*
 			 * for multiple threads monitoring the same filesystem
@@ -245,21 +245,21 @@ static bool process_files(struct thread_info *ti, sqlite3 *db)
 	/* count all files */
 
 	if((filecount = count_files(ti, db)) < 1)
-		return (false);
+		return (true);
 
 	/* process all files */
 
 	if(snprintf(stmt, BUFSIZ, sql_selectfiles,
 				ti->ti_task, ti->ti_task, QUERYLIM) >= BUFSIZ) {
 		fprintf(stderr, "%s: SQL statement truncated\n", ti->ti_section);
-		return (false);
+		return (true);
 	}
 
 	if(sqlite3_prepare_v2(db, stmt, -1, &pstmt, NULL) != SQLITE_OK) {
 		fprintf(stderr, "%s: sqlite3_prepare_v2: %s\n", ti->ti_section,
 				sqlite3_errmsg(db));
 
-		return (false);
+		return (true);
 	}
 
 	for(;;) {
@@ -333,7 +333,7 @@ static bool process_files(struct thread_info *ti, sqlite3 *db)
 		fprintf(stderr, "%s: %u %s removed\n", ti->ti_section,
 				removed, removed == 1 ? "file" : "files");
 
-	return (throttle);
+	return (throttle || removed == 0);
 }
 
 static inline double percent(double x, double y)
