@@ -122,9 +122,12 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'h':									/* print usage */
-		case '?':
 			help(myname);
 			exit(EXIT_SUCCESS);
+
+		case '?':									/* unknown option or -? */
+			help(myname);
+			exit(strcmp(argv[optind - 1], "-?") == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
 		}
 	}
 
@@ -284,7 +287,10 @@ int main(int argc, char *argv[])
 			ti->slm_active = pthread_create(&ti->slm_tid, NULL, &slmthread, thr) == 0;
 		}
 
-		if(threadtype(ti, _WRK_THR)) {				/* worker (log ingestion) thread */
+		if(threadtype(ti, _WRK_THR) && dryrun) {	/* would run command, create logs */
+			fprintf(stderr, "%s: dry run: not starting %s thread\n", ti->ti_section,
+					_WRK_THR);
+		} else if(threadtype(ti, _WRK_THR)) {		/* worker (log ingestion) thread */
 			usleep((useconds_t) 400000);
 
 			struct thread_info *thr = threadcopy(ti, _WRK_THR);
