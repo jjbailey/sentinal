@@ -1,3 +1,11 @@
 *~
 .*.swp
 .vscode
+*.o
+*.so
+*.service
+sentinal
+sentinalpipe
+dfree
+pcrefind
+pcretest
